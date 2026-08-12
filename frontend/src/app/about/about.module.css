@@ -1,0 +1,380 @@
+.breadcrumbContainer {
+  background-color: #f8fafc;
+  padding: 40px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  font-family: var(--font-outfit), sans-serif;
+}
+
+.breadcrumbContent {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.breadcrumbTitle {
+  font-size: 32px;
+  font-weight: 800;
+  color: #0b1a30;
+}
+
+.breadcrumbPath {
+  font-size: 13px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.breadcrumbPath a {
+  color: #0f4c81;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.breadcrumbPath a:hover {
+  text-decoration: underline;
+}
+
+/* Intro Text Grid */
+.introSection {
+  padding: 80px 20px;
+  background-color: #ffffff;
+  font-family: var(--font-outfit), sans-serif;
+}
+
+.introContent {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.introGrid {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 60px;
+  align-items: flex-start;
+}
+
+.sloganText {
+  font-size: 44px;
+  font-weight: 800;
+  color: #94a3b8; /* Slate light grey slogan */
+  line-height: 1.25;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.paragraphText {
+  font-size: 15px;
+  color: #475569;
+  line-height: 1.8;
+  margin-bottom: 24px;
+}
+
+.paragraphText:last-child {
+  margin-bottom: 0;
+}
+
+/* Wide image banner section */
+.portfolioSection {
+  padding: 0 20px 80px;
+  background-color: #ffffff;
+  font-family: var(--font-outfit), sans-serif;
+}
+
+.portfolioContent {
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.bannerWrapper {
+  position: relative;
+  width: 100%;
+  height: 480px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+.bannerImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.bannerCard {
+  position: absolute;
+  bottom: 40px;
+  right: 40px;
+  width: 440px;
+  background-color: #0f4c81; /* Brand Blue */
+  padding: 36px;
+  border-radius: 12px;
+  color: white;
+  border-left: 6px solid #f58220; /* Brand Orange accent */
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+}
+
+.bannerCard h3 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  line-height: 1.4;
+  color: white;
+}
+
+.bannerCard p {
+  font-size: 13px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.95);
+  margin: 0;
+}
+
+/* Geographic Coverage Section */
+.coverageSection {
+  padding: 80px 20px;
+  background-color: #ffffff;
+  border-top: 1px solid #f1f5f9;
+  font-family: var(--font-outfit), sans-serif;
+}
+
+.coverageContent {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.coverageGrid {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1fr 1fr;
+  gap: 40px;
+}
+
+.coverageCol {
+  display: flex;
+  flex-direction: column;
+}
+
+.coverageTitle {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0b1a30;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: relative;
+  display: inline-block;
+}
+
+.badgeGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.badge {
+  padding: 6px 12px;
+  background-color: #f1f5f9;
+  color: #475569;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid #e2e8f0;
+}
+
+.bulletList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bulletItem {
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.4;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bulletDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #f58220; /* orange dot */
+  flex-shrink: 0;
+}
+
+/* Why Choose Us Broker Section */
+.whyChooseSection {
+  padding: 80px 20px;
+  background-color: #f8fafc;
+  font-family: var(--font-outfit), sans-serif;
+}
+
+.whyChooseContent {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.whyChooseHeader {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.whyChooseHeader h3 {
+  font-size: 28px;
+  font-weight: 800;
+  color: #0b1a30;
+  margin-bottom: 8px;
+}
+
+.whyChooseHeader p {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+}
+
+.whyChooseGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+
+.whyChooseCard {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 32px 24px;
+  text-align: center;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.whyChooseCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(15, 76, 129, 0.05);
+}
+
+.whyChooseIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  background-color: #0f4c81; /* Brand Blue */
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.whyChooseCard h4 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0b1a30;
+  margin-bottom: 10px;
+  line-height: 1.4;
+}
+
+.whyChooseCard p {
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Call to Action Bar */
+.ctaSection {
+  background-color: #0f4c81; /* Brand Blue */
+  padding: 56px 20px;
+  color: white;
+  text-align: center;
+  font-family: var(--font-outfit), sans-serif;
+}
+
+.ctaContent {
+  max-width: 600px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.ctaTitle {
+  font-size: 26px;
+  font-weight: 800;
+  color: white;
+  margin: 0;
+}
+
+.ctaText {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.ctaBtn {
+  background-color: #ffffff;
+  color: #0f4c81;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 12px 28px;
+  border-radius: 8px;
+  text-decoration: none;
+  display: inline-block;
+  transition: all 0.2s;
+  border: none;
+  cursor: pointer;
+}
+
+.ctaBtn:hover {
+  background-color: #f8fafc;
+  transform: translateY(-1px);
+}
+
+/* Responsive Styles */
+@media (max-width: 1024px) {
+  .coverageGrid {
+    grid-template-columns: 1.2fr 1fr;
+    gap: 32px;
+  }
+  .whyChooseGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .bannerCard {
+    position: relative;
+    bottom: auto;
+    right: auto;
+    width: 100%;
+    margin-top: -40px;
+    z-index: 10;
+  }
+  .bannerWrapper {
+    height: 360px;
+  }
+}
+
+@media (max-width: 768px) {
+  .introGrid {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+  .sloganText {
+    font-size: 32px;
+  }
+  .coverageGrid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .whyChooseGrid {
+    grid-template-columns: 1fr;
+  }
+}

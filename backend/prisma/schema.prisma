@@ -1,0 +1,90 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Property {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  price       Float    // Price in AED
+  location    String
+  type        String   // "Residential" or "Commercial"
+  purpose     String   // "Buy" or "Rent"
+  status      String   // "Ready" or "Off-Plan"
+  beds        Int      // Number of bedrooms
+  baths       Int      // Number of bathrooms
+  area        Float    // Square feet
+  images      String   // JSON string containing array of image paths
+  erpId       String?  // Null if manually added, unique string key if fetched from ERP
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model UpcomingProject {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  type        String   // "Villas", "Apartments", "Penthouses", etc.
+  location    String   // Full location string
+  city        String   // "Dubai", "Abu Dhabi", "Sharjah", "Ajman", etc.
+  launchPrice String   // e.g. "AED 15.8M", "AED 561K"
+  handover    String   // e.g. "Q2 2028", "Q3 2027"
+  image       String   // Cover image path
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String
+  email     String
+  role      String   // "Super Admin", "Manager", "Editor", "Viewer"
+  mfaType   String   // "Email OTP" or "Google Authenticator"
+  otpSecret String?  // For Google Authenticator
+  otpCode   String?  // For Email OTP
+  otpExpiry DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Booking {
+  id           Int      @id @default(autoincrement())
+  propertyId   Int
+  propertyName String
+  name         String
+  email        String
+  phone        String
+  nationality  String
+  passportPath String?
+  status       String   @default("Pending")
+  declineReason String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model NationalityAutoRejection {
+  id          Int      @id @default(autoincrement())
+  nationality String   @unique
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Enquiry {
+  id            Int      @id @default(autoincrement())
+  name          String
+  email         String
+  phone         String
+  nationality   String
+  subject       String?
+  message       String
+  status        String   @default("Received")
+  declineReason String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}

@@ -1,0 +1,564 @@
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  font-family: system-ui, -apple-system, sans-serif;
+  color: #1e293b;
+}
+
+.backBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #0b1a30;
+  font-weight: 600;
+  font-size: 15px;
+  margin-bottom: 24px;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.backBtn:hover {
+  color: #0f4c81;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(340px, 0.85fr);
+  gap: 32px;
+  align-items: start;
+}
+
+.grid > *,
+.rightColumn,
+.summaryCard,
+.sidebarCard,
+.descriptionSection,
+.amenitiesSection,
+.propertyInfoSection {
+  min-width: 0;
+}
+
+/* Gallery Styles */
+.gallerySection {
+  margin-bottom: 30px;
+}
+
+.mainImageWrapper {
+  width: 100%;
+  height: 500px;
+  background-color: #f1f5f9;
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid #e2e8f0;
+}
+
+.mainImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.noImage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-size: 48px;
+  opacity: 0.2;
+}
+
+.thumbnails {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.thumbnailItem {
+  width: 86px;
+  height: 64px;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.thumbnailActive {
+  border-color: #0f4c81;
+  box-shadow: 0 4px 6px -1px rgba(15, 76, 129, 0.2);
+}
+
+.thumbnailImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Details Styles */
+.headerInfo {
+  margin-bottom: 24px;
+}
+
+.rightColumn {
+  position: sticky;
+  top: 96px;
+}
+
+.summaryCard {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 16px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.07);
+}
+
+.badges {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.summaryCard .sourceBadge {
+  display: inline-flex;
+  margin-bottom: 18px;
+}
+
+.badge {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: white;
+  text-transform: uppercase;
+}
+
+.badgeSale {
+  background-color: #0f4c81;
+}
+
+.badgeRent {
+  background-color: #0b1a30;
+}
+
+.badgeStatus {
+  background-color: #c5a880;
+}
+
+.sourceBadge {
+  background-color: #f1f5f9;
+  color: #475569;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.title {
+  font-size: 30px;
+  font-weight: 800;
+  color: #0b1a30;
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+
+.location {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #64748b;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.price {
+  font-size: 28px;
+  font-weight: 800;
+  color: #0f4c81;
+  margin: 16px 0;
+}
+
+.pricePeriod {
+  font-size: 18px;
+  color: #334155;
+}
+
+.bookingActions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
+.vacancyBadge, .bookNowButton { min-height: 46px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+.vacancyBadge { background: #eff6ff; color: #0f4c81; border: 1px solid #bfdbfe; }
+.bookNowButton { background: #0f4c81; color: #fff; border: 0; cursor: pointer; padding: 0 16px; }
+.bookNowButton:hover { background: #0a3a63; }
+.modalBackdrop { position: fixed; inset: 0; z-index: 50; background: rgba(11, 26, 48, .62); display: grid; place-items: center; padding: 20px; }
+.bookingModal { position: relative; width: min(540px, 100%); max-height: calc(100vh - 40px); overflow-y: auto; background: #fff; border-radius: 16px; padding: 32px; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
+.bookingModal h2 { color: #0b1a30; font-size: 25px; margin-bottom: 8px; }.modalProperty { color:#64748b; line-height:1.55; margin-bottom:20px; }.closeModal { position:absolute; right:16px; top:12px; border:0; background:transparent; font-size:30px; color:#64748b; cursor:pointer; }.bookingForm { display:grid; gap:12px; }.bookingForm input, .bookingForm select { width:100%; padding:12px; border:1px solid #cbd5e1; border-radius:8px; font:inherit; background:#fff; }.bookingForm input[readonly] { background:#f8fafc; color:#475569; }.passportLabel { display:grid; gap:7px; color:#334155; font-size:13px; font-weight:600; }.bookingError { color:#b91c1c; font-size:13px; }.bookingSuccess { text-align:center; }.bookingSuccess p { color:#475569; line-height:1.6; margin:16px 0 22px; }
+
+.specsBox {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  background-color: #f8fafc;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  margin: 24px 0 0;
+}
+
+.specCard {
+  text-align: center;
+}
+
+.specVal {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0b1a30;
+}
+
+.specLabel {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+.descriptionSection h3 {
+  font-size: 20px;
+  color: #0b1a30;
+  margin-bottom: 12px;
+  border-bottom: 2px solid #f1f5f9;
+  padding-bottom: 8px;
+}
+
+.descriptionSection p {
+  color: #475569;
+  line-height: 1.8;
+  font-size: 15px;
+  white-space: pre-line;
+}
+
+.propertyInfoSection,
+.amenitiesSection {
+  margin-top: 36px;
+}
+
+.propertyInfoSection h3,
+.amenitiesSection h3 {
+  font-size: 24px;
+  color: #0b1a30;
+  margin-bottom: 18px;
+}
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0 32px;
+}
+
+.infoGrid div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid #e2e8f0;
+  color: #64748b;
+}
+
+.infoGrid strong {
+  color: #1e293b;
+  text-align: right;
+}
+
+.amenitiesGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.amenityCard,
+.moreAmenities {
+  min-height: 112px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  border-radius: 10px;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.amenityCard {
+  background: #f8fafc;
+  color: #334155;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.moreAmenities {
+  border: 1px solid #dbe5f0;
+  color: #0f4c81;
+  background: #ffffff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.moreAmenities:hover {
+  background: #eff6ff;
+}
+
+.amenityIcon {
+  font-size: 26px;
+  line-height: 1;
+}
+
+/* Sidebar Contact Card */
+.sidebarCard {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  padding: 24px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  height: fit-content;
+  position: static;
+  border-radius: 16px;
+}
+
+.sidebarCard h4 {
+  font-size: 18px;
+  color: #0b1a30;
+  margin-bottom: 6px;
+  font-weight: 700;
+}
+
+.sidebarCard p {
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 20px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.formGroup label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.input, .textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.textarea {
+  min-height: 80px;
+  resize: none;
+}
+
+.input:focus, .textarea:focus {
+  border-color: #0f4c81;
+  outline: none;
+}
+
+.submitBtn {
+  width: 100%;
+  background-color: #0f4c81;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.submitBtn:hover {
+  background-color: #0a3a63;
+}
+
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+  .mainImageWrapper {
+    height: 320px;
+  }
+  .sidebarCard {
+    position: static;
+  }
+  .rightColumn {
+    position: static;
+  }
+  .infoGrid,
+  .amenitiesGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 24px 16px 36px;
+  }
+
+  .backBtn {
+    margin-bottom: 18px;
+    font-size: 14px;
+  }
+
+  .grid {
+    gap: 22px;
+  }
+
+  .mainImageWrapper {
+    height: min(64vw, 300px);
+    min-height: 220px;
+    border-radius: 10px;
+  }
+
+  .thumbnails {
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .thumbnailItem {
+    width: 70px;
+    height: 54px;
+  }
+
+  .summaryCard {
+    padding: 20px;
+    margin-bottom: 16px;
+    border-radius: 12px;
+  }
+
+  .title {
+    font-size: 25px;
+    overflow-wrap: anywhere;
+  }
+
+  .location {
+    align-items: flex-start;
+    font-size: 14px;
+    overflow-wrap: anywhere;
+  }
+
+  .price {
+    margin: 14px 0;
+    font-size: 25px;
+  }
+
+  .pricePeriod {
+    font-size: 16px;
+  }
+
+  .specsBox {
+    gap: 6px;
+    padding: 14px 8px;
+    margin-top: 18px;
+  }
+
+  .specVal {
+    font-size: 16px;
+  }
+
+  .specLabel {
+    font-size: 11px;
+  }
+
+  .bookingActions {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .vacancyBadge,
+  .bookNowButton {
+    min-height: 44px;
+    font-size: 14px;
+  }
+
+  .descriptionSection h3 {
+    font-size: 19px;
+  }
+
+  .descriptionSection p {
+    font-size: 15px;
+    line-height: 1.7;
+  }
+
+  .propertyInfoSection,
+  .amenitiesSection {
+    margin-top: 28px;
+  }
+
+  .propertyInfoSection h3,
+  .amenitiesSection h3 {
+    font-size: 21px;
+    margin-bottom: 14px;
+  }
+
+  .infoGrid div {
+    min-width: 0;
+    gap: 12px;
+    padding: 12px 0;
+    font-size: 14px;
+  }
+
+  .infoGrid strong {
+    max-width: 58%;
+    overflow-wrap: anywhere;
+  }
+
+  .amenitiesGrid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .amenityCard,
+  .moreAmenities {
+    min-height: 104px;
+    padding: 12px 8px;
+    font-size: 13px;
+  }
+
+  .amenityIcon {
+    font-size: 23px;
+  }
+
+  .sidebarCard {
+    min-width: 0;
+    padding: 20px;
+    border-radius: 12px;
+  }
+
+  .input,
+  .textarea,
+  .bookingForm input,
+  .bookingForm select {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .bookingModal {
+    width: calc(100% - 24px);
+    max-height: calc(100dvh - 24px);
+    padding: 24px 18px;
+    border-radius: 14px;
+  }
+
+  .bookingModal h2 {
+    max-width: calc(100% - 34px);
+    font-size: 22px;
+  }
+}
