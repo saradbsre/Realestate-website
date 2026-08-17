@@ -1,0 +1,6 @@
+api-test.stderr.log
+api-test.stdout.log
+connection-test.stderr.log
+connection-test.stdout.log
+frontend-test.stderr.log
+frontend-test.stdout.log
