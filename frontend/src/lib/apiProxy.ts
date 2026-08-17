@@ -1,9 +1,14 @@
-import { NextResponse } from "next/server";
-
 export async function proxyRequest(req: Request, apiPath: string) {
-  const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const backendUrl =
+  process.env.API_URL ||
+  "http://localhost:5000";
   const url = `${backendUrl}${apiPath}`;
-
+  console.log("================================");
+  console.log("🟡 NEXT.JS PROXY");
+  console.log("Method:", req.method);
+  console.log("API Path:", apiPath);
+  console.log("Backend URL:", url);
+  console.log("================================");
   const headers = new Headers();
   
   // Forward headers (e.g. cookies, content-type)
@@ -39,25 +44,17 @@ export async function proxyRequest(req: Request, apiPath: string) {
     }
 
     const response = await fetch(url, fetchOptions);
-    const data = response.headers.get("content-type")?.includes("application/json")
-      ? await response.json()
-      : await response.text();
+    const responseHeaders = new Headers(response.headers);
+    responseHeaders.delete("content-encoding");
+    responseHeaders.delete("content-length");
 
-    const resHeaders: Record<string, string> = {};
-    response.headers.forEach((val, key) => {
-      // Avoid forwarding encoding headers as we let Next.js handle it
-      if (key.toLowerCase() !== "content-encoding") {
-        resHeaders[key] = val;
-      }
-    });
-
-    // Make sure we forward back the cookies (e.g. Set-Cookie)
-    return NextResponse.json(data, {
+    return new Response(response.body, {
       status: response.status,
-      headers: resHeaders,
+      statusText: response.statusText,
+      headers: responseHeaders,
     });
   } catch (error) {
     console.error(`Proxy error for path ${apiPath}:`, error);
-    return NextResponse.json({ error: "Backend service unavailable" }, { status: 502 });
+    return Response.json({ error: "Backend service unavailable" }, { status: 502 });
   }
 }

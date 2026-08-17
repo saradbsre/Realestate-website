@@ -9,7 +9,7 @@ export default function PrivacyPage() {
   return (
     <div style={{ backgroundColor: "#f8fafc", minHeight: "100vh" }}>
       {/* Unified Sticky Header */}
-      <Header />
+    
 
       {/* Breadcrumb Hero */}
       <div style={{ backgroundColor: "#0b1a30", padding: "60px 20px", textAlign: "center", color: "white" }}>

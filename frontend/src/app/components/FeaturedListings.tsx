@@ -3,23 +3,12 @@
 import React from "react";
 import Link from "next/link";
 import styles from "./featuredListings.module.css";
-
-interface Property {
-  id: number;
-  title: string;
-  description: string;
-  price: number;
-  location: string;
-  type: string;
-  purpose: string;
-  status: string;
-  beds: number;
-  baths: number;
-  area: number;
-  images: string; // JSON string array
-  erpId: string | null;
-}
-
+import type { Property } from "@/lib/propertyApi";
+import {
+  MapPin,
+  Building2,
+  Ruler,
+} from "lucide-react";
 interface FeaturedListingsProps {
   properties: Property[];
 }
@@ -39,7 +28,18 @@ export default function FeaturedListings({ properties }: FeaturedListingsProps) 
     }).format(price);
   };
   const submitBooking = async (event: React.FormEvent) => { event.preventDefault(); if (!bookingProperty) return; setBookingError(""); const form = new FormData(); form.append("propertyId", String(bookingProperty.id)); form.append("propertyName", bookingProperty.title); form.append("name", booking.name); form.append("email", booking.email); form.append("phone", booking.phone); form.append("nationality", booking.nationality); if (booking.passport) form.append("passport", booking.passport); const response = await fetch("/api/bookings", { method: "POST", body: form }); if (response.ok) setBookingSent(true); else setBookingError((await response.json()).error || "Unable to send booking form."); };
+function compactAvailableTypes(value: string) {
+  const list = value
+    .split(",")
+    .map((x) => x.trim())
+    .filter(Boolean);
 
+  if (list.length <= 3) {
+    return list.join(" • ");
+  }
+
+  return `${list.slice(0, 3).join(" • ")} +${list.length - 3} more`;
+}
   return (
     <section id="listings" className={styles.section}>
       <div className={styles.titleArea}>
@@ -51,20 +51,20 @@ export default function FeaturedListings({ properties }: FeaturedListingsProps) 
         {properties.length === 0 ? (
           <div className={styles.noResults}>
             <p style={{ fontSize: "20px", marginBottom: "8px", fontWeight: 600 }}>No Properties Found</p>
-            <p>Try modifying your search filter options or Ask AI with a different query.</p>
+            <p>Try modifying your search filter options.</p>
           </div>
         ) : (
           properties.map((prop) => {
             let imagesList: string[] = [];
             try {
               imagesList = JSON.parse(prop.images || "[]");
-            } catch (e) {}
+            } catch {}
 
             return (
               <Link href={`/property/${prop.id}`} key={prop.id} className={styles.card}>
                 <div className={styles.imageWrapper}>
                   {/* Badges Overlay */}
-                  <div className={styles.badges}>
+                  {/* <div className={styles.badges}>
                     <span
                       className={`${styles.badge} ${
                         prop.purpose === "Buy" ? styles.badgeSale : styles.badgeRent
@@ -77,12 +77,12 @@ export default function FeaturedListings({ properties }: FeaturedListingsProps) 
                         {prop.status}
                       </span>
                     )}
-                  </div>
+                  </div> */}
 
                   {/* ERP vs Manual Badge */}
-                  <span className={styles.sourceBadge}>
+                  {/* <span className={styles.sourceBadge}>
                     {prop.erpId ? `ERP: ${prop.erpId}` : "Exclusive manual listing"}
-                  </span>
+                  </span> */}
 
                   {/* Photo */}
                   {imagesList.length > 0 ? (
@@ -96,46 +96,111 @@ export default function FeaturedListings({ properties }: FeaturedListingsProps) 
                   )}
                 </div>
 
-                <div className={styles.content}>
-                  {/* Price */}
-                  <div className={styles.price}>
-                    {formatPrice(prop.price)}{prop.purpose === "Rent" && <span className={styles.pricePeriod}> Yearly</span>}
-                  </div>
+               <div className={styles.content}>
+  {/* Price */}
+  <div className={styles.priceBlock}>
+    <div className={styles.price}>
+      {prop.price > 0 ? (
+        <>
+          {prop.maxPrice > prop.price && (
+            <span className={styles.fromText}>From </span>
+          )}
+          {formatPrice(prop.price)}
+          {prop.purpose === "Rent" && (
+            <span className={styles.pricePeriod}> / Yearly</span>
+          )}
+        </>
+      ) : (
+        <span className={styles.priceOnRequest}>Price on Request</span>
+      )}
+    </div>
+  </div>
 
-                  {/* Title */}
-                  <h3 className={styles.title}>{prop.title}</h3>
+  {/* Title */}
+  <h3 className={styles.title}>{prop.title}</h3>
 
-                  {/* Location */}
-                  <div className={styles.location}>
-                    <span>📍</span>
-                    <span>{prop.location}</span>
-                  </div>
+  {/* Location */}
+<div className={styles.location}>
+  <MapPin
+    className={styles.locationIcon}
+    size={17}
+    strokeWidth={2}
+  />
 
-                  {/* Specifications */}
-                  <div className={styles.specs}>
-                    <div className={styles.specItem}>
-                      <span>🛏️</span>
-                      <span>{prop.beds === 0 ? "Studio" : `${prop.beds} Beds`}</span>
-                    </div>
-                    <div className={styles.specItem}>
-                      <span>🛁</span>
-                      <span>{prop.baths} {prop.baths === 1 ? "Bath" : "Baths"}</span>
-                    </div>
-                    <div className={styles.specItem}>
-                      <span>📐</span>
-                      <span>{prop.area} Sq.Ft.</span>
-                    </div>
-                  </div>
-                  {prop.purpose === "Rent" && <div className={styles.bookingActions} onClick={(event) => { event.preventDefault(); event.stopPropagation(); }}>
-                    <span className={styles.vacancyBadge}>2 Vacant Units</span>
-                    <button type="button" className={styles.bookNowButton} onClick={(event) => { event.preventDefault(); event.stopPropagation(); setBookingProperty(prop); setBookingSent(false); setBookingError(""); }}>Book Now</button>
-                  </div>}
-                </div>
+  <span className={styles.locationText}>
+    {prop.location}
+  </span>
+</div>
+
+  {/* Divider */}
+  <div className={styles.divider}></div>
+
+  {/* Property type */}
+  <div className={styles.metaRow}>
+    <div className={styles.metaItem}>
+      <span className={styles.metaIcon}>🏢</span>
+      <span className={styles.metaText} title={prop.availableTypes}>
+        {compactAvailableTypes(prop.availableTypes)}
+
+      </span>
+    </div>
+  </div>
+
+  {/* Area */}
+  <div className={styles.metaRow}>
+    <div className={styles.metaItem}>
+      <span className={styles.metaIcon}>📐</span>
+      <span className={styles.metaText}>
+        {prop.maxArea > prop.area
+          ? `${prop.area.toLocaleString()} - ${prop.maxArea.toLocaleString()} Sq.Ft.`
+          : `${prop.area.toLocaleString()} Sq.Ft.`}
+      </span>
+    </div>
+  </div>
+
+  {/* Actions */}
+  <div
+    className={styles.bookingActions}
+    onClick={(event) => {
+      event.preventDefault();
+      event.stopPropagation();
+    }}
+  >
+    <span className={styles.vacancyBadge}>
+      {prop.vacantUnits} Vacant Units
+    </span>
+
+    <button
+      type="button"
+      className={styles.bookNowButton}
+      onClick={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        setBookingProperty(prop);
+        setBookingSent(false);
+        setBookingError("");
+      }}
+    >
+      Book Now
+    </button>
+  </div>
+</div>
               </Link>
             );
           })
         )}
       </div>
+      {properties.length > 0 && (
+  <div className={styles.viewAllWrapper}>
+    <Link
+      href="/properties"
+      className={styles.viewAllButton}
+    >
+      See All Properties
+      <span>→</span>
+    </Link>
+  </div>
+)}
       {bookingProperty && <div className={styles.modalBackdrop} role="dialog" aria-modal="true" aria-label="Book this property"><div className={styles.bookingModal}>
         <button className={styles.closeModal} type="button" onClick={() => setBookingProperty(null)} aria-label="Close booking form">×</button>
         {!bookingSent ? <><h2>Book this property</h2><p className={styles.modalProperty}>{bookingProperty.title}<br />{formatPrice(bookingProperty.price)} / Yearly</p><form onSubmit={submitBooking} className={styles.bookingForm}>

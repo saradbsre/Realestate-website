@@ -64,7 +64,7 @@ export default function ContactPage() {
     <div style={{ backgroundColor: "#f8fafc", minHeight: "100vh" }}>
       {/* Top Blue Ribbon */}
       {/* Unified Sticky Header */}
-      <Header />
+  
 
       {/* Hero Banner */}
       <header className={styles.hero}>

@@ -44,7 +44,7 @@ export default function FaqPage() {
   return (
     <div style={{ backgroundColor: "#ffffff", minHeight: "100vh" }}>
       {/* Unified Sticky Header */}
-      <Header />
+  
 
       {/* Breadcrumbs Container */}
       <div className={styles.breadcrumbContainer}>

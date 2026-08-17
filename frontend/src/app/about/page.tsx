@@ -71,7 +71,7 @@ export default function AboutPage() {
   return (
     <div style={{ backgroundColor: "#ffffff", minHeight: "100vh" }}>
       {/* Unified Sticky Header */}
-      <Header />
+ 
 
       {/* Page Title & Breadcrumbs */}
       <div className={styles.breadcrumbContainer}>

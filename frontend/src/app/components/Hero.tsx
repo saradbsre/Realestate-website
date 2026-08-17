@@ -1,304 +1,1395 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+
+import {
+  MapPin,
+  Building2,
+  Tag,
+  BedDouble,
+  ChevronDown,
+  MapPinSearch,
+} from "lucide-react";
+
 import styles from "./hero.module.css";
+
+import {
+  getProperties,
+  getPropertyFilterOptions,
+  type Property,
+  type PropertyFilterCategory,
+} from "@/lib/propertyApi";
+
+/* =========================================================
+   TYPES
+========================================================= */
 
 interface HeroProps {
   onSearch: (filters: {
-    purpose: string;
     location: string;
-    status: string;
-    type: string;
+
+    unitTypeId:
+      | number
+      | null;
+
     beds: string;
+
     minPrice: string;
+
     maxPrice: string;
   }) => void;
 }
 
-export default function Hero({ onSearch }: HeroProps) {
-  // Tabs
-  const tabs = [
-    { id: "properties", name: "Properties" },
-    { id: "new-projects", name: "New Projects" },
-    { id: "agents", name: "Agents" },
-  ];
-  const [activeTab, setActiveTab] = useState("properties");
+/* =========================================================
+   PRICE OPTIONS
+========================================================= */
 
-  // Filter States
-  const [purpose, setPurpose] = useState("Buy"); // Buy / Rent
-  const [location, setLocation] = useState("");
-  const [status, setStatus] = useState("All"); 
-  const [type, setType] = useState("All"); 
-  const [propertyCategory, setPropertyCategory] = useState("All Properties");
-  const [propertyGroup, setPropertyGroup] = useState<"Residential" | "Commercial">("Residential");
-  const [isPropertyTypeOpen, setIsPropertyTypeOpen] = useState(false);
-  const [rentalPeriod, setRentalPeriod] = useState("Yearly");
-  const [beds, setBeds] = useState("All"); 
-  const [priceRange, setPriceRange] = useState("All"); 
+const PRICE_OPTIONS = [
+  {
+    value: "All",
+    label: "Any Price",
+  },
 
-  const propertyCategories = {
-    Residential: ["Apartment", "Villa", "Townhouse", "Penthouse", "Duplex", "Residential Building"],
-    Commercial: ["Office", "Shop", "Warehouse", "Labour Camp", "Bulk Unit", "Land", "Floor", "Building", "Factory", "Industrial Land", "Mixed Use Land", "Showroom", "Other Commercial"],
-  };
-  
-  // Autocomplete suggestions
-  const [allProperties, setAllProperties] = useState<any[]>([]);
-  const [suggestions, setSuggestions] = useState<any[]>([]);
+  {
+    value: "0-30000",
+    label: "Up to AED 30K",
+  },
 
-  // Agents list
-  const agents = [
-    { name: "Firas Bin Shabib", role: "Principal Partner / Luxury Specialist", spec: "Saadiyat Island & Palm Jumeirah", phone: "+971 50 111 2222", initial: "FB" },
-    { name: "Sarah Ahmed", role: "Senior Portfolio Manager", spec: "Dubai Marina & Downtown", phone: "+971 50 333 4444", initial: "SA" },
-    { name: "Marcus Vane", role: "Commercial & Retail Specialist", spec: "Business Bay & DIFC", phone: "+971 50 555 6666", initial: "MV" },
-  ];
+  {
+    value: "30000-50000",
+    label: "AED 30K - 50K",
+  },
 
-  // Load properties list to search against locally for autocomplete
+  {
+    value: "50000-100000",
+    label: "AED 50K - 100K",
+  },
+
+  {
+    value: "100000-200000",
+    label: "AED 100K - 200K",
+  },
+
+  {
+    value: "200000-",
+    label: "AED 200K+",
+  },
+];
+
+/* =========================================================
+   BED OPTIONS
+
+   IMPORTANT:
+   value = ERP unit.Purpose_type
+========================================================= */
+
+const BED_OPTIONS = [
+  {
+    value: "All",
+    label: "Any",
+  },
+
+  {
+    value: "STD",
+    label: "Studio",
+  },
+
+  {
+    value: "1BK",
+    label: "1 BHK",
+  },
+
+  {
+    value: "2BK",
+    label: "2 BHK",
+  },
+
+  {
+    value: "3BK",
+    label: "3 BHK",
+  },
+
+  {
+    value: "4BK",
+    label: "4 BHK",
+  },
+];
+
+/* =========================================================
+   COMPONENT
+========================================================= */
+
+export default function Hero({
+  onSearch,
+}: HeroProps) {
+  /* =======================================================
+     LOCATION
+  ======================================================= */
+
+  const [
+    location,
+    setLocation,
+  ] = useState("");
+
+  const [
+    allProperties,
+    setAllProperties,
+  ] = useState<Property[]>(
+    []
+  );
+
+  const [
+    suggestions,
+    setSuggestions,
+  ] = useState<Property[]>(
+    []
+  );
+
+  /* =======================================================
+     PROPERTY TYPE
+  ======================================================= */
+
+  const [
+    propertyCategories,
+    setPropertyCategories,
+  ] = useState<
+    PropertyFilterCategory[]
+  >([]);
+
+  /*
+   * Category tab:
+   *
+   * UC01
+   * UC02
+   */
+  const [
+    propertyGroup,
+    setPropertyGroup,
+  ] = useState("");
+
+  /*
+   * Display label:
+   *
+   * All Types
+   * Apartment
+   * Villa
+   * Office
+   * etc.
+   */
+  const [
+    propertyCategory,
+    setPropertyCategory,
+  ] = useState(
+    "All Types"
+  );
+
+  /*
+   * Actual database UnitTypeId
+   *
+   * null = All Types
+   */
+  const [
+    selectedUnitTypeId,
+    setSelectedUnitTypeId,
+  ] = useState<
+    number | null
+  >(null);
+
+  /* =======================================================
+     PRICE
+  ======================================================= */
+
+  const [
+    priceRange,
+    setPriceRange,
+  ] = useState("All");
+
+  /* =======================================================
+     BEDS
+
+     This stores ERP Purpose_type:
+     STD
+     1BK
+     2BK
+     etc.
+  ======================================================= */
+
+  const [
+    beds,
+    setBeds,
+  ] = useState("All");
+
+  /* =======================================================
+     DROPDOWNS
+  ======================================================= */
+
+  const [
+    isPropertyTypeOpen,
+    setIsPropertyTypeOpen,
+  ] = useState(false);
+
+  const [
+    isPriceOpen,
+    setIsPriceOpen,
+  ] = useState(false);
+
+  const [
+    isBedsOpen,
+    setIsBedsOpen,
+  ] = useState(false);
+
+  const filtersRef =
+    useRef<HTMLDivElement | null>(
+      null
+    );
+
+  /* =======================================================
+     LOAD PROPERTY TYPE FILTER OPTIONS
+  ======================================================= */
+
   useEffect(() => {
-    fetch("/api/properties")
-      .then((res) => res.json())
-      .then((data) => setAllProperties(data))
-      .catch((err) => console.error("Error loading suggestion list:", err));
+    getPropertyFilterOptions()
+      .then((data) => {
+        setPropertyCategories(
+          data
+        );
+
+        /*
+         * Select first category
+         * tab by default.
+         */
+        if (
+          data.length > 0
+        ) {
+          setPropertyGroup(
+            data[0]
+              .categoryId
+          );
+        }
+      })
+      .catch((error) => {
+        console.error(
+          "Error loading property filter options:",
+          error
+        );
+      });
   }, []);
 
-  const handleLocationChange = (val: string) => {
-    setLocation(val);
-    if (!val.trim()) {
-      setSuggestions([]);
+  /* =======================================================
+     LOAD LOCATION SUGGESTION DATA
+  ======================================================= */
+
+  useEffect(() => {
+    getProperties({
+      page: 1,
+
+      pageSize: 100,
+    })
+      .then(
+        ({
+          properties,
+        }) => {
+          setAllProperties(
+            properties
+          );
+        }
+      )
+      .catch((error) => {
+        console.error(
+          "Error loading suggestion list:",
+          error
+        );
+      });
+  }, []);
+
+  /* =======================================================
+     OUTSIDE CLICK
+  ======================================================= */
+
+  useEffect(() => {
+    const handleOutsideClick = (
+      event: MouseEvent
+    ) => {
+      if (
+        filtersRef.current &&
+        !filtersRef.current.contains(
+          event.target as Node
+        )
+      ) {
+        setIsPropertyTypeOpen(
+          false
+        );
+
+        setIsPriceOpen(
+          false
+        );
+
+        setIsBedsOpen(
+          false
+        );
+      }
+    };
+
+    document.addEventListener(
+      "mousedown",
+      handleOutsideClick
+    );
+
+    return () => {
+      document.removeEventListener(
+        "mousedown",
+        handleOutsideClick
+      );
+    };
+  }, []);
+
+  /* =======================================================
+     CURRENT CATEGORY
+  ======================================================= */
+
+  const selectedCategory =
+    useMemo(() => {
+      return (
+        propertyCategories.find(
+          (
+            category
+          ) =>
+            category.categoryId ===
+            propertyGroup
+        ) || null
+      );
+    }, [
+      propertyCategories,
+      propertyGroup,
+    ]);
+
+  /* =======================================================
+     CURRENT UNIT TYPE
+  ======================================================= */
+
+  const selectedUnitType =
+    useMemo(() => {
+      if (
+        selectedUnitTypeId ===
+        null
+      ) {
+        return null;
+      }
+
+      for (
+        const category of
+        propertyCategories
+      ) {
+        const found =
+          category.types.find(
+            (type) =>
+              type.id ===
+              selectedUnitTypeId
+          );
+
+        if (found) {
+          return found;
+        }
+      }
+
+      return null;
+    }, [
+      propertyCategories,
+      selectedUnitTypeId,
+    ]);
+
+  /* =======================================================
+     APARTMENT CHECK
+
+     Beds only applies to Apartment.
+  ======================================================= */
+
+  const isApartment =
+    selectedUnitType
+      ?.name
+      ?.trim()
+      .toUpperCase() ===
+    "APARTMENT";
+
+  /* =======================================================
+     LOCATION CHANGE
+  ======================================================= */
+
+  const handleLocationChange = (
+    value: string
+  ) => {
+    setLocation(value);
+
+    if (!value.trim()) {
+      setSuggestions(
+        []
+      );
+
       return;
     }
-    const lowerVal = val.toLowerCase();
-    const filtered = allProperties.filter(
-      (p) =>
-        p.title.toLowerCase().includes(lowerVal) ||
-        p.location.toLowerCase().includes(lowerVal)
+
+    const searchValue =
+      value
+        .trim()
+        .toLowerCase();
+
+    /*
+     * Avoid duplicate location
+     * suggestions from different
+     * buildings.
+     */
+    const uniqueLocations =
+      new Map<
+        string,
+        Property
+      >();
+
+    allProperties.forEach(
+      (property) => {
+        const propertyLocation =
+          property.location
+            ?.trim();
+
+        if (
+          !propertyLocation
+        ) {
+          return;
+        }
+
+        if (
+          !propertyLocation
+            .toLowerCase()
+            .includes(
+              searchValue
+            )
+        ) {
+          return;
+        }
+
+        const key =
+          propertyLocation.toLowerCase();
+
+        if (
+          !uniqueLocations.has(
+            key
+          )
+        ) {
+          uniqueLocations.set(
+            key,
+            property
+          );
+        }
+      }
     );
-    setSuggestions(filtered.slice(0, 5)); // Limit to top 5 matches
+
+    setSuggestions(
+      Array.from(
+        uniqueLocations.values()
+      ).slice(0, 5)
+    );
   };
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    let minPrice = "";
-    let maxPrice = "";
-    if (priceRange !== "All") {
-      const [min, max] = priceRange.split("-");
-      minPrice = min;
-      maxPrice = max || "";
+  /* =======================================================
+     FORMAT CATEGORY
+  ======================================================= */
+
+  function formatCategoryName(
+    value: string
+  ) {
+    return value
+      .trim()
+      .toLowerCase()
+      .replace(
+        /\b\w/g,
+        (char) =>
+          char.toUpperCase()
+      );
+  }
+
+  /* =======================================================
+     FORMAT UNIT TYPE
+  ======================================================= */
+
+  function formatUnitType(
+    value: string
+  ) {
+    const mapping:
+      Record<
+        string,
+        string
+      > = {
+      APARTMENT:
+        "Apartment",
+
+      VILLA:
+        "Villa",
+
+      OFFICE:
+        "Office",
+
+      SHOP:
+        "Shop",
+
+      "LABOUR CAMP":
+        "Labour Camp",
+
+      "SHOW ROOM":
+        "Showroom",
+
+      WAREHOUSE:
+        "Warehouse",
+    };
+
+    const key =
+      value
+        .trim()
+        .toUpperCase();
+
+    return (
+      mapping[key] ||
+      formatCategoryName(
+        value
+      )
+    );
+  }
+
+  /* =======================================================
+     PROPERTY TYPE SELECTION
+  ======================================================= */
+
+  const selectPropertyType = (
+    id: number,
+    name: string
+  ) => {
+    setSelectedUnitTypeId(
+      id
+    );
+
+    setPropertyCategory(
+      formatUnitType(
+        name
+      )
+    );
+
+    /*
+     * Whenever property type
+     * changes clear Beds.
+     */
+    setBeds("All");
+
+    setIsBedsOpen(false);
+
+    setIsPropertyTypeOpen(
+      false
+    );
+  };
+
+  /* =======================================================
+     ALL TYPES
+  ======================================================= */
+
+  const selectAllTypes =
+    () => {
+      setSelectedUnitTypeId(
+        null
+      );
+
+      setPropertyCategory(
+        "All Types"
+      );
+
+      setBeds("All");
+
+      setIsBedsOpen(false);
+
+      setIsPropertyTypeOpen(
+        false
+      );
+    };
+
+  /* =======================================================
+     PRICE LABEL
+  ======================================================= */
+
+  const selectedPriceLabel =
+    PRICE_OPTIONS.find(
+      (option) =>
+        option.value ===
+        priceRange
+    )?.label ||
+    "Any Price";
+
+  /* =======================================================
+     BED LABEL
+  ======================================================= */
+
+  const selectedBedLabel =
+    BED_OPTIONS.find(
+      (option) =>
+        option.value ===
+        beds
+    )?.label || "Any";
+
+  /* =======================================================
+     SEARCH
+  ======================================================= */
+
+  const handleSearchSubmit = (
+    event: React.FormEvent<HTMLFormElement>
+  ) => {
+    event.preventDefault();
+
+    let minPrice =
+      "";
+
+    let maxPrice =
+      "";
+
+    if (
+      priceRange !==
+      "All"
+    ) {
+      const [min, max] =
+        priceRange.split(
+          "-"
+        );
+
+      minPrice =
+        min || "";
+
+      maxPrice =
+        max || "";
     }
 
     onSearch({
-      purpose,
-      location,
-      status: activeTab === "new-projects" ? "Off-Plan" : status,
-      type,
-      beds,
+      location:
+        location.trim(),
+
+      /*
+       * Database UnitTypeId
+       */
+      unitTypeId:
+        selectedUnitTypeId,
+
+      /*
+       * Only Apartment can
+       * send a Beds filter.
+       *
+       * Value will be:
+       * STD
+       * 1BK
+       * 2BK
+       * ...
+       */
+      beds:
+        isApartment
+          ? beds
+          : "All",
+
       minPrice,
+
       maxPrice,
     });
+
+    setSuggestions(
+      []
+    );
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("en-AE", {
-      style: "currency",
-      currency: "AED",
-      maximumFractionDigits: 0,
-    }).format(price);
-  };
+  /* =======================================================
+     RENDER
+  ======================================================= */
 
   return (
-    <section className={styles.hero}>
-      <div className={styles.headingArea}>
-        <h1>Real homes live here</h1>
-        <p style={{ maxWidth: "680px", margin: "8px auto 0", fontSize: "16px", lineHeight: "1.5", fontWeight: 400 }}>
-          Browse a wide range of quality apartments and villas across Dubai’s prime locations with options to suit every budget and lifestyle
-        </p>
-      </div>
+    <section
+      className={
+        styles.hero
+      }
+    >
+      <div
+        className={
+          styles.overlay
+        }
+      />
 
-      <div className={styles.searchCard}>
-        {/* Top Tabs */}
-        <div className={styles.tabs}>
-          {tabs.map((tab) => (
-            <span
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`${styles.tab} ${activeTab === tab.id ? styles.tabActive : ""}`}
-            >
-              {tab.name}
-            </span>
-          ))}
+      <div
+        className={
+          styles.heroInner
+        }
+      >
+        {/* =================================================
+            HEADING
+        ================================================= */}
+
+        <div
+          className={
+            styles.headingArea
+          }
+        >
+          <h1>
+            Find the Right
+            Space for You
+          </h1>
+
+          <p>
+            From homes to
+            offices, shops,
+            showrooms and
+            warehouses,
+            explore rental
+            properties across
+            prime locations in
+            the UAE.
+          </p>
         </div>
 
-        {/* 1. PROPERTIES & NEW PROJECTS FORM */}
-        {(activeTab === "properties" || activeTab === "new-projects") && (
-          <form onSubmit={handleSearchSubmit}>
-            {/* Row 1: Buy/Rent + Location + Search */}
-            <div className={styles.filterRow1}>
-              <div className={styles.toggleGroup}>
-                <button
-                  type="button"
-                  onClick={() => setPurpose("Buy")}
-                  className={`${styles.toggleBtn} ${purpose === "Buy" ? styles.toggleBtnActive : ""}`}
-                >
-                  Buy
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPurpose("Rent")}
-                  className={`${styles.toggleBtn} ${purpose === "Rent" ? styles.toggleBtnActive : ""}`}
-                >
-                  Rent
-                </button>
+        {/* =================================================
+            SEARCH FORM
+        ================================================= */}
+
+        <form
+          className={
+            styles.searchArea
+          }
+          onSubmit={
+            handleSearchSubmit
+          }
+        >
+          {/* ===============================================
+              LOCATION SEARCH
+          =============================================== */}
+
+          <div
+            className={
+              styles.locationSearchCard
+            }
+          >
+            <div
+              className={
+                styles.locationLeading
+              }
+            >
+              <div
+                className={
+                  styles.iconCircle
+                }
+              >
+                <MapPinSearch
+                  size={20}
+                />
               </div>
 
-              {/* Location Input with Autocomplete suggestions under it */}
-              <div className={styles.locationInputWrapper}>
-                <span className={styles.locationIcon}>📍</span>
+              <div
+                className={
+                  styles.locationField
+                }
+              >
+                <label>
+                  LOCATION
+                </label>
+
                 <input
-                  type="text"
-                  value={location}
-                  onChange={(e) => handleLocationChange(e.target.value)}
+                  value={
+                    location
+                  }
+                  onChange={(e) =>
+                    handleLocationChange(
+                      e.target
+                        .value
+                    )
+                  }
                   onBlur={() => {
-                    // Small delay to let click navigate before suggestions disappear
-                    setTimeout(() => setSuggestions([]), 200);
+                    setTimeout(
+                      () =>
+                        setSuggestions(
+                          []
+                        ),
+                      200
+                    );
                   }}
-                  placeholder="Enter location (e.g. Dubai Marina, Saadiyat Island)"
-                  className={styles.locationInput}
+                  placeholder="Enter location (e.g. Al Qusais, Al Nahda)"
                 />
 
-                {/* Suggestions Dropdown Card */}
-                {suggestions.length > 0 && (
-                  <div className={styles.autocompleteDropdown}>
-                    {suggestions.map((item) => {
-                      let imagesList: string[] = [];
-                      try {
-                        imagesList = JSON.parse(item.images || "[]");
-                      } catch (e) {}
+                {/* =========================================
+                    AUTOCOMPLETE
+                ========================================= */}
 
-                      return (
-                        <div
-                          key={item.id}
-                          onMouseDown={() => {
-                            window.location.href = `/property/${item.id}`;
+                {suggestions.length >
+                  0 && (
+                  <div
+                    className={
+                      styles.autocompleteDropdown
+                    }
+                  >
+                    {suggestions.map(
+                      (
+                        property
+                      ) => (
+                        <button
+                          type="button"
+                          key={`suggestion-${property.id}`}
+                          className={
+                            styles.suggestionItem
+                          }
+                          onMouseDown={(
+                            event
+                          ) => {
+                            /*
+                             * Prevent blur
+                             * before selection.
+                             */
+                            event.preventDefault();
+
+                            setLocation(
+                              property.location
+                            );
+
+                            setSuggestions(
+                              []
+                            );
                           }}
-                          className={styles.suggestionItem}
                         >
-                          <img
-                            src={imagesList[0] || "/luxury_villa_hero.jpg"}
-                            alt={item.title}
-                            className={styles.suggestionThumb}
+                          <MapPin
+                            size={
+                              17
+                            }
                           />
-                          <div className={styles.suggestionContent}>
-                            <div className={styles.suggestionTitle}>{item.title}</div>
-                            <div className={styles.suggestionMeta}>
-                              📍 {item.location} • {item.beds} Bed • {item.type}
-                            </div>
+
+                          <div>
+                            <strong>
+                              {
+                                property.location
+                              }
+                            </strong>
+
+                            <span>
+                              {
+                                property.title
+                              }
+                            </span>
                           </div>
-                          <div className={styles.suggestionPrice}>
-                            {formatPrice(item.price)}
-                          </div>
-                        </div>
-                      );
-                    })}
+                        </button>
+                      )
+                    )}
                   </div>
                 )}
               </div>
+            </div>
 
-              <button type="submit" className={styles.searchBtn}>
-                Search
+            {/* SEARCH BUTTON */}
+
+            <div
+              className={
+                styles.locationRight
+              }
+            >
+              <button
+                type="submit"
+                className={
+                  styles.searchButton
+                }
+              >
+                <span>
+                  Search Rentals
+                </span>
+
+                <span
+                  className={
+                    styles.searchArrow
+                  }
+                >
+                  →
+                </span>
               </button>
             </div>
+          </div>
 
-            {/* Row 2: Status + property type + rental period + beds + price */}
-            <div className={styles.filterRow2}>
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                disabled={activeTab === "new-projects"}
-                className={styles.select}
+          {/* ===============================================
+              FILTER CARDS
+          =============================================== */}
+
+          <div
+            ref={
+              filtersRef
+            }
+            className={
+              styles.filterCards
+            }
+          >
+            {/* =============================================
+                PROPERTY TYPE
+            ============================================= */}
+
+            <div
+              className={
+                styles.filterWrapper
+              }
+            >
+              <button
+                type="button"
+                className={
+                  styles.filterCard
+                }
+                onClick={() => {
+                  setIsPropertyTypeOpen(
+                    (
+                      open
+                    ) =>
+                      !open
+                  );
+
+                  setIsPriceOpen(
+                    false
+                  );
+
+                  setIsBedsOpen(
+                    false
+                  );
+                }}
+                aria-expanded={
+                  isPropertyTypeOpen
+                }
               >
-                <option value="All">All Statuses</option>
-                <option value="Ready">Ready</option>
-                <option value="Off-Plan">Off-Plan</option>
-              </select>
+                <div
+                  className={
+                    styles.filterIcon
+                  }
+                >
+                  <Building2
+                    size={
+                      20
+                    }
+                  />
+                </div>
 
-              <div className={styles.propertyTypeWrapper}>
-                <button type="button" className={styles.propertyTypeTrigger} onClick={() => setIsPropertyTypeOpen((isOpen) => !isOpen)} aria-expanded={isPropertyTypeOpen}>
-                  <span>{propertyCategory}</span><span aria-hidden="true">⌄</span>
-                </button>
-                {isPropertyTypeOpen && (
-                  <div className={styles.propertyTypePanel}>
-                    <div className={styles.propertyTypeTabs}>
-                      {(["Residential", "Commercial"] as const).map((group) => (
-                        <button key={group} type="button" onClick={() => setPropertyGroup(group)} className={`${styles.propertyTypeTab} ${propertyGroup === group ? styles.propertyTypeTabActive : ""}`}>{group}</button>
-                      ))}
-                    </div>
-                    <div className={styles.propertyCategoryGrid}>
-                      {propertyCategories[propertyGroup].map((category) => (
-                        <button key={category} type="button" className={`${styles.propertyCategoryOption} ${propertyCategory === category ? styles.propertyCategoryOptionActive : ""}`} onClick={() => { setPropertyCategory(category); setType(propertyGroup); setIsPropertyTypeOpen(false); }}>
-                          <span className={styles.radioMark} aria-hidden="true" />{category}
+                <div
+                  className={
+                    styles.filterInfo
+                  }
+                >
+                  <span
+                    className={
+                      styles.filterLabel
+                    }
+                  >
+                    Property
+                    Type
+                  </span>
+
+                  <strong>
+                    {
+                      propertyCategory
+                    }
+                  </strong>
+                </div>
+
+                <ChevronDown
+                  size={15}
+                  className={`${styles.chevron} ${
+                    isPropertyTypeOpen
+                      ? styles.chevronOpen
+                      : ""
+                  }`}
+                />
+              </button>
+
+              {/* ===========================================
+                  PROPERTY TYPE PANEL
+              =========================================== */}
+
+              {isPropertyTypeOpen && (
+                <div
+                  className={
+                    styles.propertyTypePanel
+                  }
+                >
+                  {/* CATEGORY TABS */}
+
+                  <div
+                    className={
+                      styles.propertyTypeTabs
+                    }
+                  >
+                    {propertyCategories.map(
+                      (
+                        category
+                      ) => (
+                        <button
+                          key={
+                            category.categoryId
+                          }
+                          type="button"
+                          onClick={() =>
+                            setPropertyGroup(
+                              category.categoryId
+                            )
+                          }
+                          className={`${styles.propertyTypeTab} ${
+                            propertyGroup ===
+                            category.categoryId
+                              ? styles.propertyTypeTabActive
+                              : ""
+                          }`}
+                        >
+                          {formatCategoryName(
+                            category.categoryName
+                          )}
                         </button>
-                      ))}
-                    </div>
-                    <div className={styles.propertyTypeActions}>
-                      <button type="button" className={styles.resetPropertyType} onClick={() => { setPropertyCategory("All Properties"); setType("All"); setIsPropertyTypeOpen(false); }}>Reset</button>
-                      <button type="button" className={styles.donePropertyType} onClick={() => setIsPropertyTypeOpen(false)}>Done</button>
-                    </div>
+                      )
+                    )}
+                  </div>
+
+                  {/* ALL TYPES */}
+
+                  <button
+                    type="button"
+                    className={`${styles.dropdownOption} ${
+                      selectedUnitTypeId ===
+                      null
+                        ? styles.dropdownOptionActive
+                        : ""
+                    }`}
+                    onClick={
+                      selectAllTypes
+                    }
+                  >
+                    <span
+                      className={
+                        styles.radioMark
+                      }
+                    />
+
+                    <span>
+                      All Types
+                    </span>
+                  </button>
+
+                  {/* =========================================
+                      UNIT TYPES
+
+                      IMPORTANT:
+                      Only ONE propertyCategoryList.
+                  ========================================= */}
+
+                  <div
+                    className={
+                      styles.propertyCategoryList
+                    }
+                  >
+                    {selectedCategory
+                      ?.types
+                      .map(
+                        (
+                          type
+                        ) => (
+                          <button
+                            key={
+                              type.id
+                            }
+                            type="button"
+                            className={`${styles.dropdownOption} ${
+                              selectedUnitTypeId ===
+                              type.id
+                                ? styles.dropdownOptionActive
+                                : ""
+                            }`}
+                            onClick={() =>
+                              selectPropertyType(
+                                type.id,
+                                type.name
+                              )
+                            }
+                          >
+                            <span
+                              className={
+                                styles.radioMark
+                              }
+                            />
+
+                            <span>
+                              {formatUnitType(
+                                type.name
+                              )}
+                            </span>
+                          </button>
+                        )
+                      )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* =============================================
+                PRICE
+            ============================================= */}
+
+            <div
+              className={
+                styles.filterWrapper
+              }
+            >
+              <button
+                type="button"
+                className={
+                  styles.filterCard
+                }
+                onClick={() => {
+                  setIsPriceOpen(
+                    (
+                      open
+                    ) =>
+                      !open
+                  );
+
+                  setIsPropertyTypeOpen(
+                    false
+                  );
+
+                  setIsBedsOpen(
+                    false
+                  );
+                }}
+                aria-expanded={
+                  isPriceOpen
+                }
+              >
+                <div
+                  className={
+                    styles.filterIcon
+                  }
+                >
+                  <Tag
+                    size={
+                      20
+                    }
+                  />
+                </div>
+
+                <div
+                  className={
+                    styles.filterInfo
+                  }
+                >
+                  <span
+                    className={
+                      styles.filterLabel
+                    }
+                  >
+                    Price Range
+                  </span>
+
+                  <strong>
+                    {
+                      selectedPriceLabel
+                    }
+                  </strong>
+                </div>
+
+                <ChevronDown
+                  size={15}
+                  className={`${styles.chevron} ${
+                    isPriceOpen
+                      ? styles.chevronOpen
+                      : ""
+                  }`}
+                />
+              </button>
+
+              {isPriceOpen && (
+                <div
+                  className={
+                    styles.simpleDropdownPanel
+                  }
+                >
+                  {PRICE_OPTIONS.map(
+                    (
+                      option
+                    ) => (
+                      <button
+                        key={
+                          option.value
+                        }
+                        type="button"
+                        className={`${styles.dropdownOption} ${
+                          priceRange ===
+                          option.value
+                            ? styles.dropdownOptionActive
+                            : ""
+                        }`}
+                        onClick={() => {
+                          setPriceRange(
+                            option.value
+                          );
+
+                          setIsPriceOpen(
+                            false
+                          );
+                        }}
+                      >
+                        <span
+                          className={
+                            styles.radioMark
+                          }
+                        />
+
+                        <span>
+                          {
+                            option.label
+                          }
+                        </span>
+                      </button>
+                    )
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* =============================================
+                BEDS
+
+                Only Apartment should use this filter.
+            ============================================= */}
+
+            <div
+              className={
+                styles.filterWrapper
+              }
+            >
+              <button
+                type="button"
+                className={
+                  styles.filterCard
+                }
+                disabled={
+                  !isApartment
+                }
+                onClick={() => {
+                  if (
+                    !isApartment
+                  ) {
+                    return;
+                  }
+
+                  setIsBedsOpen(
+                    (
+                      open
+                    ) =>
+                      !open
+                  );
+
+                  setIsPriceOpen(
+                    false
+                  );
+
+                  setIsPropertyTypeOpen(
+                    false
+                  );
+                }}
+                aria-expanded={
+                  isBedsOpen
+                }
+                aria-disabled={
+                  !isApartment
+                }
+              >
+                <div
+                  className={
+                    styles.filterIcon
+                  }
+                >
+                  <BedDouble
+                    size={
+                      20
+                    }
+                  />
+                </div>
+
+                <div
+                  className={
+                    styles.filterInfo
+                  }
+                >
+                  <span
+                    className={
+                      styles.filterLabel
+                    }
+                  >
+                    Beds
+                  </span>
+
+                  <strong>
+                    {isApartment
+                      ? selectedBedLabel
+                      : "Select Property Type"}
+                  </strong>
+                </div>
+
+                <ChevronDown
+                  size={15}
+                  className={`${styles.chevron} ${
+                    isBedsOpen
+                      ? styles.chevronOpen
+                      : ""
+                  }`}
+                />
+              </button>
+
+              {isApartment &&
+                isBedsOpen && (
+                  <div
+                    className={
+                      styles.simpleDropdownPanel
+                    }
+                  >
+                    {BED_OPTIONS.map(
+                      (
+                        option
+                      ) => (
+                        <button
+                          key={
+                            option.value
+                          }
+                          type="button"
+                          className={`${styles.dropdownOption} ${
+                            beds ===
+                            option.value
+                              ? styles.dropdownOptionActive
+                              : ""
+                          }`}
+                          onClick={() => {
+                            setBeds(
+                              option.value
+                            );
+
+                            setIsBedsOpen(
+                              false
+                            );
+                          }}
+                        >
+                          <span
+                            className={
+                              styles.radioMark
+                            }
+                          />
+
+                          <span>
+                            {
+                              option.label
+                            }
+                          </span>
+                        </button>
+                      )
+                    )}
                   </div>
                 )}
-              </div>
-
-              <select value={rentalPeriod} onChange={(e) => setRentalPeriod(e.target.value)} className={styles.select} aria-label="Rental period">
-                <option value="Yearly">Yearly</option>
-                <option value="Monthly">Monthly</option>
-              </select>
-
-              <select
-                value={beds}
-                onChange={(e) => setBeds(e.target.value)}
-                className={styles.select}
-              >
-                <option value="All">Beds & Baths</option>
-                <option value="1">1 Bedroom</option>
-                <option value="2">2 Bedrooms</option>
-                <option value="3">3 Bedrooms</option>
-                <option value="4">4 Bedrooms</option>
-                <option value="5">5+ Bedrooms</option>
-              </select>
-
-              <select
-                value={priceRange}
-                onChange={(e) => setPriceRange(e.target.value)}
-                className={styles.select}
-              >
-                <option value="All">Price (AED)</option>
-                <option value="0-500000">Under 500k AED</option>
-                <option value="500000-1500000">500k - 1.5M AED</option>
-                <option value="1500000-4000000">1.5M - 4.0M AED</option>
-                <option value="4000000-10000000">4.0M - 10M AED</option>
-                <option value="10000000-">10M+ AED</option>
-              </select>
-            </div>
-          </form>
-        )}
-
-        {/* 2. AGENTS TAB */}
-        {activeTab === "agents" && (
-          <div>
-            <div className={styles.panelTitle}>Our Elite Broker Team</div>
-            <div className={styles.panelSub}>Connect with certified professionals who know your target neighborhoods inside out.</div>
-
-            <div className={styles.agentsGrid}>
-              {agents.map((agent, i) => (
-                <div key={i} className={styles.agentCard}>
-                  <div className={styles.agentAvatar}>{agent.initial}</div>
-                  <div className={styles.agentName}>{agent.name}</div>
-                  <div className={styles.agentSpec}>{agent.spec}</div>
-                  <div className={styles.agentPhone}>{agent.phone}</div>
-                </div>
-              ))}
             </div>
           </div>
-        )}
+        </form>
       </div>
     </section>
   );

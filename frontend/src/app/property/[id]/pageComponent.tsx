@@ -2,25 +2,10 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import styles from "./propertyDetail.module.css";
+import styles from "./property.module.css";
 import Footer from "../../components/Footer";
 import Header from "../../components/Header";
-
-interface Property {
-  id: number;
-  title: string;
-  description: string;
-  price: number;
-  location: string;
-  type: string;
-  purpose: string;
-  status: string;
-  beds: number;
-  baths: number;
-  area: number;
-  images: string; // JSON string array
-  erpId: string | null;
-}
+import type { Property } from "@/lib/propertyApi";
 
 interface PropertyClientProps {
   property: Property;
@@ -30,7 +15,7 @@ export default function PropertyClient({ property }: PropertyClientProps) {
   let imagesList: string[] = [];
   try {
     imagesList = JSON.parse(property.images || "[]");
-  } catch (e) {}
+  } catch {}
 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [enquiry, setEnquiry] = useState({
@@ -44,7 +29,7 @@ export default function PropertyClient({ property }: PropertyClientProps) {
   });
 
   const [submitted, setSubmitted] = useState(false);
-  const [submittedDetails, setSubmittedDetails] = useState<any | null>(null);
+  const [submittedDetails, setSubmittedDetails] = useState<typeof enquiry | null>(null);
   const [showAllAmenities, setShowAllAmenities] = useState(false);
   const [bookingOpen, setBookingOpen] = useState(false);
   const [bookingSent, setBookingSent] = useState(false);
@@ -129,7 +114,7 @@ export default function PropertyClient({ property }: PropertyClientProps) {
   return (
     <div style={{ backgroundColor: "#f8fafc", minHeight: "100vh" }}>
       {/* Unified Sticky Header */}
-      <Header />
+
 
       {/* Main Details Body */}
       <div className={styles.container}>

@@ -3,26 +3,10 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import styles from "./admin.module.css";
+import { getProperties, type Property } from "@/lib/propertyApi";
 
 const nationalityCodes = "AF AL DZ AD AO AG AR AM AU AT AZ BS BH BD BB BY BE BZ BJ BT BO BA BW BR BN BG BF BI CV KH CM CA CF TD CL CN CO KM CG CD CR CI HR CU CY CZ DK DJ DM DO EC EG SV GQ ER EE SZ ET FJ FI FR GA GM GE DE GH GR GD GT GN GW GY HT HN HU IS IN ID IR IQ IE IL IT JM JP JO KZ KE KI KP KR KW KG LA LV LB LS LR LY LI LT LU MG MW MY MV ML MT MH MR MU MX FM MD MC MN ME MA MZ MM NA NR NP NL NZ NI NE NG MK NO OM PK PW PA PG PY PE PH PL PT QA RO RU RW KN LC VC WS SM ST SA SN RS SC SL SG SK SI SB SO ZA SS ES LK SD SR SE CH SY TJ TZ TH TL TG TO TT TN TR TM TV UG UA AE GB US UY UZ VU VA VE VN YE ZM ZW".split(" ");
 const countryNames = new Intl.DisplayNames(["en"], { type: "region" });
-
-interface Property {
-  id: number;
-  title: string;
-  description: string;
-  price: number;
-  location: string;
-  type: string;
-  purpose: string;
-  status: string;
-  beds: number;
-  baths: number;
-  area: number;
-  images: string; // JSON string array
-  erpId: string | null;
-  createdAt: string;
-}
 
 interface UpcomingProject {
   id: number;
@@ -169,9 +153,7 @@ export default function AdminDashboard() {
   const fetchProperties = async () => {
     try {
       setLoadingListings(true);
-      const res = await fetch("/api/properties");
-      if (!res.ok) throw new Error("Failed to fetch properties");
-      const data = await res.json();
+      const { properties: data } = await getProperties({ pageSize: 10 });
       setProperties(data);
     } catch (err: any) {
       setErrorMessage(err.message || "Failed to load listings.");
@@ -360,112 +342,10 @@ export default function AdminDashboard() {
     }
   };
 
-  // Delete active listing
-  const handleDeleteListing = async (id: number) => {
-    if (userRole === "Viewer") return;
-    if (!confirm("Are you sure you want to delete this property listing?")) return;
-
-    try {
-      const res = await fetch(`/api/properties/${id}`, {
-        method: "DELETE",
-      });
-
-      if (!res.ok) throw new Error("Failed to delete property.");
-
-      setStatusMessage("Property deleted successfully.");
-      setProperties(properties.filter((p) => p.id !== id));
-    } catch (err: any) {
-      setErrorMessage(err.message || "Failed to delete property.");
-    }
-  };
-
-  // Add pictures to active listing
-  const handleImageUpload = async (id: number, files: FileList | null) => {
-    if (userRole === "Viewer") return;
-    if (!files || files.length === 0) return;
-
-    try {
-      setStatusMessage("Uploading images...");
-      setErrorMessage("");
-
-      const formData = new FormData();
-      for (let i = 0; i < files.length; i++) {
-        formData.append("images", files[i]);
-      }
-
-      const res = await fetch(`/api/properties/${id}/images`, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!res.ok) throw new Error("Failed to upload images.");
-
-      setStatusMessage("Images uploaded successfully!");
-      fetchProperties();
-    } catch (err: any) {
-      setErrorMessage(err.message || "Failed to upload images.");
-      setStatusMessage("");
-    }
-  };
-
-  // Handle manual listing submit
+  // Properties are read-only here because the backend manages them from ERP.
   const handleAddPropertySubmit = async (e: React.FormEvent) => {
-    if (userRole === "Viewer") return;
     e.preventDefault();
-    setSavingListing(true);
-    setErrorMessage("");
-    setStatusMessage("");
-
-    try {
-      const payload = new FormData();
-      payload.append("title", listingForm.title);
-      payload.append("description", listingForm.description);
-      payload.append("price", listingForm.price);
-      payload.append("location", listingForm.location);
-      payload.append("type", listingForm.type);
-      payload.append("purpose", listingForm.purpose);
-      payload.append("status", listingForm.status);
-      payload.append("beds", listingForm.beds);
-      payload.append("baths", listingForm.baths);
-      payload.append("area", listingForm.area);
-
-      if (listingImages) {
-        for (let i = 0; i < listingImages.length; i++) {
-          payload.append("images", listingImages[i]);
-        }
-      }
-
-      const res = await fetch("/api/properties", {
-        method: "POST",
-        body: payload,
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || "Failed to create property listing.");
-      }
-
-      setStatusMessage("New property listing created successfully!");
-      setListingForm({
-        title: "",
-        description: "",
-        price: "",
-        location: "",
-        type: "Residential",
-        purpose: "Rent",
-        status: "Ready",
-        beds: "1",
-        baths: "1",
-        area: "",
-      });
-      setListingImages(null);
-      fetchProperties();
-      setActiveTab("listings");
-    } catch (err: any) {
-      setErrorMessage(err.message || "An unexpected error occurred saving listing.");
-    } finally {
-      setSavingListing(false);
-    }
+    setErrorMessage("Properties are managed by the ERP backend. Use ERP Sync to refresh frontend listings.");
   };
 
   // Handle manual upcoming project submit
@@ -1143,8 +1023,8 @@ export default function AdminDashboard() {
           <div>
             <div className={styles.contentHeader}>
               <div>
-                <h2>Add Active Property Listing</h2>
-                <p>Create a manual residential or commercial asset listing directly in your local SQLite database.</p>
+                <h2>ERP Property Management</h2>
+                <p>Properties are read from the backend ERP database. Create or edit them in ERP, then run ERP Sync.</p>
               </div>
             </div>
 
@@ -1295,8 +1175,8 @@ export default function AdminDashboard() {
               </div>
 
               <div className={styles.submitRow}>
-                <button type="submit" disabled={savingListing} className={`${styles.btn} ${styles.btnPrimary}`}>
-                  {savingListing ? "Creating Listing..." : "Save Property Listing"}
+                    <button type="submit" disabled className={`${styles.btn} ${styles.btnPrimary}`}>
+                      Managed in ERP
                 </button>
               </div>
             </form>

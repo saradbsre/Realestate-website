@@ -19,7 +19,17 @@
   color: #64748b;
   font-size: 15px;
 }
+.metaText {
+  color: #23395b;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.45;
 
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -28,7 +38,7 @@
   margin: 0 auto;
 }
 
-.card {
+/* .card {
   background: white;
   border-radius: 12px;
   overflow: hidden;
@@ -38,13 +48,13 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-}
+} */
 
-.card:hover {
+/* .card:hover {
   transform: translateY(-4px);
   box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.1), 0 8px 8px -6px rgba(0, 0, 0, 0.1);
   border-color: #cbd5e1;
-}
+} */
 
 .imageWrapper {
   position: relative;
@@ -119,17 +129,23 @@
 }
 
 .content {
-  padding: 20px;
+  padding: 22px 22px 18px;
   display: flex;
   flex-direction: column;
-  flex-grow: 1;
+  gap: 6px;
+}
+
+.priceBlock {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
 }
 
 .price {
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 800;
-  color: #0b1a30;
-  margin-bottom: 6px;
+  color: #0b2957;
+  line-height: 1.2;
 }
 
 .pricePeriod {
@@ -149,14 +165,139 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
 }
+.fromText {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0b2957;
+  margin-right: 4px;
+}
+
+.pricePeriod {
+  font-size: 14px;
+  font-weight: 600;
+  color: #5c6f87;
+}
+
+.priceOnRequest {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0b2957;
+}
+
+.title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #162b49;
+  line-height: 1.35;
+  margin: 0;
+}
 
 .location {
   display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: #6b7c93;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.locationIcon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.locationText {
+  color: #667892;
+  font-weight: 500;
+}
+
+.divider {
+  height: 1px;
+  background: #e7edf5;
+  width: 100%;
+}
+
+.metaRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.metaItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: #6b7c93;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.metaIcon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.metaText {
+  color: #23395b;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.45;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.bookingActions {
+  display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 13px;
-  color: #64748b;
-  margin-bottom: 16px;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.vacancyBadge {
+  flex: 1;
+  text-align: center;
+  background: #eef5ff;
+  color: #14467d;
+  border: 1px solid #c9dbf2;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.bookNowButton {
+  flex: 1;
+  background: #0f4b8c;
+  color: #fff;
+  border: none;
+  padding: 13px 16px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.bookNowButton:hover {
+  background: #0b3f77;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid #e5ebf3;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 6px 18px rgba(13, 39, 80, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  text-decoration: none;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 24px rgba(13, 39, 80, 0.14);
 }
 
 .specs {
@@ -184,4 +325,45 @@
   color: #64748b;
   grid-column: 1 / -1;
   font-size: 16px;
+}
+.viewAllWrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 34px;
+}
+
+.viewAllButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  min-width: 190px;
+  padding: 13px 22px;
+
+  border: 1px solid #0b5794;
+  border-radius: 10px;
+
+  background: #ffffff;
+  color: #0b5794;
+
+  font-size: 14px;
+  font-weight: 700;
+
+  text-decoration: none;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.viewAllButton:hover {
+  background: #0b5794;
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.viewAllButton span {
+  font-size: 18px;
 }

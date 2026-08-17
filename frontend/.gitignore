@@ -1,0 +1,7 @@
+node_modules
+AGENTS.md
+CLAUDE.md
+.next/
+eslint.config.mjs
+next-env.d.ts
+next.config.ts

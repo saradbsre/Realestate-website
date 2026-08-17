@@ -34,7 +34,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 40px;
+  padding: 5px 40px;
   background-color: #ffffff; /* Solid White */
   color: #1e293b;
   position: sticky;
@@ -96,7 +96,7 @@
 }
 
 .navLink {
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 600;
   color: #334155;
   transition: color 0.2s;

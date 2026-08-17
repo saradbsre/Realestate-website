@@ -1,15 +1,31 @@
 import type { Metadata } from "next";
+
 import "./globals.css";
 
+import Header from "./components/Header";
+import KeepBackendAlive from "./components/KeepBackendAlive";
+
 export const metadata: Metadata = {
-  title: "ABDULWAHED BIN SHABIB REAL ESTATE L.L.C | Premium Direct Rentals",
-  description: "Direct property owners in the UAE since 1981. We own, lease, and manage an exclusive portfolio of residential apartments, villas, and commercial spaces.",
+  title: "Abdulwahed Bin Shabib Real Estate",
+  description:
+    "Residential and commercial properties for rent in the UAE.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <KeepBackendAlive />
+        <Header />
+
+        <main>
+          {children}
+        </main>
+      </body>
     </html>
   );
 }
