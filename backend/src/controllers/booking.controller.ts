@@ -1,19 +1,324 @@
-import { NextFunction, Request, Response } from "express";
-import { hasActiveNationalityRejection, insertBooking } from "../repositories/booking.repository";
+import type {
+  Request,
+  Response,
+} from "express";
 
-export async function createBooking(req: Request, res: Response, next: NextFunction) {
+import {
+  createBooking,
+  findBookingProperty,
+} from "../repositories/booking.repository";
+
+import {
+  cleanText,
+  validateBookingFields,
+  validatePassportFile,
+} from "../utils/bookingValidation";
+
+import {
+  sendBookingEmails,
+} from "../utils/bookingEmail";
+
+export async function submitBooking(
+  req: Request,
+  res: Response
+) {
   try {
-    const { propertyId, propertyName, name, email, phone, nationality } = req.body;
-    const file = req.file;
-    if (![propertyId, propertyName, name, email, phone, nationality].every(Boolean) || !file) return res.status(400).json({ error: "Complete all fields and attach a passport copy." });
-    if (!Number.isInteger(Number(propertyId)) || !["application/pdf", "image/jpeg", "image/png"].includes(file.mimetype)) return res.status(400).json({ error: "Passport must be a PDF, JPG, or PNG under 5 MB." });
-    const normalizedNationality = String(nationality).trim();
-    const autoRejected = await hasActiveNationalityRejection(normalizedNationality);
-    const booking = await insertBooking({
-      propertyId: Number(propertyId), propertyName: String(propertyName).trim(), name: String(name).trim(),
-      email: String(email).trim(), phone: String(phone).trim(), nationality: normalizedNationality,
-      passportPath: `data:${file.mimetype};base64,${file.buffer.toString("base64")}`,
-    }, autoRejected);
-    return res.status(201).json({ success: true, bookingId: booking.id, status: booking.status, autoRejected });
-  } catch (error) { return next(error); }
+    /* =====================================================
+       READ FIELDS
+    ===================================================== */
+
+    const propertyId =
+      cleanText(
+        req.body.propertyId
+      );
+
+    const submittedPropertyName =
+      cleanText(
+        req.body.propertyName
+      );
+
+    const unitReference =
+      cleanText(
+        req.body.unitReference
+      );
+
+    const unitType =
+      cleanText(
+        req.body.unitType
+      );
+
+    const customerName =
+      cleanText(
+        req.body.name
+      );
+
+    const email =
+      cleanText(
+        req.body.email
+      ).toLowerCase();
+
+    const phone =
+      cleanText(
+        req.body.phone
+      );
+
+    const nationality =
+      cleanText(
+        req.body.nationality
+      );
+
+    /* =====================================================
+       VALIDATE BASIC FIELDS
+    ===================================================== */
+
+    const fieldValidation =
+      validateBookingFields({
+        propertyId,
+        propertyName:
+          submittedPropertyName,
+        name:
+          customerName,
+        email,
+        phone,
+        nationality,
+      });
+
+    if (
+      !fieldValidation.valid
+    ) {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          error:
+            fieldValidation.error,
+        });
+    }
+
+    /* =====================================================
+       VALIDATE UNIT DETAILS
+    ===================================================== */
+
+    if (
+      unitReference &&
+      unitReference.length > 100
+    ) {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          error:
+            "Invalid unit reference.",
+        });
+    }
+
+    if (
+      unitType &&
+      unitType.length > 150
+    ) {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          error:
+            "Invalid unit type.",
+        });
+    }
+
+    /* =====================================================
+       VALIDATE PASSPORT
+    ===================================================== */
+
+    const passport =
+      req.file;
+
+    const passportValidation =
+      validatePassportFile(
+        passport
+      );
+
+    if (
+      !passportValidation.valid
+    ) {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          error:
+            passportValidation.error,
+        });
+    }
+
+    if (!passport) {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          error:
+            "Passport copy is required.",
+        });
+    }
+
+    /* =====================================================
+       VERIFY PROPERTY
+    ===================================================== */
+
+    const property =
+      await findBookingProperty(
+        propertyId
+      );
+
+    if (!property) {
+      return res
+        .status(404)
+        .json({
+          success: false,
+          error:
+            "The selected property could not be found.",
+        });
+    }
+
+    /*
+     * Use ERP property name,
+     * not frontend property name.
+     */
+
+    const propertyName =
+      cleanText(
+        property.propertyName
+      );
+
+    /* =====================================================
+       BOOKING STATUS
+    ===================================================== */
+
+    const autoRejected =
+      false;
+
+    const declineReason:
+      | string
+      | null =
+      null;
+
+    const status =
+      autoRejected
+        ? "Declined"
+        : "Pending";
+
+    /* =====================================================
+       INSERT BOOKING
+    ===================================================== */
+
+    const booking =
+      await createBooking({
+        propertyId,
+        propertyName,
+
+        /*
+         * Directly save values
+         * received from frontend.
+         */
+        unitReference:
+          unitReference || null,
+
+        unitType:
+          unitType || null,
+
+        customerName,
+        email,
+        phone,
+        nationality,
+
+        passportFile:
+          passport.buffer,
+
+        passportFileName:
+          passport.originalname,
+
+        passportMimeType:
+          passport.mimetype,
+
+        passportFileSize:
+          passport.size,
+
+        status,
+
+        isAutoRejected:
+          autoRejected,
+
+        declineReason,
+      });
+
+    /* =====================================================
+       SEND EMAIL
+    ===================================================== */
+
+    sendBookingEmails({
+      bookingId:
+        booking.BookingId,
+
+      propertyId,
+
+      propertyName,
+
+      customerName,
+
+      email,
+
+      phone,
+
+      nationality,
+
+      passportBuffer:
+        passport.buffer,
+
+      passportFilename:
+        passport.originalname,
+
+      passportMimeType:
+        passport.mimetype,
+    }).catch(
+      (error) => {
+        console.error(
+          "Booking email failed:",
+          error
+        );
+      }
+    );
+
+    /* =====================================================
+       RESPONSE
+    ===================================================== */
+
+    return res
+      .status(201)
+      .json({
+        success: true,
+
+        message:
+          "Booking request submitted successfully.",
+
+        bookingId:
+          booking.BookingId,
+
+        status:
+          booking.Status,
+
+        autoRejected,
+      });
+  } catch (error) {
+    console.error(
+      "Booking submission failed:",
+      error
+    );
+
+    return res
+      .status(500)
+      .json({
+        success: false,
+
+        error:
+          "Unable to submit booking. Please try again.",
+      });
+  }
 }

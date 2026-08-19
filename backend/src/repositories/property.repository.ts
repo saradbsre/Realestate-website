@@ -16,15 +16,7 @@ export interface PropertySearchParams {
 
   pageSize?: number;
 }
-/**
- * Property listing/search API.
- *
- * One returned row represents a grouped website listing:
- * Building + Property Type + Area + Rent + Purpose.
- *
- * This prevents every individual vacant ERP unit from appearing
- * as a separate property card.
- */
+
 export async function findAllProperties(
   filters: PropertySearchParams
 ) {
@@ -1038,7 +1030,7 @@ export async function findVacantUnitsByBuildingId(
             -- UNIT
             ------------------------------------
 
-            U.Unit_RefNo
+            U.ucat_id
                 AS referenceNo,
 
             U.unit_master_desc

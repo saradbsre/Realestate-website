@@ -1,10 +1,24 @@
-import { Router } from "express";
-import multer from "multer";
-import { createBooking } from "../controllers/booking.controller";
+import {
+  Router,
+} from "express";
 
-const router = Router();
-const upload = multer({ limits: { fileSize: 5 * 1024 * 1024 } });
+import {
+  bookingUpload,
+} from "../config/bookingUpload";
 
-router.post("/", upload.single("passport"), createBooking);
+import {
+  submitBooking,
+} from "../controllers/booking.controller";
+
+const router =
+  Router();
+
+router.post(
+  "/",
+  bookingUpload.single(
+    "passport"
+  ),
+  submitBooking
+);
 
 export default router;

@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { readSession } from "../middleware/auth";
 import { verifyTOTP } from "../lib/totp";
 import { clearOtp, findUserByUsername, saveEmailOtp } from "../repositories/auth.repository";
-import { findAllBookings, updateBookingStatus } from "../repositories/booking.repository";
+
 
 export async function login(req: Request, res: Response, next: NextFunction) {
   try {
@@ -41,16 +41,16 @@ export function logout(_req: Request, res: Response) {
   return res.json({ success: true });
 }
 
-export async function getBookings(_req: Request, res: Response, next: NextFunction) {
-  try { return res.json(await findAllBookings()); }
-  catch (error) { return next(error); }
-}
+// export async function getBookings(_req: Request, res: Response, next: NextFunction) {
+//   try { return res.json(await findAllBookings()); }
+//   catch (error) { return next(error); }
+// }
 
-export async function updateBooking(req: Request, res: Response, next: NextFunction) {
-  try {
-    const { id, status } = req.body;
-    if (!Number.isInteger(Number(id)) || !["Pending", "Confirmed", "Declined"].includes(status)) return res.status(400).json({ error: "Invalid booking update" });
-    const booking = await updateBookingStatus(Number(id), status);
-    return booking ? res.json(booking) : res.status(404).json({ error: "Booking not found" });
-  } catch (error) { return next(error); }
-}
+// export async function updateBooking(req: Request, res: Response, next: NextFunction) {
+//   try {
+//     const { id, status } = req.body;
+//     if (!Number.isInteger(Number(id)) || !["Pending", "Confirmed", "Declined"].includes(status)) return res.status(400).json({ error: "Invalid booking update" });
+//     const booking = await updateBookingStatus(Number(id), status);
+//     return booking ? res.json(booking) : res.status(404).json({ error: "Booking not found" });
+//   } catch (error) { return next(error); }
+// }
