@@ -42,13 +42,19 @@ export async function findAllProperties(
   const offset =
     (page - 1) * pageSize;
 
+    const normalizedSearch =
+  filters.search
+    ?.replace(/,/g, " ")
+    .replace(/\s+/g, " ")
+    .trim() || null;
+
   const request = db
     .request()
 
     .input(
       "Search",
       sql.NVarChar(300),
-      filters.search || null
+     normalizedSearch
     )
 
     .input(
@@ -485,34 +491,33 @@ B.PriorityOrder
         ================================================
         */
 
-        AND
-        (
-            @Search IS NULL
+       AND
+(
+    @Search IS NULL
 
-            OR B.build_Add
-               LIKE
-               '%' +
-               @Search +
-               '%'
+    OR LTRIM(RTRIM(ISNULL(B.build_Add, '')))
+        LIKE '%' + @Search + '%'
 
-            OR B.build_neigh
-               LIKE
-               '%' +
-               @Search +
-               '%'
+    OR LTRIM(RTRIM(ISNULL(B.build_neigh, '')))
+        LIKE '%' + @Search + '%'
 
-            OR A.area_desc
-               LIKE
-               '%' +
-               @Search +
-               '%'
+    OR LTRIM(RTRIM(ISNULL(A.area_desc, '')))
+        LIKE '%' + @Search + '%'
 
-            OR P.place_desc
-               LIKE
-               '%' +
-               @Search +
-               '%'
+    OR LTRIM(RTRIM(ISNULL(P.place_desc, '')))
+        LIKE '%' + @Search + '%'
+
+    OR
+    LTRIM(
+        RTRIM(
+            ISNULL(B.build_Add, '') + ' ' +
+            ISNULL(B.build_neigh, '') + ' ' +
+            ISNULL(A.area_desc, '') + ' ' +
+            ISNULL(P.place_desc, '')
         )
+    )
+    LIKE '%' + @Search + '%'
+)
 
 
     /*
@@ -810,34 +815,33 @@ export async function countProperties(
           LOCATION
           */
 
-          AND
-          (
-              @Search IS NULL
+        AND
+(
+    @Search IS NULL
 
-              OR B.build_Add
-                 LIKE
-                 '%' +
-                 @Search +
-                 '%'
+    OR LTRIM(RTRIM(ISNULL(B.build_Add, '')))
+        LIKE '%' + @Search + '%'
 
-              OR B.build_neigh
-                 LIKE
-                 '%' +
-                 @Search +
-                 '%'
+    OR LTRIM(RTRIM(ISNULL(B.build_neigh, '')))
+        LIKE '%' + @Search + '%'
 
-              OR A.area_desc
-                 LIKE
-                 '%' +
-                 @Search +
-                 '%'
+    OR LTRIM(RTRIM(ISNULL(A.area_desc, '')))
+        LIKE '%' + @Search + '%'
 
-              OR P.place_desc
-                 LIKE
-                 '%' +
-                 @Search +
-                 '%'
-          );
+    OR LTRIM(RTRIM(ISNULL(P.place_desc, '')))
+        LIKE '%' + @Search + '%'
+
+    OR
+    LTRIM(
+        RTRIM(
+            ISNULL(B.build_Add, '') + ' ' +
+            ISNULL(B.build_neigh, '') + ' ' +
+            ISNULL(A.area_desc, '') + ' ' +
+            ISNULL(P.place_desc, '')
+        )
+    )
+    LIKE '%' + @Search + '%'
+);
     `);
 
   return Number(
