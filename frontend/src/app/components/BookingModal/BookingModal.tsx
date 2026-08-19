@@ -34,8 +34,8 @@ const NATIONALITY_CODES =
     .split(" ");
 
 const API_URL =
-  process.env.API_URL ||
-  "http://localhost:5000";
+  process.env.NEXT_PUBLIC_API_URL ||
+  "http://:5000";
 
 export default function BookingModal({
   property,
