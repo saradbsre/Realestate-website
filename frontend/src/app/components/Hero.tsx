@@ -288,7 +288,7 @@ export default function Hero({
     getProperties({
       page: 1,
 
-      pageSize: 100,
+      pageSize: 10,
     })
       .then(
         ({
