@@ -1,6 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, {
+  useEffect,
+  useState,
+} from "react";
 import styles from "./home.module.css";
 
 import Hero from "./components/Hero";
@@ -42,7 +45,35 @@ export default function HomeClient({
 
   const [searching, setSearching] =
     useState(false);
+useEffect(() => {
+  const loadInitialProperties = async () => {
+    try {
+      const { properties: results } =
+        await getProperties({
+          page: 1,
+          pageSize: 10,
+        });
 
+      setProperties(results);
+    } catch (error) {
+      console.error(
+        "Error loading initial properties:",
+        error
+      );
+    }
+  };
+
+  /*
+   * Only fetch if server did not
+   * provide initial properties.
+   */
+  if (
+    !initialProperties ||
+    initialProperties.length === 0
+  ) {
+    loadInitialProperties();
+  }
+}, [initialProperties]);
   const handleSearch = async (
     filters: HeroSearchFilters
   ) => {
@@ -129,6 +160,8 @@ export default function HomeClient({
       setSearching(false);
     }
   };
+
+  
 
   return (
     <div
