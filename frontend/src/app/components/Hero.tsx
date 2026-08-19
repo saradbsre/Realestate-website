@@ -543,6 +543,8 @@ export default function Hero({
 
       WAREHOUSE:
         "Warehouse",
+      STORE:
+        "Store",
     };
 
     const key =

@@ -100,134 +100,107 @@ export async function findAllProperties(
     ==========================================================
     */
 
-    WITH EligibleUnits AS
-    (
-        SELECT
-            U.*
-
-        FROM dbo.unit U
-
-        WHERE
-            ISNULL(
-                U.IsActive,
-                1
-            ) = 1
-
-            AND ISNULL(
-                U.unit_vacant,
-                'N'
-            ) = 'Y'
-
-
-            /*
-            ============================================
-            PROPERTY TYPE
-
-            Example:
-
-            APARTMENT
-            PurposeCodes =
-            STD,1BK,2BK,3BK,4BK
-
-            U.Purpose_type must exist
-            inside those codes.
-            ============================================
-            */
-
-            AND
+ WITH EligibleUnits AS
 (
-    @UnitTypeId IS NULL
+    SELECT
+        U.*
 
-    OR EXISTS
-    (
-        SELECT 1
-        FROM dbo.UnitType UT
+    FROM dbo.unit U
 
-        WHERE
-            UT.UnitTypeId = @UnitTypeId
+    WHERE
+        ISNULL(U.IsActive, 1) = 1
 
-            AND ISNULL(
-                UT.IsActive,
-                1
-            ) = 1
-
-            AND
-            ',' +
-            REPLACE(
-                ISNULL(
-                    UT.PurposeCodes,
-                    ''
-                ),
-                ' ',
-                ''
-            ) +
-            ','
-            LIKE
-            '%,' +
-            LTRIM(
-                RTRIM(
-                    U.Purpose_type
-                )
-            ) +
-            ',%'
-    )
-)
+        AND ISNULL(U.unit_vacant, 'N') = 'Y'
 
 
-            /*
-            ============================================
-            BEDS
+        /*
+        ===============================================
+        UNIT TYPE
 
-            Frontend sends:
+        Frontend:
+            Apartment -> UnitTypeId = 1
 
-            Studio -> STD
-            1 Bed   -> 1BK
-            2 Bed   -> 2BK
-            3 Bed   -> 3BK
-            4 Bed   -> 4BK
+        View:
+            1 | APARTMENT | STD
+            1 | APARTMENT | 1BK
+            1 | APARTMENT | 2BK
+            1 | APARTMENT | 3BK
+            1 | APARTMENT | 4BK
 
-            Exact ERP code comparison.
-            ============================================
-            */
+        Unit:
+            Purpose_type = STD / 1BK / 2BK ...
+        ===============================================
+        */
 
-            AND
+        AND
+        (
+            @UnitTypeId IS NULL
+
+            OR EXISTS
             (
-                @Beds IS NULL
+                SELECT 1
 
-                OR U.Purpose_type =
-                   @Beds
+                FROM dbo.vw_UnitType VUT
+
+                WHERE
+                    VUT.UnitTypeId = @UnitTypeId
+
+                    AND LTRIM(RTRIM(VUT.PurposeCode))
+                        =
+                        LTRIM(RTRIM(U.Purpose_type))
             )
+        )
 
 
-            /*
-            ============================================
-            MINIMUM PRICE
-            ============================================
-            */
+        /*
+        ===============================================
+        BED FILTER
 
-            AND
-            (
-                @MinPrice IS NULL
+        Studio -> STD
+        1 Bed  -> 1BK
+        2 Bed  -> 2BK
+        3 Bed  -> 3BK
+        4 Bed  -> 4BK
+        ===============================================
+        */
 
-                OR U.unit_annual_rent >=
-                   @MinPrice
-            )
+        AND
+        (
+            @Beds IS NULL
+
+            OR LTRIM(RTRIM(U.Purpose_type))
+                =
+                LTRIM(RTRIM(@Beds))
+        )
 
 
-            /*
-            ============================================
-            MAXIMUM PRICE
-            ============================================
-            */
+        /*
+        ===============================================
+        MIN PRICE
+        ===============================================
+        */
 
-            AND
-            (
-                @MaxPrice IS NULL
+        AND
+        (
+            @MinPrice IS NULL
 
-                OR U.unit_annual_rent <=
-                   @MaxPrice
-            )
-    ),
+            OR U.unit_annual_rent >= @MinPrice
+        )
+
+
+        /*
+        ===============================================
+        MAX PRICE
+        ===============================================
+        */
+
+        AND
+        (
+            @MaxPrice IS NULL
+
+            OR U.unit_annual_rent <= @MaxPrice
+        )
+),
 
 
 
@@ -368,14 +341,13 @@ export async function findAllProperties(
         -- WEBSITE PRIORITY
         ------------------------------------------------
 
-        ISNULL(
-            WBC.IsTopPriority,
-            0
-        ) AS isTopPriority,
+       ISNULL(
+    B.IsTopPriority,
+    0
+) AS isTopPriority,
 
-        WBC.PriorityOrder
-            AS priorityOrder,
-
+B.PriorityOrder
+    AS priorityOrder,
 
         ------------------------------------------------
         -- AVAILABLE TYPES
@@ -506,9 +478,7 @@ export async function findAllProperties(
            B.build_id
 
 
-    LEFT JOIN dbo.BuildingOrderConfig WBC
-        ON WBC.build_id =
-           B.build_id
+    
 
 
     WHERE
@@ -594,9 +564,8 @@ export async function findAllProperties(
 
         BPT.availableTypes,
 
-        WBC.IsTopPriority,
-
-        WBC.PriorityOrder
+       B.IsTopPriority,
+B.PriorityOrder
 
 
     /*
@@ -608,19 +577,19 @@ export async function findAllProperties(
     ORDER BY
 
         ISNULL(
-            WBC.IsTopPriority,
+            B.IsTopPriority,
             0
         ) DESC,
 
         CASE
 
             WHEN ISNULL(
-                WBC.IsTopPriority,
+                B.IsTopPriority,
                 0
             ) = 1
 
             THEN ISNULL(
-                WBC.PriorityOrder,
+                B.PriorityOrder,
                 999999
             )
 
@@ -641,32 +610,62 @@ export async function findAllProperties(
 }
 
 export async function getPropertyFilterOptionsRepo() {
-  const db = await getBinShabibEstateNet();
+ const db = await getBinShabibEstateNet();
 
-  const result = await db.request().query(`
-    SELECT
-        UC.ucat_id AS categoryId,
-        UC.ucat_Desc AS categoryName,
+    const result = await db.request().query(`
+        SELECT
+            UC.ucat_id AS categoryId,
+            UC.ucat_Desc AS categoryName,
 
-        UT.UnitTypeId AS unitTypeId,
-        UT.UnitTypeDesc AS unitTypeName
+            VUT.UnitTypeId AS unitTypeId,
+            VUT.UnitTypeDesc AS unitTypeName
 
-    FROM dbo.uCategory UC
+        FROM dbo.uCategory UC
 
-    LEFT JOIN dbo.UnitType UT
-        ON UT.ucat_id = UC.ucat_id
-        AND ISNULL(UT.IsActive, 1) = 1
+        LEFT JOIN
+        (
+            SELECT DISTINCT
+                UnitTypeId,
+                UnitTypeDesc,
 
-    ORDER BY
-        CASE
-            WHEN UC.ucat_Desc = 'RESIDENTIAL' THEN 1
-            WHEN UC.ucat_Desc = 'COMMERCIAL' THEN 2
-            ELSE 3
-        END,
-        UT.UnitTypeDesc;
-  `);
+                CASE
+                    WHEN UnitTypeDesc IN ('APARTMENT', 'VILLA')
+                        THEN 'UC02'
 
-  return result.recordset;
+                    WHEN UnitTypeDesc IN (
+                        'OFFICE',
+                        'SHOP',
+                        'SHOW ROOM',
+                        'LABOUR CAMP',
+                        'WAREHOUSE',
+                        'Store'
+                    )
+                        THEN 'UC01'
+
+                    ELSE NULL
+                END AS ucat_id
+
+            FROM dbo.vw_UnitType
+
+            WHERE UnitTypeId <> 99
+
+        ) VUT
+            ON VUT.ucat_id = UC.ucat_id
+
+        WHERE
+            VUT.UnitTypeId IS NOT NULL
+
+        ORDER BY
+            CASE
+                WHEN UC.ucat_Desc = 'RESIDENTIAL' THEN 1
+                WHEN UC.ucat_Desc = 'COMMERCIAL' THEN 2
+                ELSE 3
+            END,
+
+            VUT.UnitTypeDesc;
+    `);
+
+    return result.recordset;
 }
 /**
  * Returns the number of grouped listings for pagination.
@@ -757,39 +756,23 @@ export async function countProperties(
 (
     @UnitTypeId IS NULL
 
+   AND
+(
+    @UnitTypeId IS NULL
+
     OR EXISTS
     (
         SELECT 1
-        FROM dbo.UnitType UT
+        FROM dbo.vw_UnitType UT
 
         WHERE
             UT.UnitTypeId = @UnitTypeId
 
-            AND ISNULL(
-                UT.IsActive,
-                1
-            ) = 1
-
-            AND
-            ',' +
-            REPLACE(
-                ISNULL(
-                    UT.PurposeCodes,
-                    ''
-                ),
-                ' ',
-                ''
-            ) +
-            ','
-            LIKE
-            '%,' +
-            LTRIM(
-                RTRIM(
-                    U.Purpose_type
-                )
-            ) +
-            ',%'
+            AND LTRIM(RTRIM(UT.PurposeCode))
+                =
+                LTRIM(RTRIM(U.Purpose_type))
     )
+)
 )
 
 
