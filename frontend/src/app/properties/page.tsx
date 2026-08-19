@@ -1,13 +1,16 @@
 "use client";
 
 import React, {
+  Suspense,
   useEffect,
   useMemo,
   useState,
 } from "react";
 
 import Link from "next/link";
-
+import {
+  useSearchParams,
+} from "next/navigation";
 import {
   MapPin,
   Building2,
@@ -97,13 +100,14 @@ const PRICE_OPTIONS = [
   },
 ];
 
-export default function PropertiesPage() {
+function PropertiesContent() {
   /*
   |--------------------------------------------------------------------------
   | Results
   |--------------------------------------------------------------------------
   */
-
+const searchParams =
+  useSearchParams();
   const [properties, setProperties] =
     useState<Property[]>([]);
 
@@ -205,6 +209,17 @@ export default function PropertiesPage() {
   | Load Property Type options
   |--------------------------------------------------------------------------
   */
+
+  useEffect(() => {
+  const search =
+    searchParams.get("search");
+
+  if (search) {
+    setLocationInput(search);
+    setLocation(search);
+    setPage(1);
+  }
+}, [searchParams]);
 
   useEffect(() => {
     async function loadFilterOptions() {
@@ -1268,12 +1283,12 @@ const selectedBedName =
                         >
                           {/* IMAGE */}
 
-                        <Link
-                        href={`/property/${encodeURIComponent(
-                            property.id
-                        )}`}
-                        className={styles.imageArea}
-                        >
+                    <Link
+  href={`/property?id=${encodeURIComponent(
+    property.id
+  )}`}
+  className={styles.imageArea}
+>
                             {image ? (
                               <img
                                 src={
@@ -1306,16 +1321,15 @@ const selectedBedName =
                             }
                           >
                             <Link
-                             href={`/property/${encodeURIComponent(
-  property.id
-)}`}className={styles.titleLink}
-                            >
-                              <h2>
-                                {
-                                  property.title
-                                }
-                              </h2>
-                            </Link>
+  href={`/property?id=${encodeURIComponent(
+    property.id
+  )}`}
+  className={styles.titleLink}
+>
+  <h2>
+    {property.title}
+  </h2>
+</Link>
 
                             <div
                               className={
@@ -1451,17 +1465,18 @@ const selectedBedName =
                               </div>
                             )}
 
-                            <Link
-                             href={`/property/${encodeURIComponent(
-  property.id
-)}`}  className={styles.viewButton}
-                            >
-                              View Property
+                       <Link
+  href={`/property?id=${encodeURIComponent(
+    property.id
+  )}`}
+  className={styles.viewButton}
+>
+  View Property
 
-                              <span>
-                                →
-                              </span>
-                            </Link>
+  <span>
+    →
+  </span>
+</Link>
                           </div>
                         </article>
                       );
@@ -1614,5 +1629,25 @@ const selectedBedName =
         </div>
       </section>
     </main>
+  );
+}
+
+export default function PropertiesPage() {
+  return (
+    <Suspense
+      fallback={
+        <main
+          className={styles.page}
+        >
+          <div
+            className={styles.loading}
+          >
+            Loading properties...
+          </div>
+        </main>
+      }
+    >
+      <PropertiesContent />
+    </Suspense>
   );
 }

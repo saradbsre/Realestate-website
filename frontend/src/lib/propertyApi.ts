@@ -1,3 +1,7 @@
+/* =========================================================
+   PROPERTY TYPES
+========================================================= */
+
 export interface Property {
   id: string;
   title: string;
@@ -17,7 +21,9 @@ export interface Property {
 
   beds: number;
   baths: number;
- amenities?: string[];
+
+  amenities?: string[];
+
   area: number;
   maxArea: number;
 
@@ -27,24 +33,32 @@ export interface Property {
 
   vacantUnits: number;
 }
+
 export interface PropertyFilters {
   search?: string;
 
   unitTypeId?:
-    string | number;
+    | string
+    | number;
 
   beds?: string;
 
   minPrice?:
-    string | number;
+    | string
+    | number;
 
   maxPrice?:
-    string | number;
+    | string
+    | number;
 
   page?: number;
 
   pageSize?: number;
 }
+
+/* =========================================================
+   PROPERTY UNIT
+========================================================= */
 
 export interface PropertyUnit {
   referenceNo:
@@ -63,22 +77,19 @@ export interface PropertyUnit {
     string | null;
 
   floorNumber:
-    string | number | null;
+    | string
+    | number
+    | null;
 
-  area:
-    number;
+  area: number;
 
-  areaUnit:
-    string;
+  areaUnit: string;
 
-  annualRent:
-    number;
+  annualRent: number;
 
-  maxAnnualRent:
-    number;
+  maxAnnualRent: number;
 
-  currency:
-    string;
+  currency: string;
 
   numberOfPayments:
     number | null;
@@ -98,11 +109,9 @@ export interface PropertyUnit {
   securityDeposit:
     number | null;
 
-  vacant:
-    string;
+  vacant: string;
 
-  isActive:
-    boolean;
+  isActive: boolean;
 
   image:
     string | null;
@@ -111,11 +120,10 @@ export interface PropertyUnit {
     string | null;
 }
 
-/*
- * Response from:
- *
- * GET /api/properties
- */
+/* =========================================================
+   BACKEND PROPERTY LIST RESPONSE
+========================================================= */
+
 interface BackendPropertyList {
   data: BackendProperty[];
 
@@ -127,28 +135,25 @@ interface BackendPropertyList {
   };
 }
 
-/*
- * Supports both:
- *
- * Listing API aliases:
- * id, title
- *
- * and current detail API aliases:
- * buildingId, buildingName
- *
- * This lets us migrate the backend gradually without
- * breaking the frontend.
- */
+/* =========================================================
+   BACKEND PROPERTY
+========================================================= */
+
 interface BackendProperty {
   id: string;
+
   title: string;
 
   buildingType?: string;
 
   address?: string;
+
   areaName?: string;
+
   placeName?: string;
+
   neighborhood?: string;
+
   location?: string;
 
   propertyType?: string;
@@ -156,12 +161,15 @@ interface BackendProperty {
   availableTypes?: string;
 
   area?: number;
+
   maxArea?: number;
 
   price?: number;
+
   maxPrice?: number;
 
   currency?: string;
+
   rentalPeriod?: string;
 
   purpose?: string;
@@ -171,66 +179,78 @@ interface BackendProperty {
   referenceNo?: string;
 }
 
+/* =========================================================
+   FILTER OPTIONS
+========================================================= */
+
+export interface PropertyFilterType {
+  id: number;
+  name: string;
+}
+
+export interface PropertyFilterCategory {
+  categoryId: string;
+
+  categoryName: string;
+
+  types: PropertyFilterType[];
+}
+
+interface PropertyFilterResponse {
+  success: boolean;
+
+  data: PropertyFilterCategory[];
+}
+
+/* =========================================================
+   BACKEND URL
+========================================================= */
+
 /*
- * Response row from:
+ * Local:
  *
- * GET /api/properties/:id/units
+ * NEXT_PUBLIC_API_URL=http://localhost:5000
+ *
+ * Production:
+ *
+ * NEXT_PUBLIC_API_URL=https://your-backend.onrender.com
  */
-interface BackendUnit {
-  referenceNo?: string;
 
-  propertyType?: string;
-
-  unitDescription?: string;
-
-  floorNumber?: string | number;
-
-  area?: number;
-
-  annualRent?: number;
-
-  maximumAnnualRent?: number;
-
-  contractRent?: number;
-
-  numberOfPayments?: number;
-
-  purpose?: string;
-
-  unitAddress?: string;
-
-  unitNature?: string;
-
-  lastUpdated?: string;
-}
-
-interface BackendUnits {
-  buildingId?: number;
-
-  total?: number;
-
-  units?: BackendUnit[];
-}
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "";
 
 /*
- * Generates frontend API URL.
+ * Example:
  *
- * Client:
- * /api/properties
+ * apiUrl("/properties")
  *
- * Server component with baseUrl:
- * http://localhost:3005/api/properties
+ * Local:
+ * http://localhost:5000/api/properties
+ *
+ * Production:
+ * https://xxx.onrender.com/api/properties
  */
 function apiUrl(
-  path: string,
-  baseUrl = ""
+  path: string
 ) {
-  return `${baseUrl.replace(/\/$/, "")}/api${path}`;
+  if (!API_BASE_URL) {
+    throw new Error(
+      "NEXT_PUBLIC_API_URL is not configured."
+    );
+  }
+
+  return `${
+    API_BASE_URL.replace(
+      /\/$/,
+      ""
+    )
+  }/api${path}`;
 }
 
-/*
- * Common response reader.
- */
+/* =========================================================
+   COMMON JSON READER
+========================================================= */
+
 async function readJson<T>(
   response: Response
 ): Promise<T> {
@@ -241,204 +261,297 @@ async function readJson<T>(
 
     throw new Error(
       body?.error ||
-        `Property API request failed (${response.status})`
+        `API request failed (${response.status})`
     );
   }
 
-  return response.json() as Promise<T>;
+  const data = await response.json();
+
+  return data as T;
 }
+/* =========================================================
+   PROPERTY TYPE FORMATTER
+========================================================= */
 
-function formatPropertyType(type: string): string {
-  const value = type
-    .trim()
-    .replace(/\s+/g, " ")
-    .toUpperCase();
+function formatPropertyType(
+  type: string
+): string {
+  const value =
+    type
+      .trim()
+      .replace(
+        /\s+/g,
+        " "
+      )
+      .toUpperCase();
 
-  const exactMappings: Record<string, string> = {
-    "STUDIO": "Studio",
-    "STUDIO FLAT": "Studio",
+  const exactMappings:
+    Record<
+      string,
+      string
+    > = {
+    STUDIO:
+      "Studio",
 
-    "OFFICE": "Office",
-    "OFFICE FLAT": "Office",
+    "STUDIO FLAT":
+      "Studio",
 
-    "SHOP": "Shop",
+    OFFICE:
+      "Office",
 
-    "SHOWROOM": "Showroom",
-    "SHOW ROOM": "Showroom",
+    "OFFICE FLAT":
+      "Office",
 
-    "VILLA": "Villa",
+    SHOP:
+      "Shop",
 
-    "WAREHOUSE": "Warehouse",
-    "WARE HOUSE": "Warehouse",
+    SHOWROOM:
+      "Showroom",
 
-    "PENTHOUSE": "Penthouse",
+    "SHOW ROOM":
+      "Showroom",
 
-    "DUPLEX": "Duplex",
+    VILLA:
+      "Villa",
 
-    "TOWNHOUSE": "Townhouse",
-    "TOWN HOUSE": "Townhouse",
+    WAREHOUSE:
+      "Warehouse",
 
-    "RETAIL": "Retail",
+    "WARE HOUSE":
+      "Warehouse",
+
+    PENTHOUSE:
+      "Penthouse",
+
+    DUPLEX:
+      "Duplex",
+
+    TOWNHOUSE:
+      "Townhouse",
+
+    "TOWN HOUSE":
+      "Townhouse",
+
+    RETAIL:
+      "Retail",
+
+    "LABOUR CAMP":
+      "Labour Camp",
   };
 
-  if (exactMappings[value]) {
-    return exactMappings[value];
+  if (
+    exactMappings[value]
+  ) {
+    return exactMappings[
+      value
+    ];
   }
 
   /*
+   * ERP examples:
+   *
    * 1 BED ROOM HALL
    * 2 BED ROOM HALL
-   * 3 BEDROOM HALL
-   * 1 BED ROOM
-   * etc.
+   * 3 BED ROOM
    */
-  const bedroomMatch = value.match(
-    /^(\d+)\s*BED\s*ROOM(?:\s*HALL)?$/
-  );
+  const bedroomMatch =
+    value.match(
+      /^(\d+)\s*BED\s*ROOM(?:\s*HALL)?$/
+    );
 
-  if (bedroomMatch) {
-    return `${bedroomMatch[1]} BHK`;
+  if (
+    bedroomMatch
+  ) {
+    return `${bedroomMatch[1]} Bed`;
   }
 
   /*
-   * Handles:
+   * Examples:
+   *
    * 1 BEDROOM
    * 2 BEDROOM
-   * 3 BEDROOM HALL
    */
-  const bedroomMatch2 = value.match(
-    /^(\d+)\s*BEDROOM(?:\s*HALL)?$/
-  );
+  const bedroomMatch2 =
+    value.match(
+      /^(\d+)\s*BEDROOM(?:\s*HALL)?$/
+    );
 
-  if (bedroomMatch2) {
+  if (
+    bedroomMatch2
+  ) {
     return `${bedroomMatch2[1]} Bed`;
   }
 
-  /*
-   * Fallback:
-   * Convert ERP uppercase text into readable title case.
-   */
   return type
     .trim()
     .toLowerCase()
-    .replace(/\b\w/g, (char) =>
-      char.toUpperCase()
+    .replace(
+      /\b\w/g,
+      (char) =>
+        char.toUpperCase()
     );
 }
+
+/* =========================================================
+   AVAILABLE TYPES FORMATTER
+========================================================= */
 
 function formatAvailableTypes(
   availableTypes?: string
 ): string {
-  if (!availableTypes) {
+  if (
+    !availableTypes
+  ) {
     return "";
   }
 
-  const formatted = availableTypes
-    .split(",")
-    .map((type) =>
-      formatPropertyType(type)
-    )
-    .filter(Boolean);
+  const formatted =
+    availableTypes
+      .split(",")
+      .map(
+        (type) =>
+          formatPropertyType(
+            type
+          )
+      )
+      .filter(Boolean);
 
-  /*
-   * Remove duplicates after conversion.
-   *
-   * Example:
-   * STUDIO + STUDIO FLAT
-   * becomes only:
-   * Studio
-   */
-  return [...new Set(formatted)]
-    .join(", ");
+  return [
+    ...new Set(
+      formatted
+    ),
+  ].join(", ");
 }
 
+/* =========================================================
+   NORMALIZE PROPERTY
+========================================================= */
 
-/*
- * Convert ERP API response into the Property object
- * already expected by your React components.
- */
 function normalizeProperty(
   property: BackendProperty
 ): Property {
   return {
-   id: String(property.id),
+    id:
+      String(
+        property.id
+      ),
 
     title:
-      property.title,
+      property.title || "",
 
-    description: "",
+    description:
+      "",
 
     price:
-      Number(property.price || 0),
+      Number(
+        property.price || 0
+      ),
 
     maxPrice:
       Number(
         property.maxPrice ??
-        property.price ??
-        0
+          property.price ??
+          0
       ),
 
     location:
       property.location || "",
 
- type: formatPropertyType(
-  property.propertyType ||
-  "Property"
-),
+    type:
+      formatPropertyType(
+        property.propertyType ||
+          "Property"
+      ),
 
-availableTypes:
-  formatAvailableTypes(
-    property.availableTypes ||
-    property.propertyType
-  ),
+    availableTypes:
+      formatAvailableTypes(
+        property.availableTypes ||
+          property.propertyType
+      ),
 
     purpose:
-      property.purpose || "Rent",
+      property.purpose ||
+      "Rent",
 
-    status: "Ready",
+    status:
+      "Ready",
 
-    beds: 0,
+    beds:
+      0,
 
-    baths: 0,
+    baths:
+      0,
 
     area:
-      Number(property.area || 0),
+      Number(
+        property.area || 0
+      ),
 
     maxArea:
       Number(
         property.maxArea ??
-        property.area ??
-        0
+          property.area ??
+          0
       ),
 
-    images: "[]",
+    images:
+      "[]",
 
     erpId:
-      property.referenceNo || null,
+      property.referenceNo ||
+      null,
 
     vacantUnits:
       Number(
-        property.vacantUnits || 0
+        property.vacantUnits ||
+          0
       ),
   };
 }
 
-/*
- * GET /api/properties
- *
- * Search/listing API
- */
+/* =========================================================
+   SAFE BUILDING ID
+========================================================= */
+
+function encodeBuildingId(
+  id: string
+) {
+  let decodedId =
+    id;
+
+  try {
+    decodedId =
+      decodeURIComponent(
+        id
+      );
+  } catch {
+    decodedId =
+      id;
+  }
+
+  return encodeURIComponent(
+    decodedId.trim()
+  );
+}
+
+/* =========================================================
+   GET PROPERTIES
+========================================================= */
+
 export async function getProperties(
-  filters: PropertyFilters = {},
-  baseUrl = ""
+  filters:
+    PropertyFilters = {}
 ) {
   const params =
     new URLSearchParams();
 
-  Object.entries(filters).forEach(
+  Object.entries(
+    filters
+  ).forEach(
     ([key, value]) => {
       if (
-        value !== undefined &&
+        value !==
+          undefined &&
         value !== null &&
         value !== ""
       ) {
@@ -454,30 +567,39 @@ export async function getProperties(
     params.toString();
 
   const url =
-    `${apiUrl(
-      "/properties",
-      baseUrl
-    )}${
+    `${
+      apiUrl(
+        "/properties"
+      )
+    }${
       queryString
         ? `?${queryString}`
         : ""
     }`;
 
   const response =
-    await fetch(url, {
-      cache: "no-store",
-    });
+    await fetch(
+      url,
+      {
+        cache:
+          "no-store",
+      }
+    );
 
   const result =
-    await readJson<BackendPropertyList>(
-      response
-    );
+    await readJson<
+      BackendPropertyList
+    >(response);
 
   return {
     properties:
       result.data.map(
-        (property) =>
-          normalizeProperty(property)
+        (
+          property
+        ) =>
+          normalizeProperty(
+            property
+          )
       ),
 
     pagination:
@@ -485,115 +607,111 @@ export async function getProperties(
   };
 }
 
+/* =========================================================
+   GET FILTER OPTIONS
+========================================================= */
 
-export interface PropertyFilterType {
-  id: number;
-  name: string;
-}
-
-export interface PropertyFilterCategory {
-  categoryId: string;
-  categoryName: string;
-  types: PropertyFilterType[];
-}
-
-interface PropertyFilterResponse {
-  success: boolean;
-  data: PropertyFilterCategory[];
-}
-export async function getPropertyFilterOptions(
-  baseUrl = ""
-) {
-  const response = await fetch(
-    apiUrl(
-      "/properties/filter-options",
-      baseUrl
-    ),
-    {
-      cache: "no-store",
-    }
-  );
-
-  const result =
-    await readJson<PropertyFilterResponse>(
-      response
+export async function getPropertyFilterOptions() {
+  const response =
+    await fetch(
+      apiUrl(
+        "/properties/filter-options"
+      ),
+      {
+        cache:
+          "no-store",
+      }
     );
 
+  const result =
+    await readJson<
+      PropertyFilterResponse
+    >(response);
+
   return result.data;
 }
-/*
- * GET /api/properties/:id
- *
- * GET /api/properties/:id/units
- *
- * Runs both requests at the same time.
- */
+
+/* =========================================================
+   GET PROPERTY
+========================================================= */
+
 export async function getProperty(
-  id: string,
-  baseUrl = ""
+  id: string
 ) {
   const safeId =
-    encodeBuildingId(id);
+    encodeBuildingId(
+      id
+    );
 
-  const response = await fetch(
-    apiUrl(
-      `/properties/${safeId}`,
-      baseUrl
-    ),
-    {
-      cache: "no-store",
-    }
-  );
+  const response =
+    await fetch(
+      apiUrl(
+        `/properties/${safeId}`
+      ),
+      {
+        cache:
+          "no-store",
+      }
+    );
 
   const result =
     await readJson<{
       success: boolean;
-      data: Property;
+
+      data:
+        BackendProperty;
     }>(response);
 
-  return result.data;
+  /*
+   * Detail endpoint can return
+   * backend format too.
+   */
+  return normalizeProperty(
+    result.data
+  );
 }
 
+/* =========================================================
+   GET PROPERTY UNITS
+========================================================= */
+
 export async function getPropertyUnits(
-  id: string,
-  baseUrl = ""
+  id: string
 ) {
   const safeId =
-    encodeBuildingId(id);
+    encodeBuildingId(
+      id
+    );
 
-  const response = await fetch(
-    apiUrl(
-      `/properties/${safeId}/units`,
-      baseUrl
-    ),
-    {
-      cache: "no-store",
-    }
-  );
+  const response =
+    await fetch(
+      apiUrl(
+        `/properties/${safeId}/units`
+      ),
+      {
+        cache:
+          "no-store",
+      }
+    );
 
   const result =
     await readJson<{
-      success: boolean;
-      total: number;
-      data: PropertyUnit[];
+      success:
+        boolean;
+
+      total:
+        number;
+
+      data:
+        PropertyUnit[];
     }>(response);
 
   return {
-    total: result.total,
-    units: result.data,
+    total:
+      result.total,
+
+    units:
+      result.data ||
+      [],
   };
 }
-function encodeBuildingId(id: string) {
-  let decodedId = id;
-
-  try {
-    decodedId = decodeURIComponent(id);
-  } catch {
-    decodedId = id;
-  }
-
-  return encodeURIComponent(
-    decodedId.trim()
-  );
-}
-

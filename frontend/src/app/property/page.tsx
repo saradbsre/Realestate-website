@@ -1,13 +1,16 @@
 "use client";
 
 import {
+  Suspense,
   useEffect,
   useMemo,
   useState,
 } from "react";
 
+
+import BookingModal from "../components/BookingModal/BookingModal";
 import {
-  useParams,
+  useSearchParams,
 } from "next/navigation";
 
 import Link from "next/link";
@@ -96,25 +99,11 @@ const DUMMY_AMENITIES = [
    COMPONENT
 ========================================================= */
 
-export default function PropertyDetailPage() {
-  const params =
-    useParams<{
-      id: string;
-    }>();
+function PropertyDetailContent() {
+const searchParams = useSearchParams();
 
-  /*
-   * Important:
-   * building IDs can contain :
-   *
-   * Example:
-   * P:894
-   */
-  const buildingId =
-    decodeURIComponent(
-      String(
-        params.id || ""
-      )
-    );
+const buildingId =
+  searchParams.get("id")?.trim() || "";
 
   /* =======================================================
      DATA
@@ -147,7 +136,10 @@ export default function PropertyDetailPage() {
     setError,
   ] =
     useState("");
-
+const [
+  bookingUnit,
+  setBookingUnit,
+] = useState<PropertyUnit | null>(null);
   /* =======================================================
      SELECTED PROPERTY TYPE
   ======================================================= */
@@ -1138,14 +1130,17 @@ export default function PropertyDetailPage() {
                       styles.unitAction
                     }
                   >
-                    <button
-                      type="button"
-                      className={
-                        styles.bookButton
-                      }
-                    >
-                      Book Now
-                    </button>
+                   <button
+  type="button"
+  className={
+    styles.bookButton
+  }
+  onClick={() =>
+    setBookingUnit(unit)
+  }
+>
+  Book Now
+</button>
 
                    
                   </div>
@@ -1154,7 +1149,50 @@ export default function PropertyDetailPage() {
             )}
           </div>
         </section>
+
+   <BookingModal
+  open={bookingUnit !== null}
+  property={
+    bookingUnit
+      ? {
+          id: property.id,
+          title: property.title,
+
+          unitReference:
+            bookingUnit.referenceNo,
+
+          unitType:
+            bookingUnit.propertyType,
+        }
+      : null
+  }
+  onClose={() =>
+    setBookingUnit(null)
+  }
+/>
       </div>
     </main>
+  );
+}
+
+export default function PropertyDetailPage() {
+  return (
+    <Suspense
+      fallback={
+        <main
+          className={styles.statePage}
+        >
+          <Building2
+            size={40}
+          />
+
+          <h2>
+            Loading property...
+          </h2>
+        </main>
+      }
+    >
+      <PropertyDetailContent />
+    </Suspense>
   );
 }

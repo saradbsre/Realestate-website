@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import styles from "./featuredListings.module.css";
 import type { Property } from "@/lib/propertyApi";
+import BookingModal from "./BookingModal/BookingModal";
 import {
   MapPin,
   Building2,
@@ -15,11 +16,11 @@ interface FeaturedListingsProps {
 
 export default function FeaturedListings({ properties }: FeaturedListingsProps) {
   const [bookingProperty, setBookingProperty] = React.useState<Property | null>(null);
-  const [booking, setBooking] = React.useState({ name: "", email: "", phone: "", nationality: "", passport: null as File | null });
-  const [bookingSent, setBookingSent] = React.useState(false);
-  const [bookingError, setBookingError] = React.useState("");
-  const nationalityCodes = "AF AL DZ AD AO AG AR AM AU AT AZ BS BH BD BB BY BE BZ BJ BT BO BA BW BR BN BG BF BI CV KH CM CA CF TD CL CN CO KM CG CD CR CI HR CU CY CZ DK DJ DM DO EC EG SV GQ ER EE SZ ET FJ FI FR GA GM GE DE GH GR GD GT GN GW GY HT HN HU IS IN ID IR IQ IE IL IT JM JP JO KZ KE KI KP KR KW KG LA LV LB LS LR LY LI LT LU MG MW MY MV ML MT MH MR MU MX FM MD MC MN ME MA MZ MM NA NR NP NL NZ NI NE NG MK NO OM PK PW PA PG PY PE PH PL PT QA RO RU RW KN LC VC WS SM ST SA SN RS SC SL SG SK SI SB SO ZA SS ES LK SD SR SE CH SY TJ TZ TH TL TG TO TT TN TR TM TV UG UA AE GB US UY UZ VU VA VE VN YE ZM ZW".split(" ");
-  const countryNames = new Intl.DisplayNames(["en"], { type: "region" });
+  // const [booking, setBooking] = React.useState({ name: "", email: "", phone: "", nationality: "", passport: null as File | null });
+  // const [bookingSent, setBookingSent] = React.useState(false);
+  // const [bookingError, setBookingError] = React.useState("");
+  // const nationalityCodes = "AF AL DZ AD AO AG AR AM AU AT AZ BS BH BD BB BY BE BZ BJ BT BO BA BW BR BN BG BF BI CV KH CM CA CF TD CL CN CO KM CG CD CR CI HR CU CY CZ DK DJ DM DO EC EG SV GQ ER EE SZ ET FJ FI FR GA GM GE DE GH GR GD GT GN GW GY HT HN HU IS IN ID IR IQ IE IL IT JM JP JO KZ KE KI KP KR KW KG LA LV LB LS LR LY LI LT LU MG MW MY MV ML MT MH MR MU MX FM MD MC MN ME MA MZ MM NA NR NP NL NZ NI NE NG MK NO OM PK PW PA PG PY PE PH PL PT QA RO RU RW KN LC VC WS SM ST SA SN RS SC SL SG SK SI SB SO ZA SS ES LK SD SR SE CH SY TJ TZ TH TL TG TO TT TN TR TM TV UG UA AE GB US UY UZ VU VA VE VN YE ZM ZW".split(" ");
+  // const countryNames = new Intl.DisplayNames(["en"], { type: "region" });
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("en-AE", {
       style: "currency",
@@ -27,8 +28,21 @@ export default function FeaturedListings({ properties }: FeaturedListingsProps) 
       maximumFractionDigits: 0,
     }).format(price);
   };
-  const submitBooking = async (event: React.FormEvent) => { event.preventDefault(); if (!bookingProperty) return; setBookingError(""); const form = new FormData(); form.append("propertyId", String(bookingProperty.id)); form.append("propertyName", bookingProperty.title); form.append("name", booking.name); form.append("email", booking.email); form.append("phone", booking.phone); form.append("nationality", booking.nationality); if (booking.passport) form.append("passport", booking.passport); const response = await fetch("/api/bookings", { method: "POST", body: form }); if (response.ok) setBookingSent(true); else setBookingError((await response.json()).error || "Unable to send booking form."); };
-function compactAvailableTypes(value: string) {
+  // const submitBooking = async (event: React.FormEvent) => { event.preventDefault(); if (!bookingProperty) return; setBookingError(""); 
+  //   const form = new FormData(); form.append("propertyId", String(bookingProperty.id));
+  //    form.append("propertyName", bookingProperty.title); 
+  //    form.append("name", booking.name);
+  //     form.append("email", booking.email);
+  //      form.append("phone", booking.phone);
+  //       form.append("nationality", booking.nationality);
+  //        if (booking.passport) form.append("passport", booking.passport);
+  //         const response = await fetch("/api/bookings", { method: "POST", body: form });
+  //          if (response.ok) setBookingSent(true); 
+  //          else setBookingError((await response.json()).error || "Unable to send booking form."); };
+
+
+
+           function compactAvailableTypes(value: string) {
   const list = value
     .split(",")
     .map((x) => x.trim())
@@ -61,7 +75,9 @@ function compactAvailableTypes(value: string) {
             } catch {}
 
             return (
-              <Link href={`/property/${prop.id}`} key={prop.id} className={styles.card}>
+              <Link href={`/property?id=${encodeURIComponent(
+  prop.id
+)}`} key={prop.id} className={styles.card}>
                 <div className={styles.imageWrapper}>
                   {/* Badges Overlay */}
                   {/* <div className={styles.badges}>
@@ -170,19 +186,18 @@ function compactAvailableTypes(value: string) {
       {prop.vacantUnits} Vacant Units
     </span>
 
-    <button
-      type="button"
-      className={styles.bookNowButton}
-      onClick={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        setBookingProperty(prop);
-        setBookingSent(false);
-        setBookingError("");
-      }}
-    >
-      Book Now
-    </button>
+<button
+  type="button"
+  className={styles.bookNowButton}
+  onClick={(event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    setBookingProperty(prop);
+  }}
+>
+  Book Now
+</button>
   </div>
 </div>
               </Link>
@@ -201,14 +216,21 @@ function compactAvailableTypes(value: string) {
     </Link>
   </div>
 )}
-      {bookingProperty && <div className={styles.modalBackdrop} role="dialog" aria-modal="true" aria-label="Book this property"><div className={styles.bookingModal}>
-        <button className={styles.closeModal} type="button" onClick={() => setBookingProperty(null)} aria-label="Close booking form">×</button>
-        {!bookingSent ? <><h2>Book this property</h2><p className={styles.modalProperty}>{bookingProperty.title}<br />{formatPrice(bookingProperty.price)} / Yearly</p><form onSubmit={submitBooking} className={styles.bookingForm}>
-          <input readOnly value={bookingProperty.title} aria-label="Property" /><input required placeholder="Full name" value={booking.name} onChange={(e) => setBooking({ ...booking, name: e.target.value })} /><input required type="email" placeholder="Email address" value={booking.email} onChange={(e) => setBooking({ ...booking, email: e.target.value })} /><input required type="tel" placeholder="Phone number" value={booking.phone} onChange={(e) => setBooking({ ...booking, phone: e.target.value })} />
-          <select required aria-label="Nationality" value={booking.nationality} onChange={(e) => setBooking({ ...booking, nationality: e.target.value })}><option value="">Select nationality</option>{nationalityCodes.map((code) => <option key={code} value={countryNames.of(code) || code}>{countryNames.of(code) || code}</option>)}</select>
-          <label className={styles.passportLabel}>Passport copy (PDF, JPG or PNG, max 5 MB)<input required type="file" accept="application/pdf,image/jpeg,image/png" onChange={(e) => setBooking({ ...booking, passport: e.target.files?.[0] || null })} /></label>{bookingError && <p className={styles.bookingError}>{bookingError}</p>}<button className={styles.bookNowButton}>Send Booking Form</button>
-        </form></> : <div className={styles.bookingSuccess}><h2>Booking form sent</h2><p>Thank you. Our team will check your details and availability, then call you shortly to confirm the next steps.</p><button className={styles.bookNowButton} onClick={() => setBookingProperty(null)}>Close</button></div>}
-      </div></div>}
+<BookingModal
+  open={bookingProperty !== null}
+  property={
+    bookingProperty
+      ? {
+          id: bookingProperty.id,
+          title: bookingProperty.title,
+        }
+      : null
+  }
+  onClose={() =>
+    setBookingProperty(null)
+  }
+/>
+      
     </section>
   );
 }

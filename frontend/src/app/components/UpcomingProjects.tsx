@@ -22,21 +22,21 @@ export default function UpcomingProjects() {
 
   const cities = ["Dubai", "Abu Dhabi", "Sharjah", "Ajman", "Ras Al Khaimah", "Umm Al Quwain"];
 
-  useEffect(() => {
-    setLoading(true);
-    fetch("/api/upcoming-projects")
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data)) {
-          setProjects(data);
-        }
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Error loading upcoming projects:", err);
-        setLoading(false);
-      });
-  }, []);
+  // useEffect(() => {
+  //   setLoading(true);
+  //   fetch("/api/upcoming-projects")
+  //     .then((res) => res.json())
+  //     .then((data) => {
+  //       if (Array.isArray(data)) {
+  //         setProjects(data);
+  //       }
+  //       setLoading(false);
+  //     })
+  //     .catch((err) => {
+  //       console.error("Error loading upcoming projects:", err);
+  //       setLoading(false);
+  //     });
+  // }, []);
 
   const filteredProjects = projects.filter(
     (p) => p.city.toLowerCase() === activeCity.toLowerCase()

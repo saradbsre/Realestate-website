@@ -3,9 +3,10 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import styles from "./property.module.css";
-import Footer from "../../components/Footer";
-import Header from "../../components/Header";
+// import Footer from "../../components/Footer";
+// import Header from "../../components/Header";
 import type { Property } from "@/lib/propertyApi";
+// import BookingModal from "../../components/BookingModal/BookingModal";
 
 interface PropertyClientProps {
   property: Property;
@@ -222,7 +223,15 @@ export default function PropertyClient({ property }: PropertyClientProps) {
               </div>
               <div className={styles.bookingActions}>
                 <span className={styles.vacancyBadge}>2 Vacant Units</span>
-                <button type="button" className={styles.bookNowButton} onClick={() => { setBookingOpen(true); setBookingSent(false); }}>Book Now</button>
+                <button
+  type="button"
+  className={styles.bookNowButton}
+  onClick={() =>
+    setBookingOpen(true)
+  }
+>
+  Book Now
+</button>
               </div>
             </div>
             <div className={styles.sidebarCard}>
@@ -359,7 +368,7 @@ export default function PropertyClient({ property }: PropertyClientProps) {
         </div>
       </div>
 
-      {bookingOpen && <div className={styles.modalBackdrop} role="dialog" aria-modal="true" aria-label="Book this property">
+      {/* {bookingOpen && <div className={styles.modalBackdrop} role="dialog" aria-modal="true" aria-label="Book this property">
         <div className={styles.bookingModal}>
           <button className={styles.closeModal} type="button" onClick={() => setBookingOpen(false)} aria-label="Close booking form">×</button>
           {!bookingSent ? <><h2>Book this property</h2><p className={styles.modalProperty}>{property.title}<br />AED 35,000 / Yearly</p>
@@ -376,10 +385,21 @@ export default function PropertyClient({ property }: PropertyClientProps) {
               {bookingError && <p className={styles.bookingError}>{bookingError}</p>}<button className={styles.bookNowButton}>Send Booking Form</button>
             </form></> : <div className={styles.bookingSuccess}><h2>Booking form sent</h2><p>Thank you. Our representative will review availability and call you shortly to confirm your booking.</p><button className={styles.bookNowButton} onClick={() => setBookingOpen(false)}>Close</button></div>}
         </div>
-      </div>}
+      </div>} */}
+
+      {/* <BookingModal
+  open={bookingOpen}
+  property={{
+    id: property.id,
+    title: property.title,
+  }}
+  onClose={() =>
+    setBookingOpen(false)
+  }
+/> */}
 
       {/* Unified Footer */}
-      <Footer />
+      {/* <Footer /> */}
     </div>
   );
 }
