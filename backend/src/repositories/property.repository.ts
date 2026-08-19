@@ -206,42 +206,41 @@ export async function findAllProperties(
 
 
     BuildingPropertyTypes AS
-    (
-        SELECT
-            X.build_id,
+(
+    SELECT
+        EU.build_id,
 
-            STRING_AGG(
-                X.UnitTypeName,
-                ', '
-            ) AS availableTypes
+        STUFF(
+            (
+                SELECT DISTINCT
+                    ', ' + UPT2.Descr
 
-        FROM
-        (
-            SELECT DISTINCT
-                EU.build_id,
+                FROM EligibleUnits EU2
 
-                UPT.Descr
-                    AS UnitTypeName
+                LEFT JOIN dbo.Unit_Purpose_Type UPT2
+                    ON LTRIM(RTRIM(UPT2.Code))
+                       =
+                       LTRIM(RTRIM(EU2.Purpose_type))
 
-            FROM EligibleUnits EU
+                WHERE
+                    EU2.build_id = EU.build_id
 
-            LEFT JOIN dbo.Unit_Purpose_Type UPT
-                ON UPT.Code =
-                   EU.Purpose_type
+                    AND UPT2.Descr IS NOT NULL
 
-            WHERE
-                UPT.Descr IS NOT NULL
+                    AND LTRIM(RTRIM(UPT2.Descr)) <> ''
 
-                AND LTRIM(
-                    RTRIM(
-                        UPT.Descr
-                    )
-                ) <> ''
-        ) X
+                FOR XML PATH(''), TYPE
+            ).value('.', 'NVARCHAR(MAX)'),
+            1,
+            2,
+            ''
+        ) AS availableTypes
 
-        GROUP BY
-            X.build_id
-    )
+    FROM EligibleUnits EU
+
+    GROUP BY
+        EU.build_id
+)
 
 
     SELECT
@@ -276,36 +275,28 @@ export async function findAllProperties(
         -- LOCATION
         ------------------------------------------------
 
-        CONCAT_WS(
-            ', ',
-
-            NULLIF(
-                LTRIM(
-                    RTRIM(
-                        B.build_Add
-                    )
-                ),
-                ''
-            ),
-
-            NULLIF(
-                LTRIM(
-                    RTRIM(
-                        A.area_desc
-                    )
-                ),
-                ''
-            ),
-
-            NULLIF(
-                LTRIM(
-                    RTRIM(
-                        P.place_desc
-                    )
-                ),
-                ''
-            )
-        ) AS location,
+       STUFF(
+    CASE
+        WHEN NULLIF(LTRIM(RTRIM(B.build_Add)), '') IS NOT NULL
+            THEN ', ' + LTRIM(RTRIM(B.build_Add))
+        ELSE ''
+    END
+    +
+    CASE
+        WHEN NULLIF(LTRIM(RTRIM(A.area_desc)), '') IS NOT NULL
+            THEN ', ' + LTRIM(RTRIM(A.area_desc))
+        ELSE ''
+    END
+    +
+    CASE
+        WHEN NULLIF(LTRIM(RTRIM(P.place_desc)), '') IS NOT NULL
+            THEN ', ' + LTRIM(RTRIM(P.place_desc))
+        ELSE ''
+    END,
+    1,
+    2,
+    ''
+) AS location,
 
 
         ------------------------------------------------
@@ -898,36 +889,28 @@ export async function findPropertyByBuildingId(
             B.build_neigh
                 AS neighborhood,
 
-            CONCAT_WS(
-                ', ',
-
-                NULLIF(
-                    LTRIM(
-                        RTRIM(
-                            B.build_Add
-                        )
-                    ),
-                    ''
-                ),
-
-                NULLIF(
-                    LTRIM(
-                        RTRIM(
-                            A.area_desc
-                        )
-                    ),
-                    ''
-                ),
-
-                NULLIF(
-                    LTRIM(
-                        RTRIM(
-                            P.place_desc
-                        )
-                    ),
-                    ''
-                )
-            ) AS location,
+           STUFF(
+    CASE
+        WHEN NULLIF(LTRIM(RTRIM(B.build_Add)), '') IS NOT NULL
+            THEN ', ' + LTRIM(RTRIM(B.build_Add))
+        ELSE ''
+    END
+    +
+    CASE
+        WHEN NULLIF(LTRIM(RTRIM(A.area_desc)), '') IS NOT NULL
+            THEN ', ' + LTRIM(RTRIM(A.area_desc))
+        ELSE ''
+    END
+    +
+    CASE
+        WHEN NULLIF(LTRIM(RTRIM(P.place_desc)), '') IS NOT NULL
+            THEN ', ' + LTRIM(RTRIM(P.place_desc))
+        ELSE ''
+    END,
+    1,
+    2,
+    ''
+) AS location,
 
             B.plot_no
                 AS plotNumber,
