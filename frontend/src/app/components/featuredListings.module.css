@@ -14,7 +14,15 @@
   font-weight: 700;
   margin-bottom: 8px;
 }
+.card {
+  user-select: text;
+  -webkit-user-select: text;
+}
 
+.card img {
+  user-select: none;
+  -webkit-user-drag: none;
+}
 .titleArea p {
   color: #64748b;
   font-size: 15px;
