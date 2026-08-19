@@ -48,32 +48,30 @@ export default function HomeClient({
 useEffect(() => {
   const loadInitialProperties = async () => {
     try {
+      console.log("HOME: loading initial properties");
+
       const { properties: results } =
         await getProperties({
           page: 1,
           pageSize: 10,
         });
 
-      setProperties(results);
+      console.log(
+        "HOME: API properties:",
+        results
+      );
+
+      setProperties(results || []);
     } catch (error) {
       console.error(
-        "Error loading initial properties:",
+        "HOME: initial load error:",
         error
       );
     }
   };
 
-  /*
-   * Only fetch if server did not
-   * provide initial properties.
-   */
-  if (
-    !initialProperties ||
-    initialProperties.length === 0
-  ) {
-    loadInitialProperties();
-  }
-}, [initialProperties]);
+  loadInitialProperties();
+}, []);
   const handleSearch = async (
     filters: HeroSearchFilters
   ) => {
