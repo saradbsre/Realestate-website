@@ -69,12 +69,27 @@ export default function FeaturedListings({ properties }: FeaturedListingsProps) 
           </div>
         ) : (
           properties.map((prop) => {
-            let imagesList: string[] = [];
-            try {
-              imagesList = JSON.parse(prop.images || "[]");
-            } catch {}
+  let imagesList: string[] = [];
 
-            return (
+  try {
+    imagesList = JSON.parse(prop.images || "[]");
+  } catch {}
+
+  const isTwinTower =
+    prop.title
+      ?.toUpperCase()
+      .includes(
+        "A.W. BIN SHABIB TWIN TOWERS"
+      );
+
+  const propertyImage =
+    isTwinTower
+      ? "/Twin-Tower.jpg"
+      : imagesList.length > 0
+        ? imagesList[0]
+        : null;
+
+  return (
               <Link href={`/property?id=${encodeURIComponent(
   prop.id
 )}`} key={prop.id} className={styles.card}>
@@ -101,15 +116,19 @@ export default function FeaturedListings({ properties }: FeaturedListingsProps) 
                   </span> */}
 
                   {/* Photo */}
-                  {imagesList.length > 0 ? (
-                    <img
-                      src={imagesList[0]}
-                      alt={prop.title}
-                      className={styles.image}
-                    />
-                  ) : (
-                    <div className={styles.fallbackImage}>🏢</div>
-                  )}
+               {/* Photo */}
+{propertyImage ? (
+  <img
+    src={propertyImage}
+    alt={prop.title}
+    className={styles.image}
+    draggable={false}
+  />
+) : (
+  <div className={styles.fallbackImage}>
+    🏢
+  </div>
+)}
                 </div>
 
                <div className={styles.content}>

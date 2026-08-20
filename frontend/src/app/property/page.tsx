@@ -721,6 +721,7 @@ const [
             src={image}
             alt={`${property.title} ${index + 1}`}
             className={styles.thumbImage}
+            draggable={false}
           />
         </button>
       ))}

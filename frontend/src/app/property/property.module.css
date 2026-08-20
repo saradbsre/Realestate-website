@@ -584,7 +584,7 @@
   background: #eaf0f6;
 
   cursor: pointer;
-
+  touch-action: manipulation;
   transition:
     border-color 0.15s ease,
     transform 0.15s ease;
@@ -602,12 +602,19 @@
 
 .thumbImage {
   width: 100%;
-
   height: 100%;
 
   display: block;
 
   object-fit: cover;
+
+  pointer-events: none;
+
+  user-select: none;
+
+  -webkit-user-select: none;
+
+  -webkit-user-drag: none;
 }
 
 .moreOverlay {
@@ -2130,17 +2137,35 @@
 ========================================================= */
 
 .thumbnailRow {
+  width: 100%;
+
   margin-top: 10px;
 
   display: flex;
 
+  flex-wrap: nowrap;
+
   gap: 8px;
 
   overflow-x: auto;
+  overflow-y: hidden;
 
-  padding-bottom: 3px;
+  padding-bottom: 6px;
+
+  scroll-behavior: smooth;
+
+  -webkit-overflow-scrolling: touch;
+
+  touch-action: pan-x;
+
+  overscroll-behavior-x: contain;
+
+  scrollbar-width: none;
 }
 
+.thumbnailRow::-webkit-scrollbar {
+  display: none;
+}
 .thumbnailRow::-webkit-scrollbar {
   height: 4px;
 }
@@ -2362,14 +2387,35 @@
     margin-top: 15px;
   }
 
-  .thumbButton {
-    width: 105px;
-    height: 64px;
-
-    flex-basis: 105px;
-  }
-
   .amenitiesGrid {
     grid-template-columns: 1fr;
   }
+
+  .thumbnailRow {
+  width: 100%;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  flex-wrap: nowrap;
+
+  gap: 8px;
+
+  padding-bottom: 6px;
+
+  -webkit-overflow-scrolling: touch;
+
+  touch-action: pan-x;
+
+  scroll-snap-type: x proximity;
+}
+
+.thumbButton {
+  width: 105px;
+  height: 64px;
+
+  flex: 0 0 105px;
+
+  scroll-snap-align: start;
+}
 }
