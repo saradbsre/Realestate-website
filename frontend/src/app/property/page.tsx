@@ -4,9 +4,10 @@ import {
   Suspense,
   useEffect,
   useMemo,
+  useRef,
   useState,
+  type TouchEvent,
 } from "react";
-
 
 import BookingModal from "../components/BookingModal/BookingModal";
 import {
@@ -159,6 +160,68 @@ const [
     setSelectedImage,
   ] =
     useState(0);
+const touchStartX =
+  useRef<number | null>(null);
+
+const touchEndX =
+  useRef<number | null>(null);
+
+const handleTouchStart = (
+  event: TouchEvent<HTMLDivElement>
+) => {
+  touchEndX.current = null;
+
+  touchStartX.current =
+    event.targetTouches[0].clientX;
+};
+
+const handleTouchMove = (
+  event: React.TouchEvent<HTMLDivElement>
+) => {
+  touchEndX.current =
+    event.targetTouches[0].clientX;
+};
+
+const handleTouchEnd = () => {
+  if (
+    touchStartX.current === null ||
+    touchEndX.current === null
+  ) {
+    return;
+  }
+
+  const distance =
+    touchStartX.current -
+    touchEndX.current;
+
+  const minimumSwipeDistance = 50;
+
+  // Swipe LEFT → next image
+  if (
+    distance > minimumSwipeDistance
+  ) {
+    setSelectedImage((current) =>
+      current ===
+      BUILDING_IMAGES.length - 1
+        ? 0
+        : current + 1
+    );
+  }
+
+  // Swipe RIGHT → previous image
+  if (
+    distance < -minimumSwipeDistance
+  ) {
+    setSelectedImage((current) =>
+      current === 0
+        ? BUILDING_IMAGES.length - 1
+        : current - 1
+    );
+  }
+
+  touchStartX.current = null;
+  touchEndX.current = null;
+};
 
   /* =======================================================
      LOAD PROPERTY
@@ -607,12 +670,18 @@ const [
   <div className={styles.propertyOverviewGrid}>
     {/* IMAGE */}
 
-    <div className={styles.buildingImageArea}>
+    <div
+  className={styles.buildingImageArea}
+  onTouchStart={handleTouchStart}
+  onTouchMove={handleTouchMove}
+  onTouchEnd={handleTouchEnd}
+>
       <img
-        src={BUILDING_IMAGES[selectedImage]}
-        alt={property.title}
-        className={styles.buildingMainImage}
-      />
+  src={BUILDING_IMAGES[selectedImage]}
+  alt={property.title}
+  className={styles.buildingMainImage}
+  draggable={false}
+/>
 
       <div className={styles.imageBadge}>
         <Building2 size={15} />
