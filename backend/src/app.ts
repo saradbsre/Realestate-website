@@ -2,13 +2,19 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import multer from "multer";
-
+import nationalityRoutes
+  from "./routes/nationality.routes";
 import enquiryRoutes from "./routes/enquiry.routes";
 import authRoutes from "./routes/auth.routes";
 import syncRoutes from "./routes/sync.routes";
 import propertyRoutes from "./routes/property.routes";
 import bookingRoutes from "./routes/booking.routes";
-
+import upcomingProjectRoutes
+  from "./routes/upcomingProject.routes";
+  import adminBookingRoutes
+  from "./routes/adminBooking.routes";
+import adminNationalityRoutes from "./routes/adminNationality.routes";
+import adminPropertyRoutes from "./routes/adminProperty.routes";
 const app = express();
 
 /* =========================================================
@@ -139,6 +145,29 @@ app.use(
   syncRoutes
 );
 
+app.use(
+  "/api/upcoming-projects",
+  upcomingProjectRoutes
+);
+
+app.use(
+  "/api/admin/bookings",
+  adminBookingRoutes
+);
+app.use(
+  "/api/nationalities",
+  nationalityRoutes
+);
+
+app.use(
+  "/api/admin/nationality-rules",
+  adminNationalityRoutes
+);
+
+app.use(
+  "/api/admin/properties",
+  adminPropertyRoutes
+);
 /* =========================================================
    404
 ========================================================= */
@@ -248,5 +277,6 @@ app.use(
       });
   }
 );
+
 
 export default app;

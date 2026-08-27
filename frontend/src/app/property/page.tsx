@@ -9,12 +9,10 @@ import {
   type TouchEvent,
 } from "react";
 
-import BookingModal from "../components/BookingModal/BookingModal";
-import {
-  useSearchParams,
-} from "next/navigation";
-
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+
+import BookingModal from "../components/BookingModal/BookingModal";
 
 import {
   Building2,
@@ -32,6 +30,7 @@ import {
   ChevronRight,
   Home,
 } from "lucide-react";
+
 import {
   getProperty,
   getPropertyUnits,
@@ -42,14 +41,11 @@ import {
 import styles from "./property.module.css";
 
 /* =========================================================
-   DUMMY BUILDING IMAGES
-
-   Add these images inside:
-   public/building-demo/
+   BUILDING IMAGES
 ========================================================= */
 
 const BUILDING_IMAGES = [
-  "/Twin-Tower.jpg",  
+  "/Twin-Tower.jpg",
   "/bin-shabib-twin-tower/1.webp",
   "/bin-shabib-twin-tower/2.webp",
   "/bin-shabib-twin-tower/3.webp",
@@ -60,13 +56,11 @@ const BUILDING_IMAGES = [
   "/bin-shabib-twin-tower/8.webp",
   "/bin-shabib-twin-tower/9.webp",
   "/bin-shabib-twin-tower/10.webp",
-  "/bin-shabib-twin-tower/11.webp"
+  "/bin-shabib-twin-tower/11.webp",
 ];
 
 /* =========================================================
-   DUMMY AMENITIES
-
-   Later replace from DB/API.
+   AMENITIES
 ========================================================= */
 
 const DUMMY_AMENITIES = [
@@ -97,14 +91,17 @@ const DUMMY_AMENITIES = [
 ];
 
 /* =========================================================
-   COMPONENT
+   MAIN CONTENT
 ========================================================= */
 
 function PropertyDetailContent() {
-const searchParams = useSearchParams();
+  const searchParams =
+    useSearchParams();
 
-const buildingId =
-  searchParams.get("id")?.trim() || "";
+  const buildingId =
+    searchParams
+      .get("id")
+      ?.trim() || "";
 
   /* =======================================================
      DATA
@@ -137,12 +134,39 @@ const buildingId =
     setError,
   ] =
     useState("");
-const [
-  bookingUnit,
-  setBookingUnit,
-] = useState<PropertyUnit | null>(null);
+
+  const [
+    bookingUnit,
+    setBookingUnit,
+  ] =
+    useState<PropertyUnit | null>(
+      null
+    );
+
   /* =======================================================
-     SELECTED PROPERTY TYPE
+     VIEW MODE
+  ======================================================= */
+
+const [
+  unitView,
+  setUnitView,
+] =
+  useState<
+    "table" | "card"
+  >("table");
+
+useEffect(() => {
+  if (
+    window.innerWidth <= 650
+  ) {
+    setUnitView(
+      "card"
+    );
+  }
+}, []);
+
+  /* =======================================================
+     PROPERTY TYPE
   ======================================================= */
 
   const [
@@ -152,7 +176,7 @@ const [
     useState("");
 
   /* =======================================================
-     SELECTED IMAGE
+     IMAGE
   ======================================================= */
 
   const [
@@ -160,75 +184,134 @@ const [
     setSelectedImage,
   ] =
     useState(0);
-const touchStartX =
-  useRef<number | null>(null);
-
-const touchEndX =
-  useRef<number | null>(null);
-
-const handleTouchStart = (
-  event: TouchEvent<HTMLDivElement>
-) => {
-  touchEndX.current = null;
-
-  touchStartX.current =
-    event.targetTouches[0].clientX;
-};
-
-const handleTouchMove = (
-  event: React.TouchEvent<HTMLDivElement>
-) => {
-  touchEndX.current =
-    event.targetTouches[0].clientX;
-};
-
-const handleTouchEnd = () => {
-  if (
-    touchStartX.current === null ||
-    touchEndX.current === null
-  ) {
-    return;
-  }
-
-  const distance =
-    touchStartX.current -
-    touchEndX.current;
-
-  const minimumSwipeDistance = 50;
-
-  // Swipe LEFT → next image
-  if (
-    distance > minimumSwipeDistance
-  ) {
-    setSelectedImage((current) =>
-      current ===
-      BUILDING_IMAGES.length - 1
-        ? 0
-        : current + 1
-    );
-  }
-
-  // Swipe RIGHT → previous image
-  if (
-    distance < -minimumSwipeDistance
-  ) {
-    setSelectedImage((current) =>
-      current === 0
-        ? BUILDING_IMAGES.length - 1
-        : current - 1
-    );
-  }
-
-  touchStartX.current = null;
-  touchEndX.current = null;
-};
 
   /* =======================================================
-     LOAD PROPERTY
+     REFS
+  ======================================================= */
+
+  const unitsSectionRef =
+    useRef<HTMLElement | null>(
+      null
+    );
+
+  const touchStartX =
+    useRef<number | null>(
+      null
+    );
+
+  const touchEndX =
+    useRef<number | null>(
+      null
+    );
+
+  /* =======================================================
+     IMAGE SWIPE
+  ======================================================= */
+
+  const handleTouchStart = (
+    event: TouchEvent<HTMLDivElement>
+  ) => {
+    touchEndX.current =
+      null;
+
+    touchStartX.current =
+      event.targetTouches[0]
+        .clientX;
+  };
+
+  const handleTouchMove = (
+    event: TouchEvent<HTMLDivElement>
+  ) => {
+    touchEndX.current =
+      event.targetTouches[0]
+        .clientX;
+  };
+
+  const handleTouchEnd =
+    () => {
+      if (
+        touchStartX.current ===
+          null ||
+        touchEndX.current ===
+          null
+      ) {
+        return;
+      }
+
+      const distance =
+        touchStartX.current -
+        touchEndX.current;
+
+      const minimumSwipeDistance =
+        50;
+
+      if (
+        distance >
+        minimumSwipeDistance
+      ) {
+        setSelectedImage(
+          (current) =>
+            current ===
+            BUILDING_IMAGES.length -
+              1
+              ? 0
+              : current + 1
+        );
+      }
+
+      if (
+        distance <
+        -minimumSwipeDistance
+      ) {
+        setSelectedImage(
+          (current) =>
+            current === 0
+              ? BUILDING_IMAGES.length -
+                1
+              : current - 1
+        );
+      }
+
+      touchStartX.current =
+        null;
+
+      touchEndX.current =
+        null;
+    };
+
+  /* =======================================================
+     PROPERTY TYPE NAVIGATION
+  ======================================================= */
+
+  const navigateToPropertyType =
+    (
+      typeName: string
+    ) => {
+      setSelectedType(
+        typeName
+      );
+
+      requestAnimationFrame(
+        () => {
+          unitsSectionRef.current
+            ?.scrollIntoView({
+              behavior:
+                "smooth",
+              block:
+                "start",
+            });
+        }
+      );
+    };
+
+  /* =======================================================
+     LOAD DATA
   ======================================================= */
 
   useEffect(() => {
     if (!buildingId) {
+      setLoading(false);
+
       return;
     }
 
@@ -256,7 +339,8 @@ const handleTouchEnd = () => {
         );
 
         setUnits(
-          unitData.units
+          unitData.units ||
+            []
         );
       } catch (error) {
         console.error(
@@ -265,7 +349,8 @@ const handleTouchEnd = () => {
         );
 
         setError(
-          error instanceof Error
+          error instanceof
+            Error
             ? error.message
             : "Unable to load property"
         );
@@ -275,12 +360,10 @@ const handleTouchEnd = () => {
     }
 
     loadPropertyData();
-  }, [
-    buildingId,
-  ]);
+  }, [buildingId]);
 
   /* =======================================================
-     PROPERTY TYPE GROUPS
+     PROPERTY TYPES
   ======================================================= */
 
   const propertyTypes =
@@ -318,9 +401,11 @@ const handleTouchEnd = () => {
               key,
               {
                 name,
+
                 code:
                   unit.purposeCode ||
                   "",
+
                 count: 1,
               }
             );
@@ -334,7 +419,7 @@ const handleTouchEnd = () => {
     }, [units]);
 
   /* =======================================================
-     DEFAULT TAB
+     DEFAULT PROPERTY TYPE
   ======================================================= */
 
   useEffect(() => {
@@ -418,39 +503,41 @@ const handleTouchEnd = () => {
 
       return {
         minRent:
-          rents.length
+          rents.length >
+          0
             ? Math.min(
                 ...rents
               )
             : 0,
 
         maxRent:
-          rents.length
+          rents.length >
+          0
             ? Math.max(
                 ...rents
               )
             : 0,
 
         minArea:
-          areas.length
+          areas.length >
+          0
             ? Math.min(
                 ...areas
               )
             : 0,
 
         maxArea:
-          areas.length
+          areas.length >
+          0
             ? Math.max(
                 ...areas
               )
             : 0,
       };
-    }, [
-      visibleUnits,
-    ]);
+    }, [visibleUnits]);
 
   /* =======================================================
-     FORMAT PRICE
+     PRICE FORMAT
   ======================================================= */
 
   function formatPrice(
@@ -483,16 +570,28 @@ const handleTouchEnd = () => {
     ).format(amount);
   }
 
-  const breadcrumbLocationParts = useMemo(() => {
-  if (!property?.location) {
-    return [];
-  }
+  /* =======================================================
+     BREADCRUMB
+  ======================================================= */
 
-  return property.location
-    .split(",")
-    .map((part) => part.trim())
-    .filter(Boolean);
-}, [property?.location]);
+  const breadcrumbLocationParts =
+    useMemo(() => {
+      if (
+        !property?.location
+      ) {
+        return [];
+      }
+
+      return property.location
+        .split(",")
+        .map((part) =>
+          part.trim()
+        )
+        .filter(Boolean);
+    }, [
+      property?.location,
+    ]);
+
   /* =======================================================
      LOADING
   ======================================================= */
@@ -509,7 +608,8 @@ const handleTouchEnd = () => {
         />
 
         <h2>
-          Loading property...
+          Loading
+          property...
         </h2>
       </main>
     );
@@ -530,7 +630,8 @@ const handleTouchEnd = () => {
         }
       >
         <h1>
-          Property unavailable
+          Property
+          unavailable
         </h1>
 
         <p>
@@ -541,7 +642,8 @@ const handleTouchEnd = () => {
         <Link
           href="/properties"
         >
-          Back to Properties
+          Back to
+          Properties
         </Link>
       </main>
     );
@@ -557,89 +659,112 @@ const handleTouchEnd = () => {
         styles.page
       }
     >
-
-
       {/* =================================================
-          PROPERTY HEADER
+          BREADCRUMB
       ================================================= */}
 
-<div className={styles.breadcrumbBar}>
-  <div className={styles.container}>
-    <nav
-      className={styles.breadcrumb}
-      aria-label="Breadcrumb"
-    >
-      {/* HOME */}
-
-      <Link
-        href="/"
-        className={styles.breadcrumbLink}
+      <div
+        className={
+          styles.breadcrumbBar
+        }
       >
-        <Home size={15} />
-
-        <span>
-          Home
-        </span>
-      </Link>
-
-      <ChevronRight
-        size={15}
-        className={styles.breadcrumbArrow}
-      />
-
-      {/* PROPERTIES */}
-
-      <Link
-        href="/properties"
-        className={styles.breadcrumbLink}
-      >
-        Properties for Rent
-      </Link>
-
-      {/* DYNAMIC LOCATION */}
-
-      {breadcrumbLocationParts.map(
-        (part, index) => (
-          <span
-            key={`${part}-${index}`}
-            className={styles.breadcrumbGroup}
+        <div
+          className={
+            styles.container
+          }
+        >
+          <nav
+            className={
+              styles.breadcrumb
+            }
+            aria-label="Breadcrumb"
           >
+            <Link
+              href="/"
+              className={
+                styles.breadcrumbLink
+              }
+            >
+              <Home
+                size={15}
+              />
+
+              <span>
+                Home
+              </span>
+            </Link>
+
             <ChevronRight
               size={15}
-              className={styles.breadcrumbArrow}
+              className={
+                styles.breadcrumbArrow
+              }
             />
 
             <Link
-              href={`/properties?search=${encodeURIComponent(
-                part
-              )}`}
-              className={styles.breadcrumbLink}
+              href="/properties"
+              className={
+                styles.breadcrumbLink
+              }
             >
-              {part}
+              Properties
+              for Rent
             </Link>
-          </span>
-        )
-      )}
 
-      {/* CURRENT BUILDING */}
+            {breadcrumbLocationParts.map(
+              (
+                part,
+                index
+              ) => (
+                <span
+                  key={`${part}-${index}`}
+                  className={
+                    styles.breadcrumbGroup
+                  }
+                >
+                  <ChevronRight
+                    size={15}
+                    className={
+                      styles.breadcrumbArrow
+                    }
+                  />
 
-      <ChevronRight
-        size={15}
-        className={styles.breadcrumbArrow}
-      />
+                  <Link
+                    href={`/properties?search=${encodeURIComponent(
+                      part
+                    )}`}
+                    className={
+                      styles.breadcrumbLink
+                    }
+                  >
+                    {part}
+                  </Link>
+                </span>
+              )
+            )}
 
-      <span
-        className={styles.breadcrumbCurrent}
-        title={property.title}
-      >
-        {property.title}
-      </span>
-    </nav>
-  </div>
-</div>
-      {/* =================================================
-          MAIN CONTENT
-      ================================================= */}
+            <ChevronRight
+              size={15}
+              className={
+                styles.breadcrumbArrow
+              }
+            />
+
+            <span
+              className={
+                styles.breadcrumbCurrent
+              }
+              title={
+                property.title
+              }
+            >
+              {
+                property.title
+              }
+            </span>
+          </nav>
+        </div>
+      </div>
 
       <div
         className={
@@ -647,203 +772,441 @@ const handleTouchEnd = () => {
         }
       >
         {/* =================================================
-    BUILDING IMAGE
-================================================= */}
+            PROPERTY OVERVIEW
+        ================================================= */}
 
-<section className={styles.gallerySection}>
-  <div className={styles.sectionHeadingRow}>
-    <div>
-      <h2>Property Overview</h2>
-
-      <p>
-        View the building and key property information.
-      </p>
-    </div>
-
-    {BUILDING_IMAGES.length > 1 && (
-      <span className={styles.photoCount}>
-        {BUILDING_IMAGES.length} Photos
-      </span>
-    )}
-  </div>
-
-  <div className={styles.propertyOverviewGrid}>
-    {/* IMAGE */}
-
-    <div
-  className={styles.buildingImageArea}
-  onTouchStart={handleTouchStart}
-  onTouchMove={handleTouchMove}
-  onTouchEnd={handleTouchEnd}
->
-      <img
-  src={BUILDING_IMAGES[selectedImage]}
-  alt={property.title}
-  className={styles.buildingMainImage}
-  draggable={false}
-/>
-
-      <div className={styles.imageBadge}>
-        <Building2 size={15} />
-
-        Property for Rent
-      </div>
-
-      {BUILDING_IMAGES.length > 1 && (
-        <div className={styles.imageCounter}>
-          {selectedImage + 1} / {BUILDING_IMAGES.length}
-        </div>
-      )}
-    </div>
-
-    {/* PROPERTY INFORMATION */}
-
-    <div className={styles.overviewDetails}>
-      <div className={styles.overviewTitle}>
-        <span>PROPERTY DETAILS</span>
-
-        <h2>{property.title}</h2>
-
-        <div className={styles.overviewLocation}>
-          <MapPin size={17} />
-
-          <span>{property.location}</span>
-        </div>
-      </div>
-
-      <div className={styles.overviewStats}>
-        <div className={styles.overviewStat}>
-          <div className={styles.overviewStatIcon}>
-            <Building2 size={19} />
-          </div>
-
-          <div>
-            <span>Building ID</span>
-            <strong>{property.id}</strong>
-          </div>
-        </div>
-
-        <div className={styles.overviewStat}>
-          <div className={styles.overviewStatIcon}>
-            <Layers size={19} />
-          </div>
-
-          <div>
-            <span>Vacant Units</span>
-            <strong>{units.length}</strong>
-          </div>
-        </div>
-
-        <div className={styles.overviewStat}>
-          <div className={styles.overviewStatIcon}>
-            <Grid2X2 size={19} />
-          </div>
-
-          <div>
-            <span>Property Types</span>
-            <strong>{propertyTypes.length}</strong>
-          </div>
-        </div>
-      </div>
-
-      {/* PROPERTY TYPES */}
-
-      <div className={styles.overviewTypes}>
-        <span className={styles.overviewTypesLabel}>
-          Available Property Types
-        </span>
-
-        <div className={styles.overviewTypeList}>
-          {propertyTypes.map((type) => (
-            <span
-              key={type.name}
-              className={styles.overviewTypeChip}
-            >
-              {type.name}
-
-              <small>
-                {type.count}
-              </small>
-            </span>
-          ))}
-        </div>
-      </div>
-    </div>
-  </div>
-
-  {/* ONLY SHOW THUMBNAILS IF MULTIPLE IMAGES EXIST */}
-
-  {BUILDING_IMAGES.length > 1 && (
-    <div className={styles.thumbnailRow}>
-      {BUILDING_IMAGES.map((image, index) => (
-        <button
-          key={image}
-          type="button"
-          onClick={() => setSelectedImage(index)}
-          className={`${styles.thumbButton} ${
-            selectedImage === index
-              ? styles.thumbActive
-              : ""
-          }`}
+        <section
+          className={
+            styles.gallerySection
+          }
         >
-          <img
-            src={image}
-            alt={`${property.title} ${index + 1}`}
-            className={styles.thumbImage}
-            draggable={false}
-          />
-        </button>
-      ))}
-    </div>
-  )}
-</section>
-       
+          <div
+            className={
+              styles.sectionHeadingRow
+            }
+          >
+            <div>
+              <h2>
+                Property
+                Overview
+              </h2>
 
-      
+              <p>
+                View the
+                building and
+                key property
+                information.
+              </p>
+            </div>
+
+            {BUILDING_IMAGES.length >
+              1 && (
+              <span
+                className={
+                  styles.photoCount
+                }
+              >
+                {
+                  BUILDING_IMAGES.length
+                }{" "}
+                Photos
+              </span>
+            )}
+          </div>
+
+          <div
+            className={
+              styles.propertyOverviewGrid
+            }
+          >
+            {/* IMAGE */}
+
+            <div
+              className={
+                styles.buildingImageArea
+              }
+              onTouchStart={
+                handleTouchStart
+              }
+              onTouchMove={
+                handleTouchMove
+              }
+              onTouchEnd={
+                handleTouchEnd
+              }
+            >
+              <img
+                src={
+                  BUILDING_IMAGES[
+                    selectedImage
+                  ]
+                }
+                alt={
+                  property.title
+                }
+                className={
+                  styles.buildingMainImage
+                }
+                draggable={
+                  false
+                }
+              />
+
+              <div
+                className={
+                  styles.imageBadge
+                }
+              >
+                <Building2
+                  size={15}
+                />
+
+                Property for
+                Rent
+              </div>
+
+              {BUILDING_IMAGES.length >
+                1 && (
+                <div
+                  className={
+                    styles.imageCounter
+                  }
+                >
+                  {selectedImage +
+                    1}{" "}
+                  /{" "}
+                  {
+                    BUILDING_IMAGES.length
+                  }
+                </div>
+              )}
+            </div>
+
+            {/* THUMBNAILS */}
+
+            {BUILDING_IMAGES.length >
+              1 && (
+              <div
+                className={
+                  styles.thumbnailRow
+                }
+              >
+                {BUILDING_IMAGES.map(
+                  (
+                    image,
+                    index
+                  ) => (
+                    <button
+                      key={
+                        image
+                      }
+                      type="button"
+                      onClick={() =>
+                        setSelectedImage(
+                          index
+                        )
+                      }
+                      className={`${styles.thumbButton} ${
+                        selectedImage ===
+                        index
+                          ? styles.thumbActive
+                          : ""
+                      }`}
+                    >
+                      <img
+                        src={
+                          image
+                        }
+                        alt={`${property.title} ${
+                          index +
+                          1
+                        }`}
+                        className={
+                          styles.thumbImage
+                        }
+                        draggable={
+                          false
+                        }
+                      />
+                    </button>
+                  )
+                )}
+              </div>
+            )}
+
+            {/* PROPERTY DETAILS */}
+
+            <div
+              className={
+                styles.overviewDetails
+              }
+            >
+              <div
+                className={
+                  styles.overviewTitle
+                }
+              >
+                <span>
+                  Property
+                  Details
+                </span>
+
+                <h2>
+                  {
+                    property.title
+                  }
+                </h2>
+
+                <div
+                  className={
+                    styles.overviewLocation
+                  }
+                >
+                  <MapPin
+                    size={
+                      17
+                    }
+                  />
+
+                  <span>
+                    {
+                      property.location
+                    }
+                  </span>
+                </div>
+              </div>
+
+              <div
+                className={
+                  styles.overviewStats
+                }
+              >
+              
+
+                <div
+                  className={
+                    styles.overviewStat
+                  }
+                >
+                  <div
+                    className={
+                      styles.overviewStatIcon
+                    }
+                  >
+                    <Layers
+                      size={
+                        19
+                      }
+                    />
+                  </div>
+
+                  <div>
+                    <span>
+                      Vacant
+                      Units
+                    </span>
+
+                    <strong>
+                      {
+                        units.length
+                      }
+                    </strong>
+                  </div>
+                </div>
+
+                <div
+                  className={
+                    styles.overviewStat
+                  }
+                >
+                  <div
+                    className={
+                      styles.overviewStatIcon
+                    }
+                  >
+                    <Grid2X2
+                      size={
+                        19
+                      }
+                    />
+                  </div>
+
+                  <div>
+                    <span>
+                      Property
+                      Types
+                    </span>
+
+                    <strong>
+                      {
+                        propertyTypes.length
+                      }
+                    </strong>
+                  </div>
+                </div>
+              </div>
+
+              {/* TYPES */}
+
+              <div
+                className={
+                  styles.overviewTypes
+                }
+              >
+                <span
+                  className={
+                    styles.overviewTypesLabel
+                  }
+                >
+                  Available
+                  Property
+                  Types
+                </span>
+
+                <div
+                  className={
+                    styles.overviewTypeList
+                  }
+                >
+                  {propertyTypes.map(
+                    (
+                      type
+                    ) => (
+                      <button
+                        key={
+                          type.name
+                        }
+                        type="button"
+                        onClick={() =>
+                          navigateToPropertyType(
+                            type.name
+                          )
+                        }
+                        className={`${styles.overviewTypeChip} ${
+                          selectedType ===
+                          type.name
+                            ? styles.overviewTypeChipActive
+                            : ""
+                        }`}
+                      >
+                        <span>
+                          {
+                            type.name
+                          }
+                        </span>
+
+                        <small>
+                          {
+                            type.count
+                          }
+                        </small>
+
+                        <ChevronRight
+                          size={
+                            13
+                          }
+                          className={
+                            styles.overviewTypeArrow
+                          }
+                        />
+                      </button>
+                    )
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
 
         {/* =================================================
             AMENITIES
         ================================================= */}
 
-    <section className={styles.amenitiesSection}>
-  <div className={styles.sectionHeading}>
-    <h2>Building Amenities</h2>
-
-    <p>
-      Facilities and services available for this property.
-    </p>
-  </div>
-
-  <div className={styles.amenitiesGrid}>
-    {DUMMY_AMENITIES.map((amenity) => {
-      const Icon = amenity.icon;
-
-      return (
-        <div
-          key={amenity.label}
-          className={styles.amenityCard}
+        <section
+          className={
+            styles.amenitiesSection
+          }
         >
-          <div className={styles.amenityIcon}>
-            <Icon size={18} />
+          <div
+            className={
+              styles.sectionHeading
+            }
+          >
+            <h2>
+              Building
+              Amenities
+            </h2>
+
+            <p>
+              Facilities and
+              services
+              available for
+              this property.
+            </p>
           </div>
 
-          <span>{amenity.label}</span>
+          <div
+            className={
+              styles.amenitiesGrid
+            }
+          >
+            {DUMMY_AMENITIES.map(
+              (
+                amenity
+              ) => {
+                const Icon =
+                  amenity.icon;
 
-          <Check
-            size={15}
-            className={styles.amenityCheck}
-          />
-        </div>
-      );
-    })}
-  </div>
-</section>
+                return (
+                  <div
+                    key={
+                      amenity.label
+                    }
+                    className={
+                      styles.amenityCard
+                    }
+                  >
+                    <div
+                      className={
+                        styles.amenityIcon
+                      }
+                    >
+                      <Icon
+                        size={
+                          18
+                        }
+                      />
+                    </div>
+
+                    <span>
+                      {
+                        amenity.label
+                      }
+                    </span>
+
+                    <Check
+                      size={
+                        15
+                      }
+                      className={
+                        styles.amenityCheck
+                      }
+                    />
+                  </div>
+                );
+              }
+            )}
+          </div>
+        </section>
 
         {/* =================================================
             AVAILABLE UNITS
         ================================================= */}
 
         <section
+          ref={
+            unitsSectionRef
+          }
           className={
             styles.unitsSection
           }
@@ -854,17 +1217,22 @@ const handleTouchEnd = () => {
             }
           >
             <h2>
-              Available Units
+              Available
+              Units
             </h2>
 
             <p>
-             Choose a property type below to view its available units,annual rent, size and booking details.
+              Choose a
+              property type
+              below to view
+              available units,
+              annual rent,
+              size and booking
+              details.
             </p>
           </div>
 
-          {/* =================================================
-              PROPERTY TYPE TABS
-          ================================================= */}
+          {/* PROPERTY TYPE TABS */}
 
           <div
             className={
@@ -881,7 +1249,7 @@ const handleTouchEnd = () => {
                   }
                   type="button"
                   onClick={() =>
-                    setSelectedType(
+                    navigateToPropertyType(
                       type.name
                     )
                   }
@@ -909,7 +1277,7 @@ const handleTouchEnd = () => {
           </div>
 
           {/* =================================================
-              SELECTED TYPE HEADER
+              SUMMARY + VIEW SWITCH
           ================================================= */}
 
           {selectedType && (
@@ -918,7 +1286,11 @@ const handleTouchEnd = () => {
                 styles.selectedTypeHeader
               }
             >
-              <div>
+              <div
+                className={
+                  styles.selectedTypeTitle
+                }
+              >
                 <h3>
                   {
                     selectedType
@@ -939,243 +1311,511 @@ const handleTouchEnd = () => {
 
               <div
                 className={
-                  styles.selectedTypeStats
+                  styles.selectedTypeRight
                 }
               >
-                {/* RENT */}
+                <div
+                  className={
+                    styles.selectedTypeStats
+                  }
+                >
+                  <div>
+                    <span>
+                      Annual
+                      Rent
+                    </span>
 
-                <div>
-                  <span>
-                    Annual Rent
-                  </span>
+                    <strong>
+                      {typeSummary.minRent ===
+                      typeSummary.maxRent
+                        ? formatPrice(
+                            typeSummary.minRent
+                          )
+                        : `${formatPrice(
+                            typeSummary.minRent
+                          )} - ${formatPrice(
+                            typeSummary.maxRent
+                          )}`}
+                    </strong>
+                  </div>
 
-                  <strong>
-                    {typeSummary.minRent ===
-                    typeSummary.maxRent
-                      ? formatPrice(
-                          typeSummary.minRent
-                        )
-                      : `${formatPrice(
-                          typeSummary.minRent
-                        )} - ${formatPrice(
-                          typeSummary.maxRent
-                        )}`}
-                  </strong>
+                  <div>
+                    <span>
+                      Area
+                    </span>
+
+                    <strong>
+                      {typeSummary.minArea ===
+                      typeSummary.maxArea
+                        ? `${typeSummary.minArea.toLocaleString()} Sq.Ft.`
+                        : `${typeSummary.minArea.toLocaleString()} - ${typeSummary.maxArea.toLocaleString()} Sq.Ft.`}
+                    </strong>
+                  </div>
                 </div>
 
-                {/* AREA */}
+                {/* VIEW SWITCHER */}
 
-                <div>
-                  <span>
-                    Area
-                  </span>
+                <div
+                  className={
+                    styles.viewSwitcher
+                  }
+                  role="group"
+                  aria-label="Unit view"
+                >
+                  <button
+                    type="button"
+                    className={`${styles.viewButton} ${
+                      unitView ===
+                      "table"
+                        ? styles.viewButtonActive
+                        : ""
+                    }`}
+                    onClick={() =>
+                      setUnitView(
+                        "table"
+                      )
+                    }
+                  >
+                    <span
+                      className={
+                        styles.tableViewIcon
+                      }
+                    >
+                      ▤
+                    </span>
 
-                  <strong>
-                    {typeSummary.minArea ===
-                    typeSummary.maxArea
-                      ? `${typeSummary.minArea.toLocaleString()} Sq.Ft.`
-                      : `${typeSummary.minArea.toLocaleString()} - ${typeSummary.maxArea.toLocaleString()} Sq.Ft.`}
-                  </strong>
+                    Table
+                  </button>
+
+                  <button
+                    type="button"
+                    className={`${styles.viewButton} ${
+                      unitView ===
+                      "card"
+                        ? styles.viewButtonActive
+                        : ""
+                    }`}
+                    onClick={() =>
+                      setUnitView(
+                        "card"
+                      )
+                    }
+                  >
+                    <Grid2X2
+                      size={
+                        14
+                      }
+                    />
+
+                    Card
+                  </button>
                 </div>
               </div>
             </div>
           )}
 
           {/* =================================================
-              UNIT TABLE
+              TABLE VIEW
           ================================================= */}
 
-          <div
-            className={
-              styles.unitTableWrapper
-            }
-          >
-            {/* HEADER */}
-
+          {unitView ===
+            "table" && (
             <div
               className={
-                styles.unitTableHeader
+                styles.unitTableScroll
               }
             >
-              <div>
-                Unit Details
-              </div>
+              <div
+                className={
+                  styles.unitTableContent
+                }
+              >
+                {/* HEADER */}
 
-              <div>
-                Annual Rent
-              </div>
-
-              <div>
-                Unit Information
-              </div>
-
-              <div>
-                Action
-              </div>
-            </div>
-
-            {/* ROWS */}
-
-            {visibleUnits.map(
-              (
-                unit,
-                index
-              ) => (
-                <article
-                  key={`${unit.referenceNo || selectedType}-${index}`}
+                <div
                   className={
-                    styles.unitRow
+                    styles.unitTableHeader
                   }
                 >
-                  {/* =====================================
-                      UNIT DETAILS
-                  ===================================== */}
+                  <div>
+                    Unit Details
+                  </div>
 
-                  <div
-                    className={
-                      styles.unitMain
-                    }
-                  >
-                    <h4>
-                      {unit.unitName ||
-                        unit.propertyType}
-                    </h4>
+                  <div>
+                    Annual Rent
+                  </div>
 
-                    {unit.referenceNo && (
-                      <div
-                        className={
-                          styles.reference
-                        }
-                      >
-                        Ref:{" "}
-                        {
-                          unit.referenceNo
-                        }
-                      </div>
-                    )}
+                  <div>
+                    Unit
+                    Information
+                  </div>
 
-                    <div
+                  <div>
+                    Action
+                  </div>
+                </div>
+
+                {/* ROWS */}
+
+                {visibleUnits.map(
+                  (
+                    unit,
+                    index
+                  ) => (
+                    <article
+                      key={`${unit.referenceNo || selectedType}-${index}`}
                       className={
-                        styles.unitFeatures
+                        styles.unitRow
                       }
                     >
-                      {/* AREA */}
+                      {/* UNIT DETAILS */}
 
-                      <span>
-                        <Ruler
-                          size={
-                            15
+                      <div
+                        className={
+                          styles.unitMain
+                        }
+                      >
+                        <h4>
+                          {unit.unitName ||
+                            unit.propertyType}
+                        </h4>
+
+                        {unit.referenceNo && (
+                          <div
+                            className={
+                              styles.reference
+                            }
+                          >
+                            Ref:{" "}
+                            {
+                              unit.referenceNo
+                            }
+                          </div>
+                        )}
+
+                        <div
+                          className={
+                            styles.unitFeatures
                           }
-                        />
-
-                        {Number(
-                          unit.area ||
-                            0
-                        ).toLocaleString()}{" "}
-                        Sq.Ft.
-                      </span>
-
-                      {/* FLOOR */}
-
-                      {unit.floorNumber !==
-                        null &&
-                        unit.floorNumber !==
-                          undefined && (
+                        >
                           <span>
-                            <Layers
+                            <Ruler
                               size={
                                 15
                               }
                             />
 
-                            Floor{" "}
+                            {Number(
+                              unit.area ||
+                                0
+                            ).toLocaleString()}{" "}
+                            Sq.Ft.
+                          </span>
+
+                          {unit.floorNumber !==
+                            null &&
+                            unit.floorNumber !==
+                              undefined && (
+                              <span>
+                                <Layers
+                                  size={
+                                    15
+                                  }
+                                />
+
+                                Floor{" "}
+                                {
+                                  unit.floorNumber
+                                }
+                              </span>
+                            )}
+                        </div>
+
+                        <div
+                          className={
+                            styles.availableBadge
+                          }
+                        >
+                          <Check
+                            size={
+                              14
+                            }
+                          />
+
+                          Available
+                        </div>
+                      </div>
+
+                      {/* RENT */}
+
+                      <div
+                        className={
+                          styles.unitPrice
+                        }
+                      >
+                        <strong>
+                          {formatPrice(
+                            unit.annualRent
+                          )}
+                        </strong>
+
+                        {Number(
+                          unit.annualRent ||
+                            0
+                        ) >
+                          0 && (
+                          <span>
+                            per year
+                          </span>
+                        )}
+                      </div>
+
+                      {/* INFORMATION */}
+
+                      <div
+                        className={
+                          styles.unitInformation
+                        }
+                      >
+                        {Number(
+                          unit.numberOfPayments ||
+                            0
+                        ) >
+                          0 && (
+                          <div>
+                            <WalletCards
+                              size={
+                                15
+                              }
+                            />
+
+                            <span>
+                              {
+                                unit.numberOfPayments
+                              }{" "}
+                              payments
+                            </span>
+                          </div>
+                        )}
+
+                        <div>
+                          <Check
+                            size={
+                              15
+                            }
+                          />
+
+                          <span>
+                            Vacant &
+                            available
+                          </span>
+                        </div>
+
+                        {unit.airConditioning && (
+                          <div>
+                            <Wind
+                              size={
+                                15
+                              }
+                            />
+
+                            <span>
+                              Air
+                              conditioning
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* ACTION */}
+
+                      <div
+                        className={
+                          styles.unitAction
+                        }
+                      >
+                        <button
+                          type="button"
+                          className={
+                            styles.bookButton
+                          }
+                          onClick={() =>
+                            setBookingUnit(
+                              unit
+                            )
+                          }
+                        >
+                          Book Now
+                        </button>
+                      </div>
+                    </article>
+                  )
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* =================================================
+              CARD VIEW
+          ================================================= */}
+
+          {unitView ===
+            "card" && (
+            <div
+              className={
+                styles.unitCardGrid
+              }
+            >
+              {visibleUnits.map(
+                (
+                  unit,
+                  index
+                ) => (
+                  <article
+                    key={`${unit.referenceNo || selectedType}-card-${index}`}
+                    className={
+                      styles.unitCard
+                    }
+                  >
+                    <div
+                      className={
+                        styles.unitCardHeader
+                      }
+                    >
+                      <div>
+                        <h3>
+                          {unit.unitName ||
+                            unit.propertyType}
+                        </h3>
+
+                        {unit.referenceNo && (
+                          <span
+                            className={
+                              styles.unitCardReference
+                            }
+                          >
+                            Ref:{" "}
                             {
-                              unit.floorNumber
+                              unit.referenceNo
                             }
                           </span>
                         )}
+                      </div>
+
+                      <div
+                        className={
+                          styles.cardAvailable
+                        }
+                      >
+                        <Check
+                          size={
+                            13
+                          }
+                        />
+
+                        Available
+                      </div>
                     </div>
 
                     <div
                       className={
-                        styles.availableBadge
+                        styles.unitCardStats
                       }
                     >
-                      <Check
-                        size={14}
-                      />
-
-                      Available
-                    </div>
-                  </div>
-
-                  {/* =====================================
-                      RENT
-                  ===================================== */}
-
-                  <div
-                    className={
-                      styles.unitPrice
-                    }
-                  >
-                    <strong>
-                      {formatPrice(
-                        unit.annualRent
-                      )}
-                    </strong>
-
-                    {Number(
-                      unit.annualRent ||
-                        0
-                    ) > 0 && (
-                      <span>
-                        per year
-                      </span>
-                    )}
-
-                    
-                  </div>
-
-                  {/* =====================================
-                      INFORMATION
-                  ===================================== */}
-
-                  <div
-                    className={
-                      styles.unitInformation
-                    }
-                  >
-                    {unit.numberOfPayments && (
-                      <div>
-                        <WalletCards
-                          size={
-                            15
-                          }
-                        />
-
-                        <span>
-                          {
-                            unit.numberOfPayments
-                          }{" "}
-                          payments
-                        </span>
-                      </div>
-                    )}
-
-                    <div>
-                      <Check
-                        size={
-                          15
+                      <div
+                        className={
+                          styles.unitCardStat
                         }
-                      />
+                      >
+                        <span>
+                          Annual
+                          Rent
+                        </span>
 
-                      <span>
-                        Vacant &
-                        available
-                      </span>
+                        <strong>
+                          {formatPrice(
+                            unit.annualRent
+                          )}
+                        </strong>
+
+                        {Number(
+                          unit.annualRent ||
+                            0
+                        ) >
+                          0 && (
+                          <small>
+                            per year
+                          </small>
+                        )}
+                      </div>
+
+                      <div
+                        className={
+                          styles.unitCardStat
+                        }
+                      >
+                        <span>
+                          Area
+                        </span>
+
+                        <strong>
+                          {Number(
+                            unit.area ||
+                              0
+                          ).toLocaleString()}{" "}
+                          Sq.Ft.
+                        </strong>
+                      </div>
+
+                      {unit.floorNumber !==
+                        null &&
+                        unit.floorNumber !==
+                          undefined && (
+                          <div
+                            className={
+                              styles.unitCardStat
+                            }
+                          >
+                            <span>
+                              Floor
+                            </span>
+
+                            <strong>
+                              {
+                                unit.floorNumber
+                              }
+                            </strong>
+                          </div>
+                        )}
+
+                      {Number(
+                        unit.numberOfPayments ||
+                          0
+                      ) >
+                        0 && (
+                        <div
+                          className={
+                            styles.unitCardStat
+                          }
+                        >
+                          <span>
+                            Payments
+                          </span>
+
+                          <strong>
+                            {
+                              unit.numberOfPayments
+                            }
+                          </strong>
+                        </div>
+                      )}
                     </div>
 
-                    {unit.airConditioning && (
+                    <div
+                      className={
+                        styles.unitCardInfo
+                      }
+                    >
                       <div>
                         <Check
                           size={
@@ -1183,81 +1823,113 @@ const handleTouchEnd = () => {
                           }
                         />
 
-                        <span>
+                        Vacant &
+                        available
+                      </div>
+
+                      {unit.airConditioning && (
+                        <div>
+                          <Wind
+                            size={
+                              15
+                            }
+                          />
+
                           Air
                           conditioning
-                        </span>
-                      </div>
-                    )}
-                  </div>
+                        </div>
+                      )}
+                    </div>
 
-                  {/* =====================================
-                      ACTION
-                  ===================================== */}
+                    <button
+                      type="button"
+                      className={
+                        styles.cardBookButton
+                      }
+                      onClick={() =>
+                        setBookingUnit(
+                          unit
+                        )
+                      }
+                    >
+                      Book Now
+                    </button>
+                  </article>
+                )
+              )}
+            </div>
+          )}
 
-                  <div
-                    className={
-                      styles.unitAction
-                    }
-                  >
-                   <button
-  type="button"
-  className={
-    styles.bookButton
-  }
-  onClick={() =>
-    setBookingUnit(unit)
-  }
->
-  Book Now
-</button>
-
-                   
-                  </div>
-                </article>
-              )
-            )}
-          </div>
+          {visibleUnits.length ===
+            0 && (
+            <div
+              className={
+                styles.noUnits
+              }
+            >
+              No available
+              units found.
+            </div>
+          )}
         </section>
 
-   <BookingModal
-  open={bookingUnit !== null}
-  property={
-    bookingUnit
-      ? {
-          id: property.id,
-          title: property.title,
+        {/* =================================================
+            BOOKING MODAL
+        ================================================= */}
 
-          unitReference:
-            bookingUnit.referenceNo,
+        <BookingModal
+          open={
+            bookingUnit !==
+            null
+          }
+          property={
+            bookingUnit
+              ? {
+                  id:
+                    property.id,
 
-          unitType:
-            bookingUnit.propertyType,
-        }
-      : null
-  }
-  onClose={() =>
-    setBookingUnit(null)
-  }
-/>
+                  title:
+                    property.title,
+
+                  unitReference:
+                    bookingUnit.referenceNo,
+
+                  unitType:
+                    bookingUnit.propertyType,
+                }
+              : null
+          }
+          onClose={() =>
+            setBookingUnit(
+              null
+            )
+          }
+        />
       </div>
     </main>
   );
 }
+
+/* =========================================================
+   PAGE
+========================================================= */
 
 export default function PropertyDetailPage() {
   return (
     <Suspense
       fallback={
         <main
-          className={styles.statePage}
+          className={
+            styles.statePage
+          }
         >
           <Building2
             size={40}
           />
 
           <h2>
-            Loading property...
+            Loading
+            property...
           </h2>
         </main>
       }

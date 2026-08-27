@@ -2,8 +2,7 @@ import nodemailer from "nodemailer";
 
 const smtpPort =
   Number(
-    process.env.SMTP_PORT ||
-      587
+    process.env.SMTP_PORT || 465
   );
 
 export const mailTransporter =
@@ -11,11 +10,11 @@ export const mailTransporter =
     host:
       process.env.SMTP_HOST,
 
-    port:
-      smtpPort,
+    port: 587,
 
-    secure:
-      smtpPort === 465,
+    secure: false, // true for 465, false for other ports
+
+    // requireTLS: true,
 
     auth: {
       user:
@@ -23,5 +22,8 @@ export const mailTransporter =
 
       pass:
         process.env.SMTP_PASS,
+    },
+    tls: {
+      rejectUnauthorized: false,
     },
   });

@@ -1,0 +1,318 @@
+.alertBackdrop {
+  position: fixed;
+  inset: 0;
+
+  z-index: 9999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  background:
+    rgba(11, 26, 48, 0.55);
+
+  backdrop-filter:
+    blur(3px);
+}
+
+.alertModal {
+  width: 100%;
+  max-width: 430px;
+
+  padding: 28px;
+
+  background: #ffffff;
+
+  border:
+    1px solid #e2e8f0;
+
+  border-radius: 16px;
+
+  box-shadow:
+    0 24px 60px
+    rgba(15, 23, 42, 0.22);
+
+  text-align: center;
+
+  animation:
+    alertOpen
+    0.18s ease-out;
+}
+
+@keyframes alertOpen {
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(8px)
+      scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
+
+.alertIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 54px;
+  height: 54px;
+
+  margin:
+    0 auto
+    16px;
+
+  border-radius: 50%;
+
+  font-size: 25px;
+  font-weight: 800;
+}
+
+.successIcon {
+  background:
+    #dcfce7;
+
+  color:
+    #15803d;
+}
+
+.errorIcon {
+  background:
+    #fee2e2;
+
+  color:
+    #b91c1c;
+}
+
+.warningIcon {
+  background:
+    #fef3c7;
+
+  color:
+    #b45309;
+}
+
+.confirmIcon {
+  background:
+    #e0f2fe;
+
+  color:
+    #0f4c81;
+}
+
+.alertTitle {
+  margin:
+    0 0 8px;
+
+  color:
+    #0b1a30;
+
+  font-size:
+    19px;
+
+  font-weight:
+    700;
+}
+
+.alertMessage {
+  margin:
+    0;
+
+  color:
+    #64748b;
+
+  font-size:
+    13px;
+
+  line-height:
+    1.55;
+}
+
+.alertInputGroup {
+  margin-top:
+    20px;
+
+  text-align:
+    left;
+}
+
+.alertLabel {
+  display:
+    block;
+
+  margin-bottom:
+    6px;
+
+  color:
+    #475569;
+
+  font-size:
+    12px;
+
+  font-weight:
+    700;
+}
+
+.alertTextarea {
+  width:
+    100%;
+
+  min-height:
+    95px;
+
+  padding:
+    11px 12px;
+
+  resize:
+    vertical;
+
+  background:
+    #ffffff;
+
+  border:
+    1px solid #cbd5e1;
+
+  border-radius:
+    8px;
+
+  color:
+    #1e293b;
+
+  font-family:
+    inherit;
+
+  font-size:
+    13px;
+
+  outline:
+    none;
+}
+
+.alertTextarea:focus {
+  border-color:
+    #0f4c81;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(
+      15,
+      76,
+      129,
+      0.12
+    );
+}
+
+.alertActions {
+  display:
+    flex;
+
+  justify-content:
+    center;
+
+  gap:
+    10px;
+
+  margin-top:
+    24px;
+}
+
+.cancelButton,
+.confirmButton {
+  min-width:
+    105px;
+
+  padding:
+    9px 16px;
+
+  border:
+    none;
+
+  border-radius:
+    8px;
+
+  font-family:
+    inherit;
+
+  font-size:
+    12px;
+
+  font-weight:
+    700;
+
+  cursor:
+    pointer;
+}
+
+.cancelButton {
+  background:
+    #e2e8f0;
+
+  color:
+    #475569;
+}
+
+.cancelButton:hover {
+  background:
+    #cbd5e1;
+}
+
+.confirmButton {
+  background:
+    #0f4c81;
+
+  color:
+    #ffffff;
+}
+
+.confirmButton:hover {
+  background:
+    #0a3a63;
+}
+
+.dangerButton {
+  background:
+    #dc2626;
+}
+
+.dangerButton:hover {
+  background:
+    #b91c1c;
+}
+
+.cancelButton:disabled,
+.confirmButton:disabled {
+  opacity:
+    0.6;
+
+  cursor:
+    not-allowed;
+}
+
+@media (
+  max-width: 480px
+) {
+  .alertModal {
+    padding:
+      22px 18px;
+  }
+
+  .alertActions {
+    flex-direction:
+      column-reverse;
+  }
+
+  .cancelButton,
+  .confirmButton {
+    width:
+      100%;
+  }
+}

@@ -1,7 +1,7 @@
 "use client";
 
 import React, {
-  useMemo,
+  useEffect,
   useState,
 } from "react";
 
@@ -14,7 +14,11 @@ interface BookingProperty {
     unitReference?: string | null;
   unitType?: string | null
 }
-
+interface NationalityOption {
+  id: string;
+  nationality: string;
+  country: string;
+}
 interface BookingModalProps {
   property: BookingProperty | null;
   open: boolean;
@@ -29,13 +33,13 @@ interface BookingForm {
   passport: File | null;
 }
 
-const NATIONALITY_CODES =
-  "AF AL DZ AD AO AG AR AM AU AT AZ BS BH BD BB BY BE BZ BJ BT BO BA BW BR BN BG BF BI CV KH CM CA CF TD CL CN CO KM CG CD CR CI HR CU CY CZ DK DJ DM DO EC EG SV GQ ER EE SZ ET FJ FI FR GA GM GE DE GH GR GD GT GN GW GY HT HN HU IS IN ID IR IQ IE IL IT JM JP JO KZ KE KI KP KR KW KG LA LV LB LS LR LY LI LT LU MG MW MY MV ML MT MH MR MU MX FM MD MC MN ME MA MZ MM NA NR NP NL NZ NI NE NG MK NO OM PK PW PA PG PY PE PH PL PT QA RO RU RW KN LC VC WS SM ST SA SN RS SC SL SG SK SI SB SO ZA SS ES LK SD SR SE CH SY TJ TZ TH TL TG TO TT TN TR TM TV UG UA AE GB US UY UZ VU VA VE VN YE ZM ZW"
-    .split(" ");
+
 
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ||
-  "http://:5000";
+  "http://localhost:5000";
+
+  
 
 export default function BookingModal({
   property,
@@ -50,7 +54,16 @@ export default function BookingModal({
       nationality: "",
       passport: null,
     });
-
+const [
+  nationalities,
+  setNationalities,
+] = useState<
+  NationalityOption[]
+>([]);
+const [
+  loadingNationalities,
+  setLoadingNationalities,
+] = useState(true);
   const [sending, setSending] =
     useState(false);
 
@@ -60,17 +73,51 @@ export default function BookingModal({
   const [error, setError] =
     useState("");
 
-  const countryNames = useMemo(
-    () =>
-      new Intl.DisplayNames(
-        ["en"],
-        {
-          type: "region",
-        }
-      ),
-    []
-  );
+useEffect(() => {
+  if (!open) {
+    return;
+  }
 
+  async function loadNationalities() {
+    try {
+      setLoadingNationalities(
+        true
+      );
+
+      const response =
+        await fetch(
+          `${API_URL}/api/nationalities`
+        );
+
+      const result =
+        await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          result.error ||
+            "Unable to load nationalities."
+        );
+      }
+
+      setNationalities(
+        result.data || []
+      );
+    } catch (error) {
+      console.error(
+        "Unable to load nationalities:",
+        error
+      );
+
+      setNationalities([]);
+    } finally {
+      setLoadingNationalities(
+        false
+      );
+    }
+  }
+
+  loadNationalities();
+}, [open]);
   if (!open || !property) {
     return null;
   }
@@ -184,7 +231,7 @@ if (property.unitType) {
       );
 
       form.append(
-        "nationality",
+        "nationId",
         booking.nationality
       );
 
@@ -395,44 +442,41 @@ if (property.unitType) {
                   Nationality
                 </label>
 
-                <select
-                  required
-                  value={
-                    booking.nationality
-                  }
-                  onChange={(e) =>
-                    setBooking(
-                      (current) => ({
-                        ...current,
-                        nationality:
-                          e.target
-                            .value,
-                      })
-                    )
-                  }
-                >
-                  <option value="">
-                    Select nationality
-                  </option>
+             <select
+  required
+  value={
+    booking.nationality
+  }
+  onChange={(e) =>
+    setBooking(
+      (current) => ({
+        ...current,
+        nationality:
+          e.target.value,
+      })
+    )
+  }
+  disabled={
+    loadingNationalities
+  }
+>
+  <option value="">
+    {loadingNationalities
+      ? "Loading nationalities..."
+      : "Select nationality"}
+  </option>
 
-                  {NATIONALITY_CODES.map(
-                    (code) => {
-                      const name =
-                        countryNames.of(
-                          code
-                        ) || code;
-
-                      return (
-                        <option
-                          key={code}
-                          value={name}
-                        >
-                          {name}
-                        </option>
-                      );
-                    }
-                  )}
-                </select>
+  {nationalities.map(
+    (item) => (
+      <option
+  key={item.id}
+  value={item.id}
+>
+  {item.nationality}
+</option>
+    )
+  )}
+</select>
               </div>
 
               <div

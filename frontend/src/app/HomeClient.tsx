@@ -11,8 +11,7 @@ import FeaturedListings from "./components/FeaturedListings";
 import UpcomingProjects from "./components/UpcomingProjects";
 import WhyChooseUs from "./components/WhyChooseUs";
 import FaqSection from "./components/FaqSection";
-import Footer from "./components/Footer";
-import Header from "./components/Header";
+
 
 import {
   getProperties,
@@ -315,7 +314,7 @@ useEffect(() => {
         <FaqSection />
       </main>
 
-      <Footer />
+
     </div>
   );
 }

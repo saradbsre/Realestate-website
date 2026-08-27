@@ -1,126 +1,701 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import styles from "./upcomingProjects.module.css";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import {
+  MapPin,
+  
+} from "lucide-react";
+import styles
+  from "./upcomingProjects.module.css";
+
+const API_URL =
+  process.env
+    .NEXT_PUBLIC_API_URL ||
+  "http://localhost:5000";
 
 interface UpcomingProject {
-  id: number;
+  id: string;
+
   title: string;
-  description: string | null;
-  type: string;
-  location: string;
-  city: string;
-  launchPrice: string;
-  handover: string;
-  image: string;
+
+  placeId: string;
+  placeName: string;
+
+  areaId:
+    string | null;
+
+  areaName:
+    string | null;
+
+  buildArea:
+    number | null;
+
+  image:
+    string | null;
+
+  description:
+    string | null;
+
+  isUpcomingProject:
+    boolean;
+
+  isActive:
+    boolean;
 }
 
 export default function UpcomingProjects() {
-  const [projects, setProjects] = useState<UpcomingProject[]>([]);
-  const [activeCity, setActiveCity] = useState("Dubai");
-  const [loading, setLoading] = useState(true);
+  const [
+    projects,
+    setProjects,
+  ] = useState<
+    UpcomingProject[]
+  >([]);
 
-  const cities = ["Dubai", "Abu Dhabi", "Sharjah", "Ajman", "Ras Al Khaimah", "Umm Al Quwain"];
+  const [
+    activePlaceId,
+    setActivePlaceId,
+  ] = useState("");
 
-  // useEffect(() => {
-  //   setLoading(true);
-  //   fetch("/api/upcoming-projects")
-  //     .then((res) => res.json())
-  //     .then((data) => {
-  //       if (Array.isArray(data)) {
-  //         setProjects(data);
-  //       }
-  //       setLoading(false);
-  //     })
-  //     .catch((err) => {
-  //       console.error("Error loading upcoming projects:", err);
-  //       setLoading(false);
-  //     });
-  // }, []);
+  const [
+    loading,
+    setLoading,
+  ] = useState(true);
 
-  const filteredProjects = projects.filter(
-    (p) => p.city.toLowerCase() === activeCity.toLowerCase()
-  );
+  const [
+    error,
+    setError,
+  ] = useState("");
+
+  /* ============================================
+     LOAD UPCOMING PROJECTS
+  ============================================ */
+
+  useEffect(() => {
+    let cancelled =
+      false;
+
+    async function loadProjects() {
+      try {
+        setLoading(
+          true
+        );
+
+        setError("");
+
+        const response =
+          await fetch(
+            `${API_URL}/api/upcoming-projects`,
+            {
+              cache:
+                "no-store",
+            }
+          );
+
+        const result =
+          await response.json();
+
+        if (
+          !response.ok
+        ) {
+          throw new Error(
+            result.error ||
+              "Unable to load upcoming projects."
+          );
+        }
+
+        const data:
+          UpcomingProject[] =
+          Array.isArray(
+            result.data
+          )
+            ? result.data
+            : [];
+
+        if (
+          cancelled
+        ) {
+          return;
+        }
+
+        setProjects(
+          data
+        );
+
+        if (
+          data.length >
+            0
+        ) {
+          setActivePlaceId(
+            (
+              current
+            ) =>
+              current ||
+              data[0]
+                .placeId
+          );
+        }
+      } catch (error) {
+        if (
+          cancelled
+        ) {
+          return;
+        }
+
+        console.error(
+          "Upcoming project load failed:",
+          error
+        );
+
+        setProjects(
+          []
+        );
+
+        setError(
+          error instanceof
+            Error
+            ? error.message
+            : "Unable to load upcoming projects."
+        );
+      } finally {
+        if (
+          !cancelled
+        ) {
+          setLoading(
+            false
+          );
+        }
+      }
+    }
+
+    loadProjects();
+
+    return () => {
+      cancelled =
+        true;
+    };
+  }, []);
+
+  /* ============================================
+     UNIQUE PLACES FROM DB
+  ============================================ */
+
+  const places =
+    useMemo(() => {
+      const unique =
+        new Map<
+          string,
+          string
+        >();
+
+      projects.forEach(
+        (
+          project
+        ) => {
+          const placeId =
+            project.placeId?.trim();
+
+          const placeName =
+            project.placeName?.trim();
+
+          if (
+            placeId &&
+            placeName
+          ) {
+            unique.set(
+              placeId,
+              placeName
+            );
+          }
+        }
+      );
+
+      return Array.from(
+        unique.entries()
+      ).map(
+        ([
+          placeId,
+          placeName,
+        ]) => ({
+          placeId,
+          placeName,
+        })
+      );
+    }, [projects]);
+
+  /* ============================================
+     FILTER PROJECTS BY PLACE
+  ============================================ */
+
+  const filteredProjects =
+    useMemo(() => {
+      if (
+        !activePlaceId
+      ) {
+        return projects;
+      }
+
+      return projects.filter(
+        (
+          project
+        ) =>
+          project.placeId?.trim() ===
+          activePlaceId
+      );
+    }, [
+      projects,
+      activePlaceId,
+    ]);
+
+  /* ============================================
+     SELECTED PLACE NAME
+  ============================================ */
+
+  const activePlaceName =
+    useMemo(() => {
+      return (
+        places.find(
+          (
+            place
+          ) =>
+            place.placeId ===
+            activePlaceId
+        )?.placeName ||
+        ""
+      );
+    }, [
+      places,
+      activePlaceId,
+    ]);
+
+  /* ============================================
+     LOCATION
+  ============================================ */
+
+  const getLocation = (
+    project:
+      UpcomingProject
+  ) => {
+    const areaName =
+      project.areaName?.trim();
+
+    const placeName =
+      project.placeName?.trim();
+
+    if (
+      areaName &&
+      placeName
+    ) {
+      return `${areaName}, ${placeName}`;
+    }
+
+    return (
+      placeName ||
+      areaName ||
+      ""
+    );
+  };
+
+  /* ============================================
+     PROJECT IMAGE
+  ============================================ */
+
+  const hasProjectImage = (
+    image:
+      string | null
+  ) => {
+    return Boolean(
+      image &&
+        image.trim()
+    );
+  };
 
   return (
-    <section className={styles.section}>
-      <div className={styles.headingArea}>
-        <h2>Browse New Projects in UAE</h2>
-        <div className={styles.tabsContainer}>
-          <div className={styles.tabs}>
-            {cities.map((city) => (
-              <button
-                key={city}
-                type="button"
-                onClick={() => setActiveCity(city)}
-                className={`${styles.tab} ${activeCity === city ? styles.tabActive : ""}`}
+    <section
+      className={
+        styles.section
+      }
+    >
+      {/* ========================================
+          HEADING
+      ======================================== */}
+
+      <div
+        className={
+          styles.headingArea
+        }
+      >
+        <h2>
+          Browse New Projects
+          in UAE
+        </h2>
+
+        {!loading &&
+          places.length >
+            0 && (
+            <div
+              className={
+                styles.tabsContainer
+              }
+            >
+              <div
+                className={
+                  styles.tabs
+                }
               >
-                {city}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {loading ? (
-        <div style={{ textAlign: "center", color: "#64748b", padding: "40px" }}>
-          Loading upcoming projects...
-        </div>
-      ) : filteredProjects.length === 0 ? (
-        <div style={{ textAlign: "center", color: "#64748b", padding: "40px", backgroundColor: "#f8fafc", borderRadius: "12px", border: "1px dashed #cbd5e1" }}>
-          No upcoming projects listed in {activeCity} at the moment.
-        </div>
-      ) : (
-        <div className={styles.grid}>
-          {filteredProjects.map((project) => (
-            <div key={project.id} className={styles.card}>
-              {project.image && (
-                <div className={styles.imageWrap}>
-                  <img src={project.image} alt={`${project.title} project`} className={styles.image} />
-                </div>
-              )}
-              <div className={styles.content}>
-                <div className={styles.cardType}>{project.type}</div>
-                <div className={styles.cardTitle}>{project.title}</div>
-                <div className={styles.location}>
-                  <span>📍</span> {project.location}
-                </div>
-                
-                <div className={styles.infoBox}>
-                  <div className={styles.infoCol}>
-                    <div className={styles.infoLabel}>Launch Price</div>
-                    <div className={styles.infoValue}>{project.launchPrice}</div>
-                  </div>
-                  <div className={styles.infoCol}>
-                    <div className={styles.infoLabel}>Handover</div>
-                    <div className={styles.infoValue}>{project.handover}</div>
-                  </div>
-                </div>
-
-                <a 
-                  href={`https://wa.me/97142545888?text=I%20am%20interested%20in%20the%20upcoming%20project%3A%20${encodeURIComponent(project.title)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={styles.registerBtn}
-                >
-                  💬 Register Interest
-                </a>
+                {places.map(
+                  (
+                    place
+                  ) => (
+                    <button
+                      key={
+                        place.placeId
+                      }
+                      type="button"
+                      onClick={() =>
+                        setActivePlaceId(
+                          place.placeId
+                        )
+                      }
+                      className={`${styles.tab} ${
+                        activePlaceId ===
+                        place.placeId
+                          ? styles.tabActive
+                          : ""
+                      }`}
+                    >
+                      {
+                        place.placeName
+                      }
+                    </button>
+                  )
+                )}
               </div>
             </div>
-          ))}
+          )}
+      </div>
+
+      {/* ========================================
+          LOADING
+      ======================================== */}
+
+      {loading && (
+        <div
+          className={
+            styles.projectMessage
+          }
+        >
+          Loading upcoming
+          projects...
         </div>
       )}
 
-      <div className={styles.bottomCta}>
-        <a 
-          href={`https://wa.me/97142545888?text=Hello%20Abdul%20Wahed%20Bin%20Shabib%20Real%20Estate%20team%2C%20I%20would%20like%20to%20know%20more%20about%20upcoming%20new%20projects%20in%20${activeCity}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={styles.ctaBtn}
-        >
-          View all projects in {activeCity} &rarr;
-        </a>
-      </div>
+      {/* ========================================
+          ERROR
+      ======================================== */}
+
+      {!loading &&
+        error && (
+          <div
+            className={
+              styles.projectError
+            }
+          >
+            {error}
+          </div>
+        )}
+
+      {/* ========================================
+          EMPTY
+      ======================================== */}
+
+      {!loading &&
+        !error &&
+        filteredProjects.length ===
+          0 && (
+          <div
+            className={
+              styles.projectEmpty
+            }
+          >
+            No upcoming
+            projects listed
+            {activePlaceName
+              ? ` in ${activePlaceName}`
+              : ""}
+            .
+          </div>
+        )}
+
+      {/* ========================================
+          PROJECT CARDS
+      ======================================== */}
+
+      {!loading &&
+        !error &&
+        filteredProjects.length >
+          0 && (
+          <div
+            className={
+              styles.grid
+            }
+          >
+            {filteredProjects.map(
+              (
+                project
+              ) => (
+                <article
+                  key={
+                    project.id
+                  }
+                  className={
+                    styles.card
+                  }
+                >
+                  {/* =================================
+                      IMAGE
+                  ================================= */}
+
+                  {hasProjectImage(
+                    project.image
+                  ) ? (
+                    <div
+                      className={
+                        styles.imageWrap
+                      }
+                    >
+                      <img
+                        src={
+                          project.image!
+                        }
+                        alt={
+                          project.title
+                        }
+                        className={
+                          styles.image
+                        }
+                        onError={(
+                          event
+                        ) => {
+                          const image =
+                            event.currentTarget;
+
+                          image.style.display =
+                            "none";
+
+                          const parent =
+                            image.parentElement;
+
+                          if (
+                            parent
+                          ) {
+                            parent.classList.add(
+                              styles.noProjectImage
+                            );
+
+                            if (
+                              !parent.querySelector(
+                                "[data-image-placeholder]"
+                              )
+                            ) {
+                              const placeholder =
+                                document.createElement(
+                                  "div"
+                                );
+
+                              placeholder.setAttribute(
+                                "data-image-placeholder",
+                                "true"
+                              );
+
+                              placeholder.innerHTML =
+                                "<span>🏢</span>";
+
+                              parent.appendChild(
+                                placeholder
+                              );
+                            }
+                          }
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <div
+                      className={`${styles.imageWrap} ${styles.noProjectImage}`}
+                    >
+                      <div>
+                        <span style={{ opacity: "0.3" }}>
+                          🏢
+                        </span>
+
+                       
+                      </div>
+                    </div>
+                  )}
+
+                  {/* =================================
+                      CONTENT
+                  ================================= */}
+
+                  <div
+                    className={
+                      styles.content
+                    }
+                  >
+                    <div
+                      className={
+                        styles.cardType
+                      }
+                    >
+                      Upcoming
+                      Project
+                    </div>
+
+                    <h3
+                      className={
+                        styles.cardTitle
+                      }
+                    >
+                      {
+                        project.title
+                      }
+                    </h3>
+
+                    {/* LOCATION */}
+
+                    <div
+                      className={
+                        styles.location
+                      }
+                    >
+                      <span>
+                         <MapPin
+                                  size={
+                                    16
+                                  }
+                                />
+                      </span>
+
+                      <span>
+                        {getLocation(
+                          project
+                        )}
+                      </span>
+                    </div>
+
+                    {/* BUILDING AREA */}
+
+                    {project.buildArea !==
+                      null &&
+                      Number(
+                        project.buildArea
+                      ) >
+                        0 && (
+                        <div
+                          className={
+                            styles.infoBox
+                          }
+                        >
+                          <div
+                            className={
+                              styles.infoCol
+                            }
+                          >
+                            <div
+                              className={
+                                styles.infoLabel
+                              }
+                            >
+                              Building
+                              Area
+                            </div>
+
+                            <div
+                              className={
+                                styles.infoValue
+                              }
+                            >
+                              {Number(
+                                project.buildArea
+                              ).toLocaleString(
+                                "en-AE"
+                              )}{" "}
+                              Sq.Ft.
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                    {/* DESCRIPTION */}
+
+                    {project.description?.trim() && (
+                      <p
+                        className={
+                          styles.description
+                        }
+                      >
+                        {
+                          project.description
+                        }
+                      </p>
+                    )}
+
+                    {/* REGISTER INTEREST */}
+
+                    <a
+                      href={`https://wa.me/97142545888?text=${encodeURIComponent(
+                        `Hello Abdul Wahed Bin Shabib Real Estate team, I am interested in the upcoming project ${project.title} located at ${getLocation(
+                          project
+                        )}.`
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={
+                        styles.registerBtn
+                      }
+                    >
+                      💬 Register
+                      Interest
+                    </a>
+                  </div>
+                </article>
+              )
+            )}
+          </div>
+        )}
+
+      {/* ========================================
+          BOTTOM CTA
+      ======================================== */}
+
+      {!loading &&
+        !error &&
+        activePlaceName && (
+          <div
+            className={
+              styles.bottomCta
+            }
+          >
+            <a
+              href={`https://wa.me/97142545888?text=${encodeURIComponent(
+                `Hello Abdul Wahed Bin Shabib Real Estate team, I would like to know more about upcoming new projects in ${activePlaceName}.`
+              )}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={
+                styles.ctaBtn
+              }
+            >
+              View all projects
+              in{" "}
+              {activePlaceName}{" "}
+              →
+            </a>
+          </div>
+        )}
     </section>
   );
 }

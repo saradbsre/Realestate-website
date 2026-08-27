@@ -94,17 +94,6 @@ export async function findAllProperties(
     );
 
   const result = await request.query(`
-    /*
-    ==========================================================
-    ELIGIBLE UNITS
-
-    1. Active unit
-    2. Vacant unit
-    3. Match Property Type from UnitType.PurposeCodes
-    4. Match Beds when specifically selected
-    5. Match rent range
-    ==========================================================
-    */
 
  WITH EligibleUnits AS
 (
@@ -119,24 +108,7 @@ export async function findAllProperties(
         AND ISNULL(U.unit_vacant, 'N') = 'Y'
 
 
-        /*
-        ===============================================
-        UNIT TYPE
-
-        Frontend:
-            Apartment -> UnitTypeId = 1
-
-        View:
-            1 | APARTMENT | STD
-            1 | APARTMENT | 1BK
-            1 | APARTMENT | 2BK
-            1 | APARTMENT | 3BK
-            1 | APARTMENT | 4BK
-
-        Unit:
-            Purpose_type = STD / 1BK / 2BK ...
-        ===============================================
-        */
+     
 
         AND
         (
@@ -158,17 +130,7 @@ export async function findAllProperties(
         )
 
 
-        /*
-        ===============================================
-        BED FILTER
-
-        Studio -> STD
-        1 Bed  -> 1BK
-        2 Bed  -> 2BK
-        3 Bed  -> 3BK
-        4 Bed  -> 4BK
-        ===============================================
-        */
+       
 
         AND
         (
@@ -180,11 +142,7 @@ export async function findAllProperties(
         )
 
 
-        /*
-        ===============================================
-        MIN PRICE
-        ===============================================
-        */
+     
 
         AND
         (
@@ -194,11 +152,7 @@ export async function findAllProperties(
         )
 
 
-        /*
-        ===============================================
-        MAX PRICE
-        ===============================================
-        */
+       
 
         AND
         (
@@ -334,29 +288,17 @@ export async function findAllProperties(
             AS isVilla,
 
 
-        ------------------------------------------------
-        -- WEBSITE PRIORITY
-        ------------------------------------------------
+   
 
-       ISNULL(
-    B.IsTopPriority,
-    0
-) AS isTopPriority,
+       CAST(
+    B.WebDisplayOrder
+    AS INT
+) AS webDisplayOrder,
 
-B.PriorityOrder
-    AS priorityOrder,
-
-        ------------------------------------------------
-        -- AVAILABLE TYPES
-        ------------------------------------------------
+      
 
         BPT.availableTypes,
 
-
-        /*
-        If only one Purpose_type remains,
-        return its description.
-        */
 
         CASE
 
@@ -484,7 +426,11 @@ B.PriorityOrder
             1
         ) = 1
 
-
+AND
+    (
+        B.WebDisplayOrder IS NULL
+        OR B.WebDisplayOrder BETWEEN 1 AND 6
+    )
         /*
         ================================================
         LOCATION SEARCH ONLY
@@ -560,9 +506,7 @@ B.PriorityOrder
 
         BPT.availableTypes,
 
-       B.IsTopPriority,
-B.PriorityOrder
-
+      B.WebDisplayOrder
 
     /*
     ====================================================
@@ -570,30 +514,22 @@ B.PriorityOrder
     ====================================================
     */
 
-    ORDER BY
+   ORDER BY
+    CASE
+        WHEN B.WebDisplayOrder BETWEEN 1 AND 6
+        THEN 0
+        ELSE 1
+    END ASC,
 
-        ISNULL(
-            B.IsTopPriority,
-            0
-        ) DESC,
+    CASE
+        WHEN B.WebDisplayOrder BETWEEN 1 AND 6
+        THEN B.WebDisplayOrder
+        ELSE 99
+    END ASC,
 
-        CASE
+    MAX(B.sysdate) DESC,
 
-            WHEN ISNULL(
-                B.IsTopPriority,
-                0
-            ) = 1
-
-            THEN ISNULL(
-                B.PriorityOrder,
-                999999
-            )
-
-            ELSE 999999
-
-        END ASC,
-
-        B.build_desc ASC
+    B.build_desc ASC
 
 
     OFFSET @Offset ROWS
@@ -743,11 +679,12 @@ export async function countProperties(
               1
           ) = 1
 
-
-          /*
-          PROPERTY TYPE
-          */
-
+AND
+(
+    B.WebDisplayOrder IS NULL
+    OR B.WebDisplayOrder BETWEEN 1 AND 6
+)
+       
          AND
 (
     @UnitTypeId IS NULL
@@ -893,28 +830,75 @@ export async function findPropertyByBuildingId(
             B.build_neigh
                 AS neighborhood,
 
-           STUFF(
-    CASE
-        WHEN NULLIF(LTRIM(RTRIM(B.build_Add)), '') IS NOT NULL
-            THEN ', ' + LTRIM(RTRIM(B.build_Add))
-        ELSE ''
-    END
-    +
-    CASE
-        WHEN NULLIF(LTRIM(RTRIM(A.area_desc)), '') IS NOT NULL
-            THEN ', ' + LTRIM(RTRIM(A.area_desc))
-        ELSE ''
-    END
-    +
-    CASE
-        WHEN NULLIF(LTRIM(RTRIM(P.place_desc)), '') IS NOT NULL
-            THEN ', ' + LTRIM(RTRIM(P.place_desc))
-        ELSE ''
-    END,
-    1,
-    2,
-    ''
-) AS location,
+            STUFF(
+                CASE
+                    WHEN NULLIF(
+                        LTRIM(
+                            RTRIM(
+                                B.build_Add
+                            )
+                        ),
+                        ''
+                    ) IS NOT NULL
+
+                    THEN ', ' +
+                        LTRIM(
+                            RTRIM(
+                                B.build_Add
+                            )
+                        )
+
+                    ELSE ''
+                END
+
+                +
+
+                CASE
+                    WHEN NULLIF(
+                        LTRIM(
+                            RTRIM(
+                                A.area_desc
+                            )
+                        ),
+                        ''
+                    ) IS NOT NULL
+
+                    THEN ', ' +
+                        LTRIM(
+                            RTRIM(
+                                A.area_desc
+                            )
+                        )
+
+                    ELSE ''
+                END
+
+                +
+
+                CASE
+                    WHEN NULLIF(
+                        LTRIM(
+                            RTRIM(
+                                P.place_desc
+                            )
+                        ),
+                        ''
+                    ) IS NOT NULL
+
+                    THEN ', ' +
+                        LTRIM(
+                            RTRIM(
+                                P.place_desc
+                            )
+                        )
+
+                    ELSE ''
+                END,
+
+                1,
+                2,
+                ''
+            ) AS location,
 
             B.plot_no
                 AS plotNumber,
@@ -938,7 +922,12 @@ export async function findPropertyByBuildingId(
                 AS buildingNature,
 
             B.IsVilla
-                AS isVilla
+                AS isVilla,
+
+            CAST(
+                B.WebDisplayOrder
+                AS INT
+            ) AS webDisplayOrder
 
         FROM dbo.building B
 
@@ -961,7 +950,15 @@ export async function findPropertyByBuildingId(
             AND ISNULL(
                 B.IsActive,
                 1
-            ) = 1;
+            ) = 1
+
+            AND
+            (
+                B.WebDisplayOrder IS NULL
+
+                OR B.WebDisplayOrder
+                    BETWEEN 1 AND 6
+            );
       `);
 
   return (
@@ -1102,7 +1099,9 @@ export async function findVacantUnitsByBuildingId(
                 AS lastUpdated
 
         FROM dbo.unit U
-
+INNER JOIN dbo.building B
+    ON B.build_id =
+       U.build_id
         LEFT JOIN dbo.Unit_Purpose_Type UPT
             ON LTRIM(
                 RTRIM(
@@ -1115,14 +1114,30 @@ export async function findVacantUnitsByBuildingId(
                 )
             )
 
-        WHERE
-            U.build_id =
-                @BuildingId
+     WHERE
+    U.build_id =
+        @BuildingId
 
-            AND ISNULL(
-                U.IsActive,
-                1
-            ) = 1
+    AND ISNULL(
+        U.IsActive,
+        1
+    ) = 1
+
+    AND ISNULL(
+        U.unit_vacant,
+        'N'
+    ) = 'Y'
+
+    AND ISNULL(
+        B.IsActive,
+        1
+    ) = 1
+
+    AND
+    (
+        B.WebDisplayOrder IS NULL
+        OR B.WebDisplayOrder BETWEEN 1 AND 6
+    )
 
             AND ISNULL(
                 U.unit_vacant,
@@ -1260,4 +1275,219 @@ export async function getPropertyFilters() {
         ) || 0,
     },
   };
+}
+
+export async function findAllAdminProperties() {
+  const pool =
+    await getBinShabibEstateNet();
+
+  const result =
+    await pool
+      .request()
+      .query(`
+        SELECT
+            LTRIM(
+                RTRIM(
+                    B.build_id
+                )
+            ) AS id,
+
+            LTRIM(
+                RTRIM(
+                    B.build_desc
+                )
+            ) AS title,
+
+            LTRIM(
+                RTRIM(
+                    P.place_desc
+                )
+            ) AS placeName,
+
+            LTRIM(
+                RTRIM(
+                    A.area_desc
+                )
+            ) AS areaName,
+
+            CAST(
+                B.WebDisplayOrder
+                AS INT
+            ) AS webDisplayOrder,
+
+            (
+                SELECT
+                    COUNT(*)
+
+                FROM dbo.unit U2
+
+                WHERE
+                    LTRIM(
+                        RTRIM(
+                            U2.build_id
+                        )
+                    )
+                    =
+                    LTRIM(
+                        RTRIM(
+                            B.build_id
+                        )
+                    )
+
+                    AND ISNULL(
+                        U2.IsActive,
+                        1
+                    ) = 1
+
+                    AND ISNULL(
+                        U2.unit_vacant,
+                        'N'
+                    ) = 'Y'
+            ) AS vacantUnits
+
+        FROM dbo.building B
+
+        LEFT JOIN dbo.place P
+            ON LTRIM(
+                RTRIM(
+                    P.place_id
+                )
+            )
+            =
+            LTRIM(
+                RTRIM(
+                    B.place_id
+                )
+            )
+
+        LEFT JOIN dbo.area A
+            ON LTRIM(
+                RTRIM(
+                    A.area_id
+                )
+            )
+            =
+            LTRIM(
+                RTRIM(
+                    B.area_id
+                )
+            )
+
+        WHERE
+            ISNULL(
+                B.IsUpcomingProject,
+                0
+            ) = 0
+
+            AND ISNULL(
+                B.IsActive,
+                1
+            ) = 1
+
+            AND EXISTS
+            (
+                SELECT 1
+
+                FROM dbo.unit U
+
+                WHERE
+                    LTRIM(
+                        RTRIM(
+                            U.build_id
+                        )
+                    )
+                    =
+                    LTRIM(
+                        RTRIM(
+                            B.build_id
+                        )
+                    )
+
+                    AND ISNULL(
+                        U.IsActive,
+                        1
+                    ) = 1
+
+                    AND ISNULL(
+                        U.unit_vacant,
+                        'N'
+                    ) = 'Y'
+            )
+
+        ORDER BY
+            CASE
+                WHEN B.WebDisplayOrder
+                     BETWEEN 1 AND 6
+                THEN 0
+
+                WHEN B.WebDisplayOrder
+                     IS NULL
+                THEN 1
+
+                WHEN B.WebDisplayOrder = 0
+                THEN 2
+
+                ELSE 3
+            END,
+
+            CASE
+                WHEN B.WebDisplayOrder
+                     BETWEEN 1 AND 6
+                THEN B.WebDisplayOrder
+
+                ELSE 999
+            END,
+
+            B.build_desc ASC;
+      `);
+
+  return result.recordset;
+}
+
+export async function updatePropertyWebDisplay(
+  buildId: string,
+  webDisplayOrder: number | null
+) {
+  const pool =
+    await getBinShabibEstateNet();
+
+  const result =
+    await pool
+      .request()
+
+      .input(
+        "BuildId",
+        sql.NVarChar(7),
+        buildId
+      )
+
+      .input(
+        "WebDisplayOrder",
+        sql.TinyInt,
+        webDisplayOrder
+      )
+
+      .query(`
+        UPDATE dbo.building
+
+        SET
+            WebDisplayOrder =
+                @WebDisplayOrder,
+
+            sysdate =
+                GETDATE(),
+
+            userid =
+                'WEBSITE'
+
+        WHERE
+            LTRIM(RTRIM(build_id))
+              =
+            LTRIM(RTRIM(@BuildId));
+      `);
+
+  return (
+    result.rowsAffected[0] ||
+    0
+  );
 }

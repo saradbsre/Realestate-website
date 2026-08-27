@@ -6,6 +6,7 @@ import type {
 import {
   createBooking,
   findBookingProperty,
+   findNationalityAutoReject,
 } from "../repositories/booking.repository";
 
 import {
@@ -62,9 +63,9 @@ export async function submitBooking(
         req.body.phone
       );
 
-    const nationality =
+    const nationId =
       cleanText(
-        req.body.nationality
+        req.body.nationId
       );
 
     /* =====================================================
@@ -80,7 +81,8 @@ export async function submitBooking(
           customerName,
         email,
         phone,
-        nationality,
+        nationality:
+          nationId,
       });
 
     if (
@@ -92,6 +94,16 @@ export async function submitBooking(
           success: false,
           error:
             fieldValidation.error,
+        });
+    }
+
+    if (nationId.length > 7) {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          error:
+            "Invalid nationality.",
         });
     }
 
@@ -192,19 +204,26 @@ export async function submitBooking(
        BOOKING STATUS
     ===================================================== */
 
-    const autoRejected =
-      false;
+ const nationalityConfig =
+  await findNationalityAutoReject(
+    nationId
+  );
 
-    const declineReason:
-      | string
-      | null =
-      null;
+const autoRejected =
+  nationalityConfig?.isWebBookingAutoReject ===
+  true ||
+  nationalityConfig?.isWebBookingAutoReject ===
+  1;
 
-    const status =
-      autoRejected
-        ? "Declined"
-        : "Pending";
+const declineReason =
+  autoRejected
+    ? "Booking automatically declined based on nationality configuration."
+    : null;
 
+const status =
+  autoRejected
+    ? "Declined"
+    : "Pending";
     /* =====================================================
        INSERT BOOKING
     ===================================================== */
@@ -227,7 +246,7 @@ export async function submitBooking(
         customerName,
         email,
         phone,
-        nationality,
+        nationId,
 
         passportFile:
           passport.buffer,
@@ -253,31 +272,41 @@ export async function submitBooking(
        SEND EMAIL
     ===================================================== */
 
-    sendBookingEmails({
-      bookingId:
-        booking.BookingId,
+sendBookingEmails({
+  bookingId:
+    booking.bookingId,
 
-      propertyId,
+  propertyId,
 
-      propertyName,
+  propertyName,
 
-      customerName,
+  unitReference:
+    unitReference || null,
 
-      email,
+  unitType:
+    unitType || null,
 
-      phone,
+  customerName,
 
-      nationality,
+  email,
 
-      passportBuffer:
-        passport.buffer,
+  phone,
 
-      passportFilename:
-        passport.originalname,
+  nationality:
+    nationalityConfig?.nationality ||
+    nationId,
 
-      passportMimeType:
-        passport.mimetype,
-    }).catch(
+  autoRejected,
+
+  passportBuffer:
+    passport.buffer,
+
+  passportFilename:
+    passport.originalname,
+
+  passportMimeType:
+    passport.mimetype,
+}).catch(
       (error) => {
         console.error(
           "Booking email failed:",
@@ -299,10 +328,10 @@ export async function submitBooking(
           "Booking request submitted successfully.",
 
         bookingId:
-          booking.BookingId,
+          booking.bookingId,
 
         status:
-          booking.Status,
+          booking.status,
 
         autoRejected,
       });

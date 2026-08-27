@@ -30,7 +30,7 @@
   background-color: #f8fafc;
   padding: 6px;
   border-radius: 30px;
-  border: 1px solid #e2e8f0;
+  border: 2px solid #e2e8f0;
   gap: 4px;
   flex-wrap: wrap;
   justify-content: center;
@@ -131,13 +131,13 @@
   align-items: center;
   gap: 4px;
   margin-bottom: 16px;
-  line-height: 1.4;
+  line-height: 0.4;
 }
 
 /* Info Box: Price & Handover */
 .infoBox {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  /* grid-template-columns: 1fr 1fr; */
   background-color: #f8fafc;
   border: 1px solid #f1f5f9;
   border-radius: 8px;
@@ -220,4 +220,64 @@
   .grid {
     grid-template-columns: 1fr;
   }
+}
+.projectMessage {
+  padding: 40px 20px;
+  text-align: center;
+  color: #64748b;
+}
+
+.projectError {
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 24px;
+  text-align: center;
+  color: #b91c1c;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+}
+
+.projectEmpty {
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 40px 20px;
+  text-align: center;
+  color: #64748b;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+}
+
+.noProjectImage {
+  min-height: 230px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.noProjectImage > div,
+.noProjectImage [data-image-placeholder] {
+  text-align: center;
+}
+
+.noProjectImage span {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 38px;
+}
+
+.noProjectImage p {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.description {
+  margin: 12px 0 0;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.6;
 }

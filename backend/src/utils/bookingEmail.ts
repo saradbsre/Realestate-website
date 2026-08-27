@@ -1,80 +1,109 @@
-import {
-  mailTransporter,
-} from "../config/mailer";
+import nodemailer from "nodemailer";
 
-interface SendBookingEmailInput {
+interface BookingEmailData {
   bookingId: number;
 
   propertyId: string;
-
   propertyName: string;
 
+  unitReference?: string | null;
+  unitType?: string | null;
+
   customerName: string;
-
   email: string;
-
   phone: string;
-
   nationality: string;
 
+  autoRejected: boolean;
+
   passportBuffer: Buffer;
-
   passportFilename: string;
-
   passportMimeType: string;
 }
 
+const smtpPort =
+  Number(
+    process.env.SMTP_PORT || 587
+  );
+export const mailTransporter =
+  nodemailer.createTransport({
+    host:
+      process.env.SMTP_HOST,
+
+    port: 587,
+
+    secure: false, // true for 465, false for other ports
+
+    // requireTLS: true,
+
+    auth: {
+      user:
+        process.env.SMTP_USER,
+
+      pass:
+        process.env.SMTP_PASS,
+    },
+    tls: {
+      rejectUnauthorized: false,
+    },
+  });
+
 function escapeHtml(
   value: string
-): string {
-  return String(value)
-    .replace(
-      /&/g,
-      "&amp;"
-    )
-    .replace(
-      /</g,
-      "&lt;"
-    )
-    .replace(
-      />/g,
-      "&gt;"
-    )
-    .replace(
-      /"/g,
-      "&quot;"
-    )
-    .replace(
-      /'/g,
-      "&#039;"
-    );
+) {
+  return value.replace(
+    /[&<>'"]/g,
+    (char) =>
+      ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "'": "&#39;",
+        '"': "&quot;",
+      })[char] || char
+  );
 }
 
 export async function sendBookingEmails(
-  data: SendBookingEmailInput
+  data: BookingEmailData
 ) {
   const from =
-    process.env.SMTP_FROM;
+    process.env.SMTP_FROM ||
+    process.env.SMTP_USER;
 
   const adminEmail =
-    process.env
-      .BOOKING_ADMIN_EMAIL;
+    process.env.BOOKING_ADMIN_EMAIL;
 
   if (
     !from ||
     !adminEmail
   ) {
-    console.warn(
-      "SMTP_FROM or BOOKING_ADMIN_EMAIL is not configured."
+    throw new Error(
+      "Booking email configuration is missing."
     );
-
-    return;
   }
 
   const safe = {
     propertyName:
       escapeHtml(
         data.propertyName
+      ),
+
+    propertyId:
+      escapeHtml(
+        data.propertyId
+      ),
+
+    unitReference:
+      escapeHtml(
+        data.unitReference ||
+          "-"
+      ),
+
+    unitType:
+      escapeHtml(
+        data.unitType ||
+          "-"
       ),
 
     customerName:
@@ -96,22 +125,156 @@ export async function sendBookingEmails(
       escapeHtml(
         data.nationality
       ),
-
-    propertyId:
-      escapeHtml(
-        data.propertyId
-      ),
   };
 
-  const bookingDetails = `
+  /* =====================================================
+     COMMON EMAIL TEMPLATE
+  ===================================================== */
+
+  const emailShell = (
+    title: string,
+    body: string
+  ) => `
+    <!doctype html>
+
+    <html>
+      <body
+        style="
+          margin:0;
+          padding:0;
+          background:#eef3f8;
+          font-family:Arial,sans-serif;
+          color:#1e293b;
+        "
+      >
+
+        <table
+          width="100%"
+          cellspacing="0"
+          cellpadding="0"
+          border="0"
+          style="
+            padding:32px 12px;
+            background:#eef3f8;
+          "
+        >
+          <tr>
+            <td align="center">
+
+              <table
+                width="680"
+                cellspacing="0"
+                cellpadding="0"
+                border="0"
+                style="
+                  width:100%;
+                  max-width:680px;
+                  background:#ffffff;
+                  border:1px solid #dbe5ef;
+                  border-radius:16px;
+                  overflow:hidden;
+                "
+              >
+
+                <!-- HEADER -->
+
+                <tr>
+                  <td
+                    align="center"
+                    style="
+                      padding:15px;
+                      border-bottom:3px solid #f58220;
+                    "
+                  >
+                    <strong
+                      style="
+                        color:#0b1a30;
+                        font-size:17px;
+                      "
+                    >
+                      ABDULWAHED BIN SHABIB REAL ESTATE
+                    </strong>
+                  </td>
+                </tr>
+
+                <!-- CONTENT -->
+
+                <tr>
+                  <td
+                    style="
+                      padding:20px 45px;
+                    "
+                  >
+                    <h1
+                      style="
+                        margin:0 0 18px;
+                        color:#0b1a30;
+                        font-size:16px;
+                      "
+                    >
+                      ${title}
+                    </h1>
+
+                    ${body}
+
+                  </td>
+                </tr>
+
+                <!-- FOOTER -->
+
+                <tr>
+                  <td
+                    style="
+                      background:#fafafa;
+                      border-top:1px solid #f1f5f9;
+                      padding:26px;
+                      text-align:center;
+                      font-size:12px;
+                      line-height:1.7;
+                      color:#64748b;
+                    "
+                  >
+                    <strong>
+                      ABDULWAHED BIN SHABIB REAL ESTATE L.L.C
+                    </strong>
+
+                    <br />
+
+                    Street # 44A - Hor Al Anz - Deira - Dubai, UAE
+
+                    <br />
+
+                    Tollfree: 800 22773
+                    &nbsp; | &nbsp;
+                    Landline: 04 329 8000
+                  </td>
+                </tr>
+
+              </table>
+
+            </td>
+          </tr>
+        </table>
+
+      </body>
+    </html>
+  `;
+
+  /* =====================================================
+     BOOKING DETAILS
+  ===================================================== */
+
+  const detailsCard = `
     <table
-      cellpadding="0"
-      cellspacing="0"
       width="100%"
+      cellspacing="0"
+      cellpadding="0"
+      border="0"
       style="
-        margin-top:20px;
-        background:#f7f9fc;
-        border:1px solid #dde6ef;
+        margin:24px 0;
+        background:#f8fafc;
+        border:1px solid #dbe5ef;
+        border-left:4px solid #0f4c81;
         border-radius:10px;
       "
     >
@@ -119,267 +282,266 @@ export async function sendBookingEmails(
         <td
           style="
             padding:20px;
-            font-family:Arial,sans-serif;
             font-size:14px;
-            color:#31445a;
-            line-height:1.7;
+            line-height:1.8;
+            color:#334155;
           "
         >
-          <div>
-            <strong>
-              Booking Reference:
-            </strong>
 
-            #${data.bookingId}
-          </div>
+          <strong
+            style="
+              color:#0b1a30;
+            "
+          >
+            BOOKING DETAILS
+          </strong>
 
-          <div>
+          <p>
             <strong>
               Property:
             </strong>
 
             ${safe.propertyName}
-          </div>
+          </p>
 
-          <div>
+          
+         ${
+  data.unitType
+    ? `
+      <p>
+        <strong>
+          Unit Type:
+        </strong>
+
+        ${safe.unitType}
+      </p>
+    `
+    : ""
+}
+
+          <p>
             <strong>
-              Building ID:
-            </strong>
-
-            ${safe.propertyId}
-          </div>
-
-          <div>
-            <strong>
-              Customer:
+              Applicant:
             </strong>
 
             ${safe.customerName}
-          </div>
+          </p>
 
-          <div>
+          <p>
             <strong>
               Email:
             </strong>
 
             ${safe.email}
-          </div>
+          </p>
 
-          <div>
+          <p>
             <strong>
               Phone:
             </strong>
 
             ${safe.phone}
-          </div>
+          </p>
 
-          <div>
+          <p>
             <strong>
               Nationality:
             </strong>
 
             ${safe.nationality}
-          </div>
+          </p>
+
+         
+
         </td>
       </tr>
     </table>
   `;
 
-  const adminHtml = `
-    <!DOCTYPE html>
+  /* =====================================================
+     ADMIN EMAIL
+  ===================================================== */
 
-    <html>
-      <body
-        style="
-          margin:0;
-          background:#eef3f8;
-          font-family:Arial,sans-serif;
-        "
-      >
-        <table
-          width="100%"
-          cellpadding="0"
-          cellspacing="0"
+  const adminStatus =
+    data.autoRejected
+      ? `
+        <div
+          style="
+            background:#fff7ed;
+            border:1px solid #fed7aa;
+            border-radius:8px;
+            padding:14px 16px;
+            margin-bottom:20px;
+            color:#9a3412;
+          "
         >
-          <tr>
-            <td
-              align="center"
-              style="padding:30px 12px;"
-            >
-              <table
-                width="650"
-                cellpadding="0"
-                cellspacing="0"
-                style="
-                  max-width:650px;
-                  width:100%;
-                  background:#ffffff;
-                  border-radius:12px;
-                  overflow:hidden;
-                "
-              >
-                <tr>
-                  <td
-                    style="
-                      padding:24px;
-                      background:#0b568f;
-                      color:#ffffff;
-                    "
-                  >
-                    <h2
-                      style="
-                        margin:0;
-                        font-size:20px;
-                      "
-                    >
-                      New Property Booking
-                    </h2>
-                  </td>
-                </tr>
+          <strong>
+            Auto Rejected
+          </strong>
 
-                <tr>
-                  <td
-                    style="
-                      padding:28px;
-                    "
-                  >
-                    <p>
-                      A new booking
-                      request has been
-                      submitted from the
-                      website.
-                    </p>
+          <br />
 
-                    ${bookingDetails}
+          This booking was automatically declined
+          based on the configured nationality rule.
+        </div>
+      `
+      : `
+        <div
+          style="
+            background:#eff6ff;
+            border:1px solid #bfdbfe;
+            border-radius:8px;
+            padding:14px 16px;
+            margin-bottom:20px;
+            color:#1e40af;
+          "
+        >
+          <strong>
+            New Booking Request
+          </strong>
 
-                    <p
-                      style="
-                        margin-top:20px;
-                        color:#64748b;
-                        font-size:12px;
-                      "
-                    >
-                      The customer's
-                      passport copy is
-                      attached to this
-                      email.
-                    </p>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-        </table>
-      </body>
-    </html>
+          <br />
+
+          A customer has submitted a booking request.
+          Please review the booking details.
+        </div>
+      `;
+
+  const adminBody = `
+    ${adminStatus}
+
+    ${detailsCard}
   `;
 
-  const customerHtml = `
-    <!DOCTYPE html>
+  /* =====================================================
+     CUSTOMER EMAIL
+  ===================================================== */
 
-    <html>
-      <body
-        style="
-          margin:0;
-          background:#eef3f8;
-          font-family:Arial,sans-serif;
-        "
-      >
-        <table
-          width="100%"
-          cellpadding="0"
-          cellspacing="0"
-        >
-          <tr>
-            <td
-              align="center"
-              style="padding:30px 12px;"
-            >
-              <table
-                width="650"
-                cellpadding="0"
-                cellspacing="0"
-                style="
-                  max-width:650px;
-                  width:100%;
-                  background:#ffffff;
-                  border-radius:12px;
-                  overflow:hidden;
-                "
-              >
-                <tr>
-                  <td
-                    style="
-                      padding:24px;
-                      background:#0b568f;
-                      color:#ffffff;
-                    "
-                  >
-                    <h2
-                      style="
-                        margin:0;
-                        font-size:20px;
-                      "
-                    >
-                      Booking Request Received
-                    </h2>
-                  </td>
-                </tr>
+  const normalCustomerBody = `
+    <p
+      style="
+        font-size:15px;
+        line-height:1.7;
+        color:#475569;
+      "
+    >
+      Dear
+      <strong>
+        ${safe.customerName}
+      </strong>,
+    </p>
 
-                <tr>
-                  <td
-                    style="
-                      padding:28px;
-                    "
-                  >
-                    <p>
-                      Dear
-                      <strong>
-                        ${safe.customerName}
-                      </strong>,
-                    </p>
+    <p
+      style="
+        font-size:15px;
+        line-height:1.7;
+        color:#475569;
+      "
+    >
+      Thank you for your interest in
+      <strong>
+        ${safe.propertyName}
+      </strong>.
+    </p>
 
-                    <p>
-                      Thank you for your
-                      interest in
-                      <strong>
-                        ${safe.propertyName}
-                      </strong>.
-                    </p>
+    <p
+      style="
+        font-size:15px;
+        line-height:1.7;
+        color:#475569;
+      "
+    >
+      We have received your booking form.
+      Our leasing coordinators will contact
+      you shortly.
+    </p>
 
-                    <p>
-                      Your booking request
-                      has been received.
-                      Our leasing team
-                      will review the
-                      request and contact
-                      you.
-                    </p>
-
-                    ${bookingDetails}
-
-                    <p>
-                      Regards,<br />
-                      <strong>
-                        Abdulwahed Bin
-                        Shabib Real Estate
-                      </strong>
-                    </p>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-        </table>
-      </body>
-    </html>
+    ${detailsCard}
   `;
 
-  /*
-  |--------------------------------------------------------------------------
-  | Admin
-  |--------------------------------------------------------------------------
-  */
+  /* =====================================================
+     AUTO-REJECT CUSTOMER DESIGN
+  ===================================================== */
+
+  const autoRejectCustomerBody = `
+    <p
+      style="
+        font-size:15px;
+        line-height:1.7;
+        color:#475569;
+      "
+    >
+      Dear
+      <strong>
+        ${safe.customerName}
+      </strong>,
+    </p>
+
+    <p
+      style="
+        font-size:15px;
+        line-height:1.7;
+        color:#475569;
+      "
+    >
+      Thank you for your interest in
+      <strong>
+        ${safe.propertyName}
+      </strong>.
+    </p>
+
+    <div
+      style="
+        margin:24px 0;
+        padding:20px;
+        background:#fff7ed;
+        border:1px solid #fed7aa;
+        border-left:4px solid #f58220;
+        border-radius:10px;
+      "
+    >
+      <strong
+        style="
+          display:block;
+          color:#0b1a30;
+          font-size:16px;
+          margin-bottom:8px;
+        "
+      >
+        Booking Availability Update
+      </strong>
+
+      <span
+        style="
+          color:#475569;
+          font-size:15px;
+          line-height:1.7;
+        "
+      >
+        We are sorry, but this unit was
+        reserved very recently and is
+        no longer available.
+      </span>
+    </div>
+
+    <p
+      style="
+        font-size:15px;
+        line-height:1.7;
+        color:#475569;
+      "
+    >
+      We appreciate your interest and
+      would be happy to assist you with
+      other available properties.
+    </p>
+
+    ${detailsCard}
+  `;
+
+  /* =====================================================
+     SEND MAIL
+  ===================================================== */
 
   const adminMail =
     mailTransporter.sendMail({
@@ -392,10 +554,18 @@ export async function sendBookingEmails(
         data.email,
 
       subject:
-        `New Booking #${data.bookingId} - ${data.propertyName}`,
+        data.autoRejected
+          ? `Auto Rejected Booking #${data.bookingId} - ${data.propertyName}`
+          : `New Booking #${data.bookingId} - ${data.propertyName}`,
 
       html:
-        adminHtml,
+        emailShell(
+          data.autoRejected
+            ? "Auto-Rejected Booking Request"
+            : "New Booking Request",
+
+          adminBody
+        ),
 
       attachments: [
         {
@@ -411,15 +581,6 @@ export async function sendBookingEmails(
       ],
     });
 
-  /*
-  |--------------------------------------------------------------------------
-  | Customer
-  |--------------------------------------------------------------------------
-  |
-  | Do NOT attach the passport again.
-  |
-  */
-
   const customerMail =
     mailTransporter.sendMail({
       from,
@@ -428,10 +589,20 @@ export async function sendBookingEmails(
         data.email,
 
       subject:
-        `Booking Request Received - ${data.propertyName}`,
+        data.autoRejected
+          ? `Booking Availability Update - ${data.propertyName}`
+          : `Booking Form Received - ${data.propertyName}`,
 
       html:
-        customerHtml,
+        emailShell(
+          data.autoRejected
+            ? "Booking Availability Update"
+            : `Thank You, ${safe.customerName}`,
+
+          data.autoRejected
+            ? autoRejectCustomerBody
+            : normalCustomerBody
+        ),
     });
 
   await Promise.all([

@@ -6,10 +6,12 @@ import {
 
 import {
   countProperties,
+  findAllAdminProperties,
   findAllProperties,
   findPropertyByBuildingId,
   findVacantUnitsByBuildingId,
   getPropertyFilterOptionsRepo,
+  updatePropertyWebDisplay,
 type PropertySearchParams,
 } from "../repositories/property.repository";
 
@@ -318,5 +320,157 @@ export async function getPropertyFilterOptions(
     });
   } catch (error) {
     return next(error);
+  }
+}
+
+export async function updateWebDisplay(
+  req: Request,
+  res: Response
+) {
+  try {
+    const buildId =
+      String(
+        req.params.id ||
+        ""
+      ).trim();
+
+    if (!buildId) {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          error:
+            "Building ID is required.",
+        });
+    }
+
+    const rawValue =
+      req.body.webDisplayOrder;
+
+    let webDisplayOrder:
+      number | null = null;
+
+    /* NULL = normal listing */
+
+    if (
+      rawValue !== null &&
+      rawValue !== undefined &&
+      rawValue !== ""
+    ) {
+      webDisplayOrder =
+        Number(rawValue);
+
+      if (
+        !Number.isInteger(
+          webDisplayOrder
+        ) ||
+        webDisplayOrder < 0 ||
+        webDisplayOrder > 6
+      ) {
+        return res
+          .status(400)
+          .json({
+            success: false,
+            error:
+              "Website display value must be 0 to 6 or null.",
+          });
+      }
+    }
+
+    const affected =
+      await updatePropertyWebDisplay(
+        buildId,
+        webDisplayOrder
+      );
+
+    if (affected === 0) {
+      return res
+        .status(404)
+        .json({
+          success: false,
+          error:
+            "Building not found.",
+        });
+    }
+
+    return res.json({
+      success: true,
+
+      message:
+        "Website display updated successfully.",
+    });
+  } catch (error: any) {
+    console.error(
+      "Update property web display failed:",
+      error
+    );
+
+    /*
+     * Unique priority position
+     * already assigned.
+     */
+
+    if (
+      error?.number === 2601 ||
+      error?.number === 2627
+    ) {
+      return res
+        .status(409)
+        .json({
+          success: false,
+          error:
+            "This Top Priority position is already assigned to another building.",
+        });
+    }
+
+    return res
+      .status(500)
+      .json({
+        success: false,
+        error:
+          "Unable to update website display.",
+      });
+  }
+}
+
+export async function getAdminProperties(
+  _req: Request,
+  res: Response
+) {
+  try {
+    const properties =
+      await findAllAdminProperties();
+
+    return res.json({
+      success: true,
+      data:
+        properties.map(
+          (
+            property
+          ) => ({
+            ...property,
+
+            location: [
+              property.areaName,
+              property.placeName,
+            ]
+              .filter(Boolean)
+              .join(", "),
+          })
+        ),
+    });
+  } catch (error) {
+    console.error(
+      "Admin property load failed:",
+      error
+    );
+
+    return res
+      .status(500)
+      .json({
+        success: false,
+        error:
+          "Unable to load properties.",
+      });
   }
 }

@@ -32,7 +32,13 @@ export interface Property {
   erpId: string | null;
 
   vacantUnits: number;
+
+  webDisplayOrder:
+  number | null;
 }
+
+
+
 
 export interface PropertyFilters {
   search?: string;
@@ -506,6 +512,9 @@ function normalizeProperty(
         property.vacantUnits ||
           0
       ),
+
+    webDisplayOrder:
+      null,
   };
 }
 

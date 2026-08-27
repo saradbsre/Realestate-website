@@ -1,30 +1,32 @@
-import type { Metadata } from "next";
+import type {
+  Metadata,
+} from "next";
 
 import "./globals.css";
 
-import Header from "./components/Header";
-import KeepBackendAlive from "./components/KeepBackendAlive";
+import SiteChrome from "./components/SiteChrome";
 
-export const metadata: Metadata = {
-  title: "Abdulwahed Bin Shabib Real Estate",
+export const metadata:
+  Metadata = {
+  title:
+    "Abdulwahed Bin Shabib Real Estate",
+
   description:
-    "Residential and commercial properties for rent in the UAE.",
+    "Abdulwahed Bin Shabib Real Estate",
 };
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children:
+    React.ReactNode;
 }>) {
   return (
     <html lang="en">
       <body>
-        <KeepBackendAlive />
-        <Header />
-
-        <main>
+        <SiteChrome>
           {children}
-        </main>
+        </SiteChrome>
       </body>
     </html>
   );

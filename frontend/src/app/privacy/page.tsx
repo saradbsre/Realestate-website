@@ -111,8 +111,7 @@ export default function PrivacyPage() {
         </div>
       </main>
 
-      {/* Unified Footer */}
-      <Footer />
+   
     </div>
   );
 }

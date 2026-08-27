@@ -13,13 +13,13 @@
   margin: 0 auto;
 }
 
-
 /* =========================================================
    LOADING / ERROR
 ========================================================= */
 
 .statePage {
   min-height: 75vh;
+  padding: 40px 20px;
 
   display: flex;
   flex-direction: column;
@@ -27,8 +27,6 @@
   justify-content: center;
 
   gap: 12px;
-
-  padding: 40px 20px;
 
   background: #f5f7fa;
   color: #12375d;
@@ -39,160 +37,23 @@
 .statePage h1,
 .statePage h2 {
   margin: 0;
-
   color: #102f57;
   font-weight: 850;
 }
 
 .statePage p {
   margin: 0;
-
   color: #76869a;
-
   font-size: 14px;
 }
 
 .statePage a {
   margin-top: 8px;
-
   color: #0872d5;
-
   font-size: 13px;
   font-weight: 750;
-
   text-decoration: none;
 }
-
-.statePage a:hover {
-  text-decoration: underline;
-}
-
-
-/* =========================================================
-   PROPERTY HEADER
-========================================================= */
-
-.propertyHeader {
-  width: 100%;
-
-  padding: 32px 0;
-
-  background: linear-gradient(
-    135deg,
-    #07578f 0%,
-    #0b6ba6 100%
-  );
-
-  color: #ffffff;
-}
-
-.headerGrid {
-  display: flex;
-
-  align-items: center;
-  justify-content: space-between;
-
-  gap: 40px;
-}
-
-.headerContent {
-  min-width: 0;
-  max-width: 850px;
-}
-
-.propertyLabel {
-  margin-bottom: 9px;
-
-  color: rgba(255, 255, 255, 0.78);
-
-  font-size: 11px;
-  font-weight: 800;
-
-  letter-spacing: 0.9px;
-
-  text-transform: uppercase;
-}
-
-.propertyHeader h1 {
-  margin: 0;
-
-  color: #ffffff;
-
-  font-size: clamp(25px, 2.7vw, 40px);
-  line-height: 1.17;
-
-  font-weight: 900;
-
-  letter-spacing: -0.4px;
-}
-
-.headerLocation {
-  margin-top: 14px;
-
-  display: flex;
-  align-items: center;
-
-  gap: 8px;
-
-  color: rgba(255, 255, 255, 0.95);
-
-  font-size: 13px;
-  font-weight: 750;
-}
-
-.headerLocation svg {
-  flex-shrink: 0;
-}
-
-
-/* =========================================================
-   HEADER STATS
-========================================================= */
-
-.headerStats {
-  flex-shrink: 0;
-
-  display: flex;
-  align-items: center;
-
-  gap: 12px;
-}
-
-.statCard {
-  min-width: 120px;
-  min-height: 80px;
-
-  padding: 14px 16px;
-
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-
-  gap: 4px;
-
-  border: 1px solid rgba(255, 255, 255, 0.23);
-
-  border-radius: 13px;
-
-  background: rgba(255, 255, 255, 0.12);
-
-  backdrop-filter: blur(5px);
-}
-
-.statCard strong {
-  color: #ffffff;
-
-  font-size: 21px;
-  font-weight: 900;
-}
-
-.statCard span {
-  color: rgba(255, 255, 255, 0.82);
-
-  font-size: 10px;
-  font-weight: 700;
-}
-
 
 /* =========================================================
    BREADCRUMB
@@ -200,9 +61,7 @@
 
 .breadcrumbBar {
   width: 100%;
-
   background: #ffffff;
-
   border-bottom: 1px solid #dfe6ee;
 }
 
@@ -241,22 +100,16 @@
   font-weight: 700;
 
   text-decoration: none;
-
-  transition: color 0.15s ease;
 }
 
 .breadcrumbLink:hover {
   color: #055cae;
-
   text-decoration: underline;
 }
 
 .breadcrumbArrow {
   flex-shrink: 0;
-
   color: #728296;
-
-  stroke-width: 1.8;
 }
 
 .breadcrumbGroup {
@@ -271,8 +124,6 @@
 .breadcrumbCurrent {
   max-width: 360px;
 
-  flex-shrink: 1;
-
   overflow: hidden;
 
   color: #263d56;
@@ -281,13 +132,11 @@
   font-weight: 750;
 
   white-space: nowrap;
-
   text-overflow: ellipsis;
 }
 
-
 /* =========================================================
-   COMMON SECTION TITLES
+   COMMON HEADINGS
 ========================================================= */
 
 .sectionHeading {
@@ -298,7 +147,6 @@
   margin-bottom: 14px;
 
   display: flex;
-
   align-items: flex-end;
   justify-content: space-between;
 
@@ -326,39 +174,9 @@
   font-size: 12px;
   line-height: 1.5;
 }
-.buildingImageArea {
-  position: relative;
-
-  min-width: 0;
-
-  height: 390px;
-
-  overflow: hidden;
-
-  background: #e9eff5;
-
-  touch-action: pan-y;
-}
-
-.buildingMainImage {
-  width: 100%;
-  height: 100%;
-
-  display: block;
-
-  object-fit: contain;
-
-  user-select: none;
-
-  -webkit-user-select: none;
-
-  -webkit-user-drag: none;
-
-  pointer-events: none;
-}
 
 /* =========================================================
-   PROPERTY OVERVIEW / GALLERY
+   PROPERTY OVERVIEW
 ========================================================= */
 
 .gallerySection {
@@ -375,15 +193,8 @@
   font-weight: 800;
 }
 
-
-/* =========================================================
-   PROPERTY OVERVIEW CARD
-========================================================= */
-
 .propertyOverviewGrid {
   width: 100%;
-
-  min-height: 390px;
 
   display: grid;
 
@@ -391,12 +202,14 @@
     minmax(0, 1.55fr)
     minmax(360px, 0.85fr);
 
+  grid-template-rows:
+    390px auto;
+
   overflow: hidden;
 
   background: #ffffff;
 
   border: 1px solid #dce5ee;
-
   border-radius: 15px;
 
   box-shadow:
@@ -404,21 +217,25 @@
     rgba(8, 40, 72, 0.06);
 }
 
-
 /* =========================================================
-   BUILDING IMAGE
+   MAIN IMAGE
 ========================================================= */
 
 .buildingImageArea {
   position: relative;
 
-  min-width: 0;
+  grid-column: 1;
+  grid-row: 1;
 
   height: 390px;
+
+  min-width: 0;
 
   overflow: hidden;
 
   background: #e9eff5;
+
+  touch-action: pan-y;
 }
 
 .buildingMainImage {
@@ -429,16 +246,12 @@
 
   object-fit: contain;
 
-  user-select: none;
+  pointer-events: none;
 
+  user-select: none;
   -webkit-user-select: none;
   -webkit-user-drag: none;
 }
-
-
-/* =========================================================
-   IMAGE BADGE
-========================================================= */
 
 .imageBadge {
   position: absolute;
@@ -453,7 +266,6 @@
   padding: 0 11px;
 
   display: inline-flex;
-
   align-items: center;
 
   gap: 6px;
@@ -466,14 +278,7 @@
 
   font-size: 10px;
   font-weight: 800;
-
-  backdrop-filter: blur(5px);
 }
-
-
-/* =========================================================
-   IMAGE COUNTER
-========================================================= */
 
 .imageCounter {
   position: absolute;
@@ -495,12 +300,104 @@
   font-weight: 800;
 }
 
+/* =========================================================
+   THUMBNAILS
+========================================================= */
+
+.thumbnailRow {
+  grid-column: 1;
+  grid-row: 2;
+
+  width: 100%;
+  max-width: 100%;
+
+  margin: 0;
+  padding: 10px;
+
+  display: flex;
+  flex-wrap: nowrap;
+
+  gap: 8px;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  background: #ffffff;
+
+  box-sizing: border-box;
+
+  scrollbar-width: none;
+
+  -webkit-overflow-scrolling: touch;
+
+  scroll-snap-type: x proximity;
+}
+
+.thumbnailRow::-webkit-scrollbar {
+  display: none;
+}
+
+.thumbButton {
+  position: relative;
+
+  width: 128px;
+  min-width: 128px;
+  height: 74px;
+
+  flex: 0 0 128px;
+
+  padding: 0;
+
+  overflow: hidden;
+
+  border: 2px solid transparent;
+
+  border-radius: 8px;
+
+  background: #eaf0f6;
+
+  cursor: pointer;
+
+  scroll-snap-align: start;
+
+  transition:
+    border-color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.thumbButton:hover {
+  border-color: #a9c8e4;
+
+  transform: translateY(-1px);
+}
+
+.thumbActive {
+  border-color: #0872d5;
+}
+
+.thumbImage {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  object-fit: cover;
+
+  pointer-events: none;
+
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+}
 
 /* =========================================================
    OVERVIEW DETAILS
 ========================================================= */
 
 .overviewDetails {
+  grid-column: 2;
+  grid-row: 1 / 3;
+
   min-width: 0;
 
   padding: 28px;
@@ -511,11 +408,6 @@
 
   background: #ffffff;
 }
-
-
-/* =========================================================
-   PROPERTY TITLE
-========================================================= */
 
 .overviewTitle {
   padding-bottom: 20px;
@@ -569,52 +461,50 @@
   color: #0872d5;
 }
 
-
 /* =========================================================
    OVERVIEW STATS
 ========================================================= */
 
 .overviewStats {
-  margin-top: 20px;
+  margin-top: 16px;
 
   display: grid;
 
   grid-template-columns:
-    repeat(3, minmax(0, 1fr));
+    repeat(2, minmax(0, 1fr));
 
-  gap: 9px;
+  gap: 8px;
 }
 
 .overviewStat {
   min-width: 0;
-  min-height: 70px;
+  min-height: 58px;
 
-  padding: 10px;
+  padding: 8px 10px;
 
   display: flex;
   align-items: center;
 
-  gap: 9px;
+  gap: 8px;
 
   background: #f7fafd;
 
   border: 1px solid #dce5ee;
 
-  border-radius: 9px;
+  border-radius: 8px;
 }
 
 .overviewStatIcon {
-  width: 33px;
-  height: 33px;
+  width: 30px;
+  height: 30px;
 
-  flex: 0 0 33px;
+  flex: 0 0 30px;
 
   display: flex;
-
   align-items: center;
   justify-content: center;
 
-  border-radius: 8px;
+  border-radius: 7px;
 
   background: #eaf4fe;
 
@@ -627,40 +517,31 @@
   display: flex;
   flex-direction: column;
 
-  gap: 3px;
+  gap: 2px;
 }
 
 .overviewStat span {
   color: #8291a2;
 
-  font-size: 8px;
+  font-size: 7px;
   font-weight: 700;
 }
 
 .overviewStat strong {
-  min-width: 0;
-
-  overflow: hidden;
-
   color: #102f57;
 
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 900;
-
-  white-space: nowrap;
-
-  text-overflow: ellipsis;
 }
 
-
 /* =========================================================
-   AVAILABLE PROPERTY TYPES
+   PROPERTY TYPE CHIPS
 ========================================================= */
 
 .overviewTypes {
-  margin-top: 19px;
+  margin-top: 16px;
 
-  padding-top: 17px;
+  padding-top: 14px;
 
   border-top: 1px solid #e5ebf1;
 }
@@ -668,11 +549,11 @@
 .overviewTypesLabel {
   display: block;
 
-  margin-bottom: 9px;
+  margin-bottom: 8px;
 
   color: #75869a;
 
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 850;
 
   letter-spacing: 0.4px;
@@ -682,22 +563,20 @@
 
 .overviewTypeList {
   display: flex;
-
   flex-wrap: wrap;
 
-  gap: 7px;
+  gap: 6px;
 }
 
 .overviewTypeChip {
-  min-height: 29px;
+  min-height: 30px;
 
   padding: 0 9px;
 
   display: inline-flex;
-
   align-items: center;
 
-  gap: 6px;
+  gap: 5px;
 
   border: 1px solid #dce8f3;
 
@@ -707,12 +586,16 @@
 
   color: #125b93;
 
-  font-size: 9px;
+  font-family: inherit;
+
+  font-size: 8px;
   font-weight: 800;
+
+  cursor: pointer;
 }
 
 .overviewTypeChip small {
-  min-width: 19px;
+  min-width: 18px;
 
   padding: 2px 5px;
 
@@ -722,146 +605,34 @@
 
   color: #0868b5;
 
-  font-size: 8px;
+  font-size: 7px;
   font-weight: 850;
 
   text-align: center;
 }
 
-
-/* =========================================================
-   THUMBNAIL GALLERY
-
-   IMPORTANT:
-   Only one thumbnail implementation.
-   Desktop + tablet + mobile all use horizontal flex.
-========================================================= */
-
-.thumbnailRow {
-  width: 100%;
-  max-width: 100%;
-
-  margin-top: 10px;
-
-  padding: 0 0 7px;
-
-  display: flex;
-
-  flex-wrap: nowrap;
-
-  gap: 8px;
-
-  overflow-x: auto;
-  overflow-y: hidden;
-
-  -webkit-overflow-scrolling: touch;
-
-  overscroll-behavior-x: contain;
-
-  scroll-behavior: smooth;
-
-  scroll-snap-type: x proximity;
-
-  scrollbar-width: none;
-
-  touch-action: pan-x;
-
-  cursor: grab;
+.overviewTypeArrow {
+  flex-shrink: 0;
 }
 
-.thumbnailRow:active {
-  cursor: grabbing;
-}
-
-.thumbnailRow::-webkit-scrollbar {
-  display: none;
-}
-
-/*
-   If there is only one image,
-   don't show a thumbnail strip.
-*/
-
-.thumbnailRow:has(.thumbButton:only-child) {
-  display: none;
-}
-
-.thumbButton {
-  position: relative;
-
-  width: 128px;
-  min-width: 128px;
-
-  height: 74px;
-
-  flex: 0 0 128px;
-
-  padding: 0;
-
-  overflow: hidden;
-
-  border: 2px solid transparent;
-
-  border-radius: 8px;
-
-  background: #eaf0f6;
-
-  cursor: pointer;
-
-  scroll-snap-align: start;
-
-  transition:
-    border-color 0.15s ease,
-    transform 0.15s ease;
-}
-
-.thumbButton:hover {
-  border-color: #a9c8e4;
-
-  transform: translateY(-1px);
-}
-
-.thumbActive {
+.overviewTypeChipActive {
   border-color: #0872d5;
-}
 
-.thumbImage {
-  width: 100%;
-  height: 100%;
-
-  display: block;
-
-  object-fit: cover;
-
-  pointer-events: none;
-
-  user-select: none;
-
-  -webkit-user-select: none;
-
-  -webkit-user-drag: none;
-}
-
-.moreOverlay {
-  position: absolute;
-
-  inset: 0;
-
-  display: flex;
-
-  align-items: center;
-  justify-content: center;
-
-  pointer-events: none;
-
-  background: rgba(8, 30, 52, 0.58);
+  background:
+    linear-gradient(
+      135deg,
+      #0876dd 0%,
+      #075ca7 100%
+    );
 
   color: #ffffff;
-
-  font-size: 15px;
-  font-weight: 850;
 }
 
+.overviewTypeChipActive small {
+  background: rgba(255, 255, 255, 0.2);
+
+  color: #ffffff;
+}
 
 /* =========================================================
    AMENITIES
@@ -888,7 +659,6 @@
   padding: 9px 12px;
 
   display: flex;
-
   align-items: center;
 
   gap: 10px;
@@ -900,21 +670,6 @@
   border-radius: 9px;
 
   color: #173b62;
-
-  transition:
-    transform 0.15s ease,
-    border-color 0.15s ease,
-    box-shadow 0.15s ease;
-}
-
-.amenityCard:hover {
-  transform: translateY(-1px);
-
-  border-color: #b9d0e5;
-
-  box-shadow:
-    0 5px 15px
-    rgba(8, 48, 85, 0.05);
 }
 
 .amenityIcon {
@@ -924,7 +679,6 @@
   flex: 0 0 34px;
 
   display: flex;
-
   align-items: center;
   justify-content: center;
 
@@ -942,19 +696,29 @@
 
   font-size: 11px;
   font-weight: 800;
+
+  line-height: 1.25;
 }
 
+.amenityCheck {
+  margin-left: auto;
+
+  flex-shrink: 0;
+
+  color: #16813b;
+}
 
 /* =========================================================
-   AVAILABLE UNITS SECTION
+   AVAILABLE UNITS
 ========================================================= */
 
 .unitsSection {
   margin-top: 42px;
 
   padding-bottom: 65px;
-}
 
+  scroll-margin-top: 120px;
+}
 
 /* =========================================================
    PROPERTY TYPE TABS
@@ -964,7 +728,6 @@
   width: 100%;
 
   margin-bottom: 18px;
-
   padding-bottom: 4px;
 
   display: flex;
@@ -977,24 +740,6 @@
   -webkit-overflow-scrolling: touch;
 
   scrollbar-width: thin;
-
-  scrollbar-color:
-    #c9d7e5
-    transparent;
-}
-
-.propertyTabs::-webkit-scrollbar {
-  height: 4px;
-}
-
-.propertyTabs::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.propertyTabs::-webkit-scrollbar-thumb {
-  background: #c9d7e5;
-
-  border-radius: 10px;
 }
 
 .propertyTab {
@@ -1005,7 +750,6 @@
   padding: 0 14px;
 
   display: inline-flex;
-
   align-items: center;
   justify-content: center;
 
@@ -1025,20 +769,6 @@
   font-weight: 800;
 
   cursor: pointer;
-
-  transition:
-    background 0.15s ease,
-    color 0.15s ease,
-    border-color 0.15s ease,
-    box-shadow 0.15s ease;
-}
-
-.propertyTab:hover {
-  border-color: #91bbe2;
-
-  background: #f4f9fe;
-
-  color: #0872d5;
 }
 
 .propertyTab small {
@@ -1054,34 +784,17 @@
 
   font-size: 9px;
   font-weight: 850;
-
-  text-align: center;
 }
 
 .propertyTabActive {
   border-color: #0872d5;
 
-  background: linear-gradient(
-    135deg,
-    #0876dd 0%,
-    #075ca7 100%
-  );
-
-  color: #ffffff;
-
-  box-shadow:
-    0 5px 14px
-    rgba(7, 96, 178, 0.17);
-}
-
-.propertyTabActive:hover {
-  border-color: #0872d5;
-
-  background: linear-gradient(
-    135deg,
-    #0876dd 0%,
-    #075ca7 100%
-  );
+  background:
+    linear-gradient(
+      135deg,
+      #0876dd 0%,
+      #075ca7 100%
+    );
 
   color: #ffffff;
 }
@@ -1092,18 +805,16 @@
   color: #ffffff;
 }
 
-
 /* =========================================================
-   SELECTED PROPERTY TYPE SUMMARY
+   SELECTED TYPE HEADER
 ========================================================= */
 
 .selectedTypeHeader {
-  min-height: 80px;
+  min-height: 92px;
 
   padding: 16px 20px;
 
   display: flex;
-
   align-items: center;
   justify-content: space-between;
 
@@ -1112,16 +823,12 @@
   background: #ffffff;
 
   border: 1px solid #dce5ef;
-  border-bottom: none;
 
   border-radius:
-    13px
-    13px
-    0
-    0;
+    13px 13px 0 0;
 }
 
-.selectedTypeHeader h3 {
+.selectedTypeTitle h3 {
   margin: 0;
 
   color: #07568f;
@@ -1130,28 +837,32 @@
   font-weight: 900;
 }
 
-.selectedTypeHeader
-> div:first-child
-> span {
+.selectedTypeTitle > span {
   display: block;
 
-  margin-top: 3px;
+  margin-top: 4px;
 
   color: #778597;
 
   font-size: 11px;
 }
 
-.selectedTypeStats {
+.selectedTypeRight {
   display: flex;
-
   align-items: center;
 
-  gap: 32px;
+  gap: 28px;
+}
+
+.selectedTypeStats {
+  display: flex;
+  align-items: center;
+
+  gap: 30px;
 }
 
 .selectedTypeStats > div {
-  min-width: 140px;
+  min-width: 135px;
 
   display: flex;
   flex-direction: column;
@@ -1177,33 +888,115 @@
   font-weight: 900;
 }
 
-
 /* =========================================================
-   UNIT TABLE WRAPPER
+   VIEW SWITCHER
 ========================================================= */
 
-.unitTableWrapper {
-  overflow: hidden;
+.viewSwitcher {
+  flex-shrink: 0;
+
+  padding: 4px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 4px;
+
+  border: 1px solid #d7e2ed;
+
+  border-radius: 9px;
+
+  background: #f4f7fa;
+}
+
+.viewButton {
+  min-width: 82px;
+  height: 35px;
+
+  padding: 0 11px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 6px;
+
+  border: none;
+
+  border-radius: 6px;
+
+  background: transparent;
+
+  color: #597087;
+
+  font-family: inherit;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+.viewButton:hover {
+  color: #0872d5;
+
+  background: #eaf4fd;
+}
+
+.viewButtonActive {
+  background: #0872d5;
+
+  color: #ffffff;
+
+  box-shadow:
+    0 3px 8px
+    rgba(8, 114, 213, 0.18);
+}
+
+.viewButtonActive:hover {
+  background: #0872d5;
+
+  color: #ffffff;
+}
+
+.tableViewIcon {
+  font-size: 17px;
+  line-height: 1;
+}
+
+/* =========================================================
+   TABLE VIEW
+========================================================= */
+
+.unitTableScroll {
+  width: 100%;
+
+  overflow-x: auto;
+  overflow-y: hidden;
 
   background: #ffffff;
 
   border: 1px solid #dce5ef;
 
+  border-top: none;
+
   border-radius:
-    0
-    0
-    13px
-    13px;
+    0 0 13px 13px;
 
   box-shadow:
     0 8px 24px
     rgba(8, 39, 70, 0.045);
+
+  -webkit-overflow-scrolling: touch;
+
+  scrollbar-width: thin;
 }
 
+.unitTableContent {
+  width: 100%;
 
-/* =========================================================
-   TABLE HEADER
-========================================================= */
+  min-width: 980px;
+}
 
 .unitTableHeader {
   display: grid;
@@ -1214,11 +1007,12 @@
     minmax(220px, 1.15fr)
     minmax(160px, 0.75fr);
 
-  background: linear-gradient(
-    90deg,
-    #0a5b9e 0%,
-    #0a64aa 100%
-  );
+  background:
+    linear-gradient(
+      90deg,
+      #0a5b9e 0%,
+      #0a64aa 100%
+    );
 
   color: #ffffff;
 
@@ -1230,7 +1024,6 @@
   padding: 13px 15px;
 
   display: flex;
-
   align-items: center;
 
   border-right:
@@ -1241,11 +1034,6 @@
 .unitTableHeader > div:last-child {
   border-right: none;
 }
-
-
-/* =========================================================
-   UNIT ROW
-========================================================= */
 
 .unitRow {
   display: grid;
@@ -1259,8 +1047,6 @@
   background: #ffffff;
 
   border-bottom: 1px solid #e0e7ef;
-
-  transition: background 0.15s ease;
 }
 
 .unitRow:last-child {
@@ -1282,7 +1068,6 @@
 .unitRow > div:last-child {
   border-right: none;
 }
-
 
 /* =========================================================
    UNIT DETAILS
@@ -1308,7 +1093,6 @@
 
 .unitFeatures {
   display: flex;
-
   flex-wrap: wrap;
 
   gap: 6px;
@@ -1320,7 +1104,6 @@
   padding: 0 8px;
 
   display: inline-flex;
-
   align-items: center;
 
   gap: 5px;
@@ -1338,8 +1121,6 @@
 }
 
 .unitFeatures svg {
-  flex-shrink: 0;
-
   color: #587795;
 }
 
@@ -1349,7 +1130,6 @@
   margin-top: 10px;
 
   display: flex;
-
   align-items: center;
 
   gap: 5px;
@@ -1360,7 +1140,6 @@
   font-weight: 800;
 }
 
-
 /* =========================================================
    UNIT PRICE
 ========================================================= */
@@ -1370,7 +1149,6 @@
   flex-direction: column;
 
   align-items: flex-start;
-  justify-content: flex-start;
 
   gap: 3px;
 }
@@ -1390,16 +1168,6 @@
   font-size: 10px;
 }
 
-.unitPrice small {
-  margin-top: 7px;
-
-  color: #77869a;
-
-  font-size: 9px;
-  line-height: 1.5;
-}
-
-
 /* =========================================================
    UNIT INFORMATION
 ========================================================= */
@@ -1413,7 +1181,6 @@
 
 .unitInformation > div {
   display: flex;
-
   align-items: center;
 
   gap: 7px;
@@ -1430,36 +1197,30 @@
   color: #17863e;
 }
 
-
 /* =========================================================
    ACTION
 ========================================================= */
 
 .unitAction {
   display: flex;
-  flex-direction: column;
-
+  align-items: center;
   justify-content: center;
-
-  gap: 9px;
 }
 
-.bookButton {
-  width: 100%;
-
-  min-height: 39px;
-
-  padding: 0 14px;
+.bookButton,
+.cardBookButton {
+  min-height: 41px;
 
   border: none;
 
   border-radius: 7px;
 
-  background: linear-gradient(
-    135deg,
-    #0877df 0%,
-    #0561b7 100%
-  );
+  background:
+    linear-gradient(
+      135deg,
+      #0877df 0%,
+      #0561b7 100%
+    );
 
   color: #ffffff;
 
@@ -1472,32 +1233,221 @@
 
   transition:
     transform 0.15s ease,
-    box-shadow 0.15s ease,
-    background 0.15s ease;
+    box-shadow 0.15s ease;
 }
 
-.bookButton:hover {
-  transform: translateY(-1px);
+.bookButton {
+  width: 100%;
+}
 
-  background: linear-gradient(
-    135deg,
-    #076dd0 0%,
-    #04559f 100%
-  );
+.bookButton:hover,
+.cardBookButton:hover {
+  transform: translateY(-1px);
 
   box-shadow:
     0 7px 16px
     rgba(7, 98, 184, 0.22);
 }
 
-.unitAction > span {
-  color: #7b8899;
+/* =========================================================
+   CARD VIEW
+========================================================= */
+
+.unitCardGrid {
+  padding: 22px;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+
+  gap: 16px;
+
+  background: #f4f7fa;
+
+  border: 1px solid #dce5ef;
+
+  border-top: none;
+
+  border-radius:
+    0 0 13px 13px;
+}
+
+.unitCard {
+  min-width: 0;
+
+  padding: 19px;
+
+  display: flex;
+  flex-direction: column;
+
+  background: #ffffff;
+
+  border: 1px solid #d8e3ed;
+
+  border-radius: 12px;
+
+  box-shadow:
+    0 5px 18px
+    rgba(8, 39, 70, 0.045);
+}
+
+.unitCardHeader {
+  padding-bottom: 15px;
+
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  border-bottom: 1px solid #e6edf3;
+}
+
+.unitCardHeader h3 {
+  margin: 0;
+
+  color: #0870ce;
+
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.unitCardReference {
+  display: block;
+
+  margin-top: 5px;
+
+  color: #7c8998;
 
   font-size: 9px;
+}
+
+.cardAvailable {
+  flex-shrink: 0;
+
+  min-height: 27px;
+
+  padding: 0 9px;
+
+  display: inline-flex;
+  align-items: center;
+
+  gap: 4px;
+
+  border-radius: 20px;
+
+  background: #edf9f1;
+
+  color: #16813b;
+
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.unitCardStats {
+  padding: 17px 0;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 9px;
+}
+
+.unitCardStat {
+  min-width: 0;
+
+  padding: 10px;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+
+  background: #f7fafd;
+
+  border: 1px solid #e2e9f0;
+
+  border-radius: 7px;
+}
+
+.unitCardStat span {
+  color: #8391a1;
+
+  font-size: 8px;
+  font-weight: 800;
+
+  text-transform: uppercase;
+}
+
+.unitCardStat strong {
+  overflow: hidden;
+
+  color: #102f57;
+
+  font-size: 12px;
+  font-weight: 900;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.unitCardStat small {
+  color: #76869a;
+
+  font-size: 8px;
+}
+
+.unitCardInfo {
+  margin-bottom: 17px;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 7px;
+
+  color: #405a73;
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.unitCardInfo > div {
+  display: flex;
+  align-items: center;
+
+  gap: 6px;
+}
+
+.unitCardInfo svg {
+  color: #16813b;
+}
+
+.cardBookButton {
+  width: 100%;
+
+  margin-top: auto;
+}
+
+/* =========================================================
+   EMPTY
+========================================================= */
+
+.noUnits {
+  padding: 35px;
+
+  background: #ffffff;
+
+  border: 1px solid #dce5ef;
+
+  color: #718196;
+
+  font-size: 13px;
 
   text-align: center;
 }
-
 
 /* =========================================================
    LARGE TABLET
@@ -1506,22 +1456,6 @@
 @media (max-width: 1100px) {
   .container {
     width: calc(100% - 32px);
-  }
-
-  .headerGrid {
-    align-items: flex-start;
-
-    flex-direction: column;
-
-    gap: 22px;
-  }
-
-  .headerStats {
-    width: 100%;
-  }
-
-  .statCard {
-    flex: 1;
   }
 
   .propertyOverviewGrid {
@@ -1534,29 +1468,28 @@
     padding: 22px;
   }
 
-  .overviewStats {
-    grid-template-columns: 1fr;
-  }
-
-  .overviewStat {
-    min-height: 58px;
-  }
-
   .amenitiesGrid {
     grid-template-columns:
       repeat(2, minmax(0, 1fr));
   }
 
-  .unitTableWrapper {
-    overflow-x: auto;
+  .selectedTypeHeader {
+    align-items: flex-start;
+
+    flex-direction: column;
   }
 
-  .unitTableHeader,
-  .unitRow {
-    min-width: 860px;
+  .selectedTypeRight {
+    width: 100%;
+
+    justify-content: space-between;
+  }
+
+  .unitCardGrid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
   }
 }
-
 
 /* =========================================================
    TABLET
@@ -1565,38 +1498,50 @@
 @media (max-width: 800px) {
   .propertyOverviewGrid {
     grid-template-columns: 1fr;
+
+    grid-template-rows:
+      auto auto auto;
   }
 
   .buildingImageArea {
+    grid-column: 1;
+    grid-row: 1;
+
     height: 330px;
   }
 
+  .thumbnailRow {
+    grid-column: 1;
+    grid-row: 2;
+
+    padding: 8px 10px 10px;
+  }
+
   .overviewDetails {
+    grid-column: 1;
+    grid-row: 3;
+
     padding: 22px;
   }
 
   .overviewStats {
     grid-template-columns:
-      repeat(3, minmax(0, 1fr));
+      repeat(2, minmax(0, 1fr));
   }
 
-  .selectedTypeHeader {
-    align-items: flex-start;
-
-    flex-direction: column;
-
-    gap: 15px;
+  .selectedTypeRight {
+    align-items: flex-end;
   }
 
   .selectedTypeStats {
-    width: 100%;
-  }
-
-  .selectedTypeStats > div {
     flex: 1;
   }
-}
 
+  .unitTableContent {
+    width: 980px;
+    min-width: 980px;
+  }
+}
 
 /* =========================================================
    MOBILE
@@ -1608,361 +1553,540 @@
   }
 
   .container {
-    width: calc(100% - 22px);
+    width: calc(100% - 20px);
   }
 
-
-  /* HEADER */
-
-  .propertyHeader {
-    padding: 24px 0;
-  }
-
-  .propertyLabel {
-    font-size: 9px;
-  }
-
-  .propertyHeader h1 {
-    font-size: 23px;
-
-    line-height: 1.2;
-  }
-
-  .headerLocation {
-    align-items: flex-start;
-
-    font-size: 11px;
-
-    line-height: 1.45;
-  }
-
-  .headerStats {
-    display: grid;
-
-    grid-template-columns: 1fr 1fr;
-
-    gap: 8px;
-  }
-
-  .statCard {
-    min-width: 0;
-    min-height: 65px;
-
-    padding: 11px;
-  }
-
-  .statCard strong {
-    font-size: 18px;
-  }
-
-  .statCard span {
-    font-size: 9px;
-  }
-
-
-  /* BREADCRUMB */
+  /* -----------------------------------------
+     BREADCRUMB
+  ----------------------------------------- */
 
   .breadcrumb {
-    min-height: 44px;
+    min-height: 42px;
 
     gap: 5px;
   }
 
   .breadcrumbLink,
   .breadcrumbCurrent {
-    font-size: 10px;
+    font-size: 9px;
   }
 
   .breadcrumbCurrent {
-    max-width: 170px;
+    max-width: 150px;
   }
 
   .breadcrumbArrow {
-    width: 12px;
-    height: 12px;
+    width: 11px;
+    height: 11px;
   }
 
-  .breadcrumbGroup {
-    gap: 5px;
+  /* -----------------------------------------
+     HEADINGS
+  ----------------------------------------- */
+
+  .sectionHeading {
+    margin-bottom: 11px;
   }
-
-
-  /* HEADINGS */
 
   .sectionHeadingRow {
-    align-items: flex-start;
+    margin-bottom: 10px;
   }
 
   .sectionHeading h2,
   .sectionHeadingRow h2 {
-    font-size: 21px;
+    font-size: 18px;
   }
 
   .sectionHeading p,
   .sectionHeadingRow p {
-    font-size: 11px;
+    margin-top: 3px;
+
+    font-size: 9px;
   }
 
-
-  /* PROPERTY OVERVIEW */
+  /* -----------------------------------------
+     OVERVIEW
+  ----------------------------------------- */
 
   .gallerySection {
-    margin-top: 20px;
-    margin-bottom: 28px;
-  }
-
-  .propertyOverviewGrid {
-    min-height: 0;
-
-    border-radius: 11px;
+    margin-top: 16px;
+    margin-bottom: 22px;
   }
 
   .buildingImageArea {
-    height: 250px;
+    height: 235px;
   }
-
-  .overviewDetails {
-    padding: 17px;
-  }
-
-  .overviewTitle h2 {
-    font-size: 18px;
-  }
-
-  .overviewLocation {
-    align-items: flex-start;
-
-    font-size: 10px;
-  }
-
-  .overviewStats {
-    grid-template-columns: 1fr;
-  }
-
-  .overviewStat {
-    min-height: 56px;
-  }
-
-  .overviewTypes {
-    margin-top: 15px;
-  }
-
-  .photoCount {
-    font-size: 10px;
-  }
-
-
-  /* MOBILE THUMBNAIL SWIPE */
 
   .thumbnailRow {
-    width: 100%;
+    gap: 6px;
 
-    max-width: 100%;
-
-    display: flex;
-
-    flex-wrap: nowrap;
-
-    gap: 8px;
-
-    overflow-x: auto;
-    overflow-y: hidden;
-
-    padding: 0 0 8px;
-
-    -webkit-overflow-scrolling: touch;
-
-    overscroll-behavior-x: contain;
-
-    scroll-snap-type: x proximity;
-
-    touch-action: pan-x;
-
-    scrollbar-width: none;
-  }
-
-  .thumbnailRow::-webkit-scrollbar {
-    display: none;
+    padding: 7px 8px 9px;
   }
 
   .thumbButton {
-    width: 110px;
-    min-width: 110px;
+    width: 78px;
+    min-width: 78px;
+    height: 50px;
 
-    height: 66px;
-
-    flex: 0 0 110px;
-
-    scroll-snap-align: start;
+    flex: 0 0 78px;
   }
 
-  .thumbImage {
-    pointer-events: none;
-
-    user-select: none;
-
-    -webkit-user-select: none;
-
-    -webkit-user-drag: none;
+  .overviewDetails {
+    padding: 14px;
   }
 
-
-  /* AMENITIES */
-
-  .amenitiesSection {
-    margin-top: 25px;
-    margin-bottom: 30px;
+  .overviewTitle {
+    padding-bottom: 12px;
   }
 
-  .amenitiesGrid {
-    grid-template-columns: 1fr;
+  .overviewTitle > span {
+    margin-bottom: 4px;
 
-    gap: 7px;
+    font-size: 7px;
   }
 
-  .amenityCard {
-    min-height: 52px;
-
-    padding: 8px 11px;
+  .overviewTitle h2 {
+    font-size: 15px;
+    line-height: 1.25;
   }
 
-  .amenityIcon {
-    width: 33px;
-    height: 33px;
+  .overviewLocation {
+    margin-top: 8px;
 
-    flex: 0 0 33px;
+    gap: 5px;
+
+    font-size: 8px;
   }
 
-
-  /* UNIT SECTION */
-
-  .unitsSection {
-    margin-top: 30px;
-
-    padding-bottom: 40px;
+  .overviewLocation svg {
+    width: 13px;
+    height: 13px;
   }
 
-  .propertyTabs {
+  /* -----------------------------------------
+     OVERVIEW STATS - TWO IN ONE ROW
+  ----------------------------------------- */
+
+  .overviewStats {
+    margin-top: 12px;
+
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
     gap: 6px;
   }
 
-  .propertyTab {
-    min-height: 37px;
+  .overviewStat {
+    min-height: 45px;
 
-    padding: 0 10px;
+    padding: 6px 7px;
 
-    font-size: 10px;
+    gap: 6px;
   }
 
+  .overviewStatIcon {
+    width: 25px;
+    height: 25px;
 
-  /* SELECTED TYPE */
+    flex: 0 0 25px;
+  }
+
+  .overviewStatIcon svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  .overviewStat span {
+    font-size: 6px;
+  }
+
+  .overviewStat strong {
+    font-size: 9px;
+  }
+
+  /* -----------------------------------------
+     PROPERTY TYPES
+  ----------------------------------------- */
+
+  .overviewTypes {
+    margin-top: 12px;
+
+    padding-top: 11px;
+  }
+
+  .overviewTypesLabel {
+    margin-bottom: 6px;
+
+    font-size: 7px;
+  }
+
+  .overviewTypeList {
+    gap: 5px;
+  }
+
+  .overviewTypeChip {
+    min-height: 25px;
+
+    padding: 0 7px;
+
+    gap: 4px;
+
+    font-size: 7px;
+  }
+
+  .overviewTypeChip small {
+    min-width: 16px;
+
+    padding: 1px 4px;
+
+    font-size: 6px;
+  }
+
+  .overviewTypeArrow {
+    width: 10px;
+    height: 10px;
+  }
+
+  /* -----------------------------------------
+     AMENITIES
+
+     IMPORTANT:
+     TWO CARDS EACH ROW
+  ----------------------------------------- */
+
+  .amenitiesSection {
+    margin-top: 22px;
+    margin-bottom: 24px;
+  }
+
+  .amenitiesGrid {
+    display: grid;
+
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
+    gap: 6px;
+  }
+
+  .amenityCard {
+    min-width: 0;
+    min-height: 46px;
+
+    padding: 6px 7px;
+
+    gap: 6px;
+
+    border-radius: 7px;
+  }
+
+  .amenityIcon {
+    width: 26px;
+    height: 26px;
+
+    flex: 0 0 26px;
+
+    border-radius: 6px;
+  }
+
+  .amenityIcon svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  .amenityCard > span {
+    min-width: 0;
+
+    font-size: 8px;
+    line-height: 1.15;
+  }
+
+  .amenityCheck {
+    width: 11px;
+    height: 11px;
+
+    margin-left: auto;
+  }
+
+  /* -----------------------------------------
+     AVAILABLE UNITS
+  ----------------------------------------- */
+
+  .unitsSection {
+    margin-top: 25px;
+
+    padding-bottom: 35px;
+  }
+
+  .propertyTabs {
+    margin-bottom: 10px;
+
+    gap: 5px;
+  }
+
+  .propertyTab {
+    min-height: 32px;
+
+    padding: 0 8px;
+
+    gap: 5px;
+
+    font-size: 8px;
+  }
+
+  .propertyTab small {
+    min-width: 18px;
+
+    padding: 2px 5px;
+
+    font-size: 7px;
+  }
+
+  /* -----------------------------------------
+     SELECTED TYPE HEADER
+  ----------------------------------------- */
 
   .selectedTypeHeader {
-    padding: 14px;
+    min-height: 0;
+
+    padding: 10px;
+
+    gap: 9px;
 
     border-radius:
-      10px
-      10px
-      0
-      0;
+      9px 9px 0 0;
   }
 
-  .selectedTypeHeader h3 {
-    font-size: 16px;
+  .selectedTypeTitle h3 {
+    font-size: 14px;
+  }
+
+  .selectedTypeTitle > span {
+    margin-top: 2px;
+
+    font-size: 8px;
+  }
+
+  .selectedTypeRight {
+    width: 100%;
+
+    align-items: stretch;
+
+    flex-direction: column;
+
+    gap: 8px;
   }
 
   .selectedTypeStats {
+    width: 100%;
+
     display: grid;
 
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
 
-    gap: 8px;
+    gap: 6px;
   }
 
   .selectedTypeStats > div {
     min-width: 0;
 
-    padding: 9px;
+    padding: 7px;
 
     border: 1px solid #e2e8ef;
 
-    border-radius: 7px;
+    border-radius: 6px;
 
     background: #f7f9fc;
   }
 
+  .selectedTypeStats span {
+    font-size: 6px;
+  }
+
   .selectedTypeStats strong {
-    font-size: 10px;
+    font-size: 9px;
   }
 
+  /* -----------------------------------------
+     VIEW SWITCHER
+  ----------------------------------------- */
 
-  /* MOBILE UNIT CARDS */
+  .viewSwitcher {
+    width: 100%;
 
-  .unitTableWrapper {
-    overflow: visible;
-
-    border: none;
-
-    border-radius: 0;
-
-    background: transparent;
-
-    box-shadow: none;
+    padding: 3px;
   }
 
-  .unitTableHeader {
-    display: none;
-  }
+  .viewButton {
+    flex: 1;
 
-  .unitRow {
     min-width: 0;
 
-    display: block;
+    height: 31px;
 
-    margin-bottom: 11px;
+    padding: 0 8px;
 
-    overflow: hidden;
-
-    border: 1px solid #dce5ef;
-
-    border-radius: 10px;
-
-    background: #ffffff;
-
-    box-shadow:
-      0 5px 15px
-      rgba(8, 39, 70, 0.045);
+    font-size: 8px;
   }
 
-  .unitRow > div {
-    padding: 13px;
-
-    border-right: none;
-
-    border-bottom: 1px solid #e6edf3;
-  }
-
-  .unitRow > div:last-child {
-    border-bottom: none;
-  }
-
-  .unitMain h4 {
-    font-size: 13px;
-  }
-
-  .unitPrice {
-    background: #fafbfd;
-  }
-
-  .unitInformation {
-    background: #fafbfd;
-  }
-
-  .unitPrice strong {
+  .tableViewIcon {
     font-size: 14px;
   }
 
-  .bookButton {
-    min-height: 41px;
+  /* -----------------------------------------
+     MOBILE TABLE VIEW
+
+     LEFT/RIGHT SCROLL
+  ----------------------------------------- */
+
+  .unitTableScroll {
+    width: 100%;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    border-radius:
+      0 0 9px 9px;
+
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .unitTableContent {
+    width: 850px;
+    min-width: 850px;
+  }
+
+  .unitTableHeader,
+  .unitRow {
+    grid-template-columns:
+      230px
+      160px
+      240px
+      170px;
+  }
+
+  .unitTableHeader > div {
+    padding: 11px 12px;
+  }
+
+  .unitRow > div {
+    padding: 12px;
+  }
+
+  .unitMain h4 {
+    font-size: 12px;
+  }
+
+  .unitPrice strong {
+    font-size: 13px;
+  }
+
+  /* -----------------------------------------
+     CARD VIEW - HORIZONTAL SWIPE
+  ----------------------------------------- */
+
+  .unitCardGrid {
+    width: 100%;
+
+    padding: 10px 9px 14px;
+
+    display: flex;
+
+    grid-template-columns: none;
+
+    gap: 9px;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    background: #f4f7fa;
+
+    scroll-snap-type: x mandatory;
+
+    scrollbar-width: none;
+
+    -webkit-overflow-scrolling: touch;
+
+    box-sizing: border-box;
+  }
+
+  .unitCardGrid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .unitCard {
+    width: 86%;
+    min-width: 86%;
+
+    flex: 0 0 86%;
+
+    padding: 13px;
+
+    scroll-snap-align: start;
+
+    border-radius: 9px;
+  }
+
+  .unitCardHeader {
+    padding-bottom: 9px;
+  }
+
+  .unitCardHeader h3 {
+    font-size: 12px;
+  }
+
+  .unitCardReference {
+    margin-top: 3px;
+
+    font-size: 7px;
+  }
+
+  .cardAvailable {
+    min-height: 22px;
+
+    padding: 0 7px;
+
+    font-size: 7px;
+  }
+
+  .unitCardStats {
+    padding: 10px 0;
+
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
+    gap: 6px;
+  }
+
+  .unitCardStat {
+    padding: 7px;
+
+    border-radius: 6px;
+  }
+
+  .unitCardStat span {
+    font-size: 6px;
+  }
+
+  .unitCardStat strong {
+    font-size: 9px;
+  }
+
+  .unitCardStat small {
+    font-size: 6px;
+  }
+
+  .unitCardInfo {
+    margin-bottom: 9px;
+
+    gap: 4px;
+
+    font-size: 8px;
+  }
+
+  .cardBookButton {
+    min-height: 34px;
+
+    font-size: 9px;
   }
 }

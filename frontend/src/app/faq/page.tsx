@@ -90,8 +90,7 @@ export default function FaqPage() {
         </div>
       </main>
 
-      {/* Unified Footer */}
-      <Footer />
+   
     </div>
   );
 }

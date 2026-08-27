@@ -11,13 +11,14 @@ export interface CreateBookingInput {
 
   customerName: string;
   unitReference?: string | null;
-  unitType?: string | null
+  unitType?: string | null;
+  nationId: string;
 
   email: string;
 
   phone: string;
 
-  nationality: string;
+  
 
   passportFile: Buffer;
 
@@ -75,13 +76,13 @@ export async function createBooking(
       .request()
 
       .input(
-        "PropertyId",
+        "buildingId",
         sql.NVarChar(20),
         booking.propertyId
       )
 
       .input(
-        "PropertyName",
+        "buildingName",
         sql.NVarChar(300),
         booking.propertyName
       )
@@ -116,10 +117,11 @@ export async function createBooking(
         booking.phone
       )
 
+     
       .input(
-        "Nationality",
-        sql.NVarChar(100),
-        booking.nationality
+        "NationId",
+        sql.NVarChar(7),
+        booking.nationId
       )
 
       .input(
@@ -164,43 +166,51 @@ export async function createBooking(
         booking.declineReason
       )
 
+      .input(
+  "RequestType",
+  sql.NVarChar(20),
+  "BOOKING"
+)
+
       .query(`
         INSERT INTO dbo.WebBookings
         (
-            PropertyId,
-            PropertyName,
+            
+          buildingId,
+          buildingName,
 
-            UnitReference,
-            UnitType,
+            unitReference,
+            unitType,
 
-            CustomerName,
-            Email,
-            Phone,
-            Nationality,
+            customerName,
+            email,
+            phone,
+             nationId,
 
-            PassportFile,
-            PassportFileName,
-            PassportMimeType,
-            PassportFileSize,
+            passportFile,                         
+            passportFileName,
+            passportMimeType,
+            passportFileSize,
 
-            Status,
-            IsAutoRejected,
-            DeclineReason,
+            status,
+            isAutoRejected,
+            declineReason,
 
-            CreatedBy
+            createdBy,
+             requestType
         )
         OUTPUT
-            INSERTED.BookingId,
-            INSERTED.PropertyId,
-            INSERTED.PropertyName,
-            INSERTED.UnitReference,
-            INSERTED.UnitType,
-            INSERTED.Status,
-            INSERTED.CreatedAt
+            INSERTED.bookingId,
+            INSERTED.buildingId,
+            INSERTED.buildingName,
+            INSERTED.unitReference,
+            INSERTED.unitType,
+            INSERTED.status,
+            INSERTED.createdAt
         VALUES
         (
-            @PropertyId,
-            @PropertyName,
+            @buildingId,
+            @buildingName,
 
             @UnitReference,
             @UnitType,
@@ -208,7 +218,7 @@ export async function createBooking(
             @CustomerName,
             @Email,
             @Phone,
-            @Nationality,
+          @NationId,
 
             @PassportFile,
             @PassportFileName,
@@ -219,7 +229,8 @@ export async function createBooking(
             @IsAutoRejected,
             @DeclineReason,
 
-            'WEBSITE'
+            'WEBSITE',
+            @RequestType
         );
       `);
 
@@ -334,4 +345,53 @@ export async function findBookingUnit(
       `);
 
   return result.recordset[0] || null;
+}
+
+export async function findNationalityAutoReject(
+  nationId: string
+) {
+  const pool =
+    await getBinShabibEstateNet();
+
+  const result =
+    await pool
+      .request()
+
+      .input(
+        "NationId",
+        sql.NVarChar(7),
+        nationId
+      )
+
+      .query(`
+        SELECT TOP (1)
+            LTRIM(RTRIM(nation_id))
+                AS nationId,
+
+            LTRIM(RTRIM(nation_nationality))
+                AS nationality,
+
+            LTRIM(RTRIM(nation_country))
+                AS country,
+
+            CAST(
+                ISNULL(
+                    iswebBK_autoReject,
+                    0
+                )
+                AS BIT
+            ) AS isWebBookingAutoReject
+
+        FROM dbo.nation
+
+        WHERE
+            LTRIM(RTRIM(nation_id))
+              =
+            LTRIM(RTRIM(@NationId));
+      `);
+
+  return (
+    result.recordset[0] ||
+    null
+  );
 }

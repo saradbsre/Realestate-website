@@ -398,8 +398,7 @@ export default function PropertyClient({ property }: PropertyClientProps) {
   }
 /> */}
 
-      {/* Unified Footer */}
-      {/* <Footer /> */}
+
     </div>
   );
 }

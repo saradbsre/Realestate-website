@@ -108,8 +108,7 @@ export default function TermsPage() {
         </div>
       </main>
 
-      {/* Unified Footer */}
-      <Footer />
+     
     </div>
   );
 }

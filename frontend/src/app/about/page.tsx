@@ -214,8 +214,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Unified Footer */}
-      <Footer />
+   
     </div>
   );
 }

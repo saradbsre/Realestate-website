@@ -3,15 +3,15 @@ import {
 } from "express";
 
 import {
-  submitEnquiry,
-} from "../controllers/enquiry.controller";
+  getNationalities,
+} from "../controllers/nationality.controller";
 
 const router =
   Router();
 
-router.post(
+router.get(
   "/",
-  submitEnquiry
+  getNationalities
 );
 
 export default router;

@@ -1,24 +1,76 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import styles from "./admin.module.css";
-import { getProperties, type Property } from "@/lib/propertyApi";
+import React, {
+  useEffect,
+  useState,
+} from "react";
 
-const nationalityCodes = "AF AL DZ AD AO AG AR AM AU AT AZ BS BH BD BB BY BE BZ BJ BT BO BA BW BR BN BG BF BI CV KH CM CA CF TD CL CN CO KM CG CD CR CI HR CU CY CZ DK DJ DM DO EC EG SV GQ ER EE SZ ET FJ FI FR GA GM GE DE GH GR GD GT GN GW GY HT HN HU IS IN ID IR IQ IE IL IT JM JP JO KZ KE KI KP KR KW KG LA LV LB LS LR LY LI LT LU MG MW MY MV ML MT MH MR MU MX FM MD MC MN ME MA MZ MM NA NR NP NL NZ NI NE NG MK NO OM PK PW PA PG PY PE PH PL PT QA RO RU RW KN LC VC WS SM ST SA SN RS SC SL SG SK SI SB SO ZA SS ES LK SD SR SE CH SY TJ TZ TH TL TG TO TT TN TR TM TV UG UA AE GB US UY UZ VU VA VE VN YE ZM ZW".split(" ");
-const countryNames = new Intl.DisplayNames(["en"], { type: "region" });
+import styles from "./admin.module.css";
+
+import {
+  getProperties,
+  type Property,
+} from "@/lib/propertyApi";
+import CommonAlert, {
+  type AlertType,
+} from "../components/CommonAlert";
+/* =========================================================
+   API
+========================================================= */
+
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  "http://localhost:5000";
+
+/* =========================================================
+   TYPES
+========================================================= */
+const TEMP_ADMIN_USERNAME =
+  "admin";
+
+const TEMP_ADMIN_PASSWORD =
+  "Admin@123";
 
 interface UpcomingProject {
-  id: number;
+  id: string;
+
   title: string;
-  description: string | null;
-  type: string;
-  location: string;
-  city: string;
-  launchPrice: string;
-  handover: string;
-  image: string;
-  createdAt: string;
+
+  placeId: string;
+  placeName: string;
+
+  areaId:
+    string | null;
+
+  areaName:
+    string | null;
+
+  buildArea:
+    number | null;
+
+  image:
+    string | null;
+
+  description:
+    string | null;
+
+  isUpcomingProject:
+    boolean;
+
+  isActive:
+    boolean;
+}
+
+interface PlaceOption {
+  placeId: string;
+  placeName: string;
+  countryId: string;
+}
+
+interface AreaOption {
+  areaId: string;
+  areaName: string;
+  placeId: string;
 }
 
 interface PortalUser {
@@ -31,1444 +83,5076 @@ interface PortalUser {
   createdAt: string;
 }
 
-interface Booking { id: number; propertyName: string; name: string; email: string; phone: string; nationality: string; passportPath: string | null; status: string; declineReason: string | null; createdAt: string; }
-interface NationalityRule { id: number; nationality: string; isActive: boolean; }
+interface Booking {
+  id: number;
+
+  propertyId:
+    string;
+
+  propertyName:
+    string;
+
+  unitReference:
+    string | null;
+
+  unitType:
+    string | null;
+
+  name: string;
+  email: string;
+  phone: string;
+  nationality: string;
+
+  passportFileName:
+    string | null;
+
+  passportMimeType:
+    string | null;
+
+  passportFileSize:
+    number | null;
+
+  hasPassport:
+    boolean;
+
+  status:
+    string;
+
+  isAutoRejected:
+    boolean;
+
+  declineReason:
+    string | null;
+
+  createdAt:
+    string;
+
+  updatedAt:
+    string | null;
+}
+
+interface NationalityRule {
+  id: string;
+  nationality: string;
+  country: string | null;
+  isAutoReject: boolean;
+}
+
+interface NationalityOption {
+  id: string;
+  nationality: string;
+  country: string | null;
+}
+
+interface AdminProperty {
+  id: string;
+
+  title: string;
+
+  location: string;
+
+  webDisplayOrder:
+    number | null;
+     vacantUnits:
+    number;
+}
+/* =========================================================
+   COMPONENT
+========================================================= */
 
 export default function AdminDashboard() {
-  // Auth states
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [checkingAuth, setCheckingAuth] = useState(true);
-  const [userRole, setUserRole] = useState<string>("Viewer");
-  const [userUsername, setUserUsername] = useState<string>("");
+  /* =======================================================
+     AUTH
+  ======================================================= */
 
-  // Login inputs
-  const [usernameInput, setUsernameInput] = useState("");
-  const [passwordInput, setPasswordInput] = useState("");
-  const [loginError, setLoginError] = useState("");
-  const [loggingIn, setLoggingIn] = useState(false);
+  const [
+    isAuthenticated,
+    setIsAuthenticated,
+  ] = useState(false);
 
-  // OTP inputs
-  const [otpRequired, setOtpRequired] = useState(false);
-  const [otpMfaType, setOtpMfaType] = useState<"Email OTP" | "Google Authenticator">("Email OTP");
-  const [otpEmailSentTo, setOtpEmailSentTo] = useState("");
-  const [otpInput, setOtpInput] = useState("");
-  const [otpMockCode, setOtpMockCode] = useState(""); // For local testing ease!
-  const [otpVerifying, setOtpVerifying] = useState(false);
+  const [
+    checkingAuth,
+    setCheckingAuth,
+  ] = useState(false);
 
-  // Active dashboard tab state
-  const [activeTab, setActiveTab] = useState<"welcome" | "listings" | "upcoming" | "add-property" | "sync" | "users" | "bookings" | "nationality-rules">("welcome");
+  const [
+    userRole,
+    setUserRole,
+  ] = useState("Viewer");
 
-  // Listings states
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [loadingListings, setLoadingListings] = useState(true);
-  
-  // Upcoming projects states
-  const [upcomingProjects, setUpcomingProjects] = useState<UpcomingProject[]>([]);
-  const [loadingUpcoming, setLoadingUpcoming] = useState(true);
+  const [
+    userUsername,
+    setUserUsername,
+  ] = useState("");
 
-  // Users management states
-  const [portalUsers, setPortalUsers] = useState<PortalUser[]>([]);
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [nationalityRules, setNationalityRules] = useState<NationalityRule[]>([]);
-  const [nationalityInput, setNationalityInput] = useState("");
-  const [editingRuleId, setEditingRuleId] = useState<number | null>(null);
-  const [savingNationalityRule, setSavingNationalityRule] = useState(false);
-  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
-  const [loadingUsers, setLoadingUsers] = useState(true);
-  const [showQrModal, setShowQrModal] = useState(false);
-  const [qrModalSecret, setQrModalSecret] = useState("");
-  const [qrModalUsername, setQrModalUsername] = useState("");
-  
-  // New listing (property) form states
-  const [listingForm, setListingForm] = useState({
-    title: "",
-    description: "",
-    price: "",
-    location: "",
-    type: "Residential",
-    purpose: "Rent", // Rent first since we mostly give on rent!
-    status: "Ready",
-    beds: "1",
-    baths: "1",
-    area: "",
+  const [
+    usernameInput,
+    setUsernameInput,
+  ] = useState("");
+
+  const [
+    passwordInput,
+    setPasswordInput,
+  ] = useState("");
+
+  const [
+    loginError,
+    setLoginError,
+  ] = useState("");
+
+  const [
+    loggingIn,
+    setLoggingIn,
+  ] = useState(false);
+
+const [
+  availableNationalities,
+  setAvailableNationalities,
+] = useState<
+  NationalityOption[]
+>([]);
+
+const [
+  selectedNationalityId,
+  setSelectedNationalityId,
+] = useState("");
+
+const [
+  savingNationalityRule,
+  setSavingNationalityRule,
+] = useState(false);
+  /* =======================================================
+     ACTIVE TAB
+  ======================================================= */
+
+  const [
+  decliningBookingId,
+  setDecliningBookingId,
+] = useState<number | null>(null);
+const [
+  declineReason,
+  setDeclineReason,
+] = useState("");
+  const [
+    activeTab,
+    setActiveTab,
+  ] = useState<
+    | "welcome"
+    | "listings"
+    | "upcoming"
+    | "sync"
+    | "users"
+    | "bookings"
+    | "nationality-rules"
+  >("welcome");
+
+  /* =======================================================
+     PROPERTIES
+  ======================================================= */
+const [
+  searchText,
+  setSearchText,
+] = useState("");
+const [
+  properties,
+  setProperties,
+] = useState<
+  AdminProperty[]
+>([]);
+const [
+  listingFilter,
+  setListingFilter,
+] = useState<
+  | "all"
+  | "top"
+  | "normal"
+  | "hidden"
+>("all");
+
+/* =========================================================
+   LISTING COUNTS
+========================================================= */
+
+const topPriorityCount =
+  properties.filter(
+    (property) =>
+      property.webDisplayOrder !==
+        null &&
+      property.webDisplayOrder >=
+        1 &&
+      property.webDisplayOrder <=
+        6
+  ).length;
+
+const normalListingCount =
+  properties.filter(
+    (property) =>
+      property.webDisplayOrder ===
+      null
+  ).length;
+
+const hiddenListingCount =
+  properties.filter(
+    (property) =>
+      property.webDisplayOrder ===
+      0
+  ).length;
+
+/* =========================================================
+   FILTER + SORT LISTINGS
+========================================================= */
+  const normalizedSearch =
+  searchText
+    .trim()
+    .toLowerCase();
+const filteredAndSortedProperties =
+  properties
+    .filter(
+      (property) => {
+        /* ===============================================
+           DISPLAY FILTER
+        =============================================== */
+
+        let matchesDisplay =
+          true;
+
+        if (
+          listingFilter ===
+          "top"
+        ) {
+          matchesDisplay =
+            property.webDisplayOrder !==
+              null &&
+            property.webDisplayOrder >=
+              1 &&
+            property.webDisplayOrder <=
+              6;
+        }
+
+        if (
+          listingFilter ===
+          "normal"
+        ) {
+          matchesDisplay =
+            property.webDisplayOrder ===
+            null;
+        }
+
+        if (
+          listingFilter ===
+          "hidden"
+        ) {
+          matchesDisplay =
+            property.webDisplayOrder ===
+            0;
+        }
+
+        if (
+          !matchesDisplay
+        ) {
+          return false;
+        }
+
+        /* ===============================================
+           SEARCH
+        =============================================== */
+
+        if (
+          !normalizedSearch
+        ) {
+          return true;
+        }
+
+        return [
+          property.id,
+          property.title,
+          property.location,
+        ].some(
+          (value) =>
+            String(
+              value || ""
+            )
+              .toLowerCase()
+              .includes(
+                normalizedSearch
+              )
+        );
+      }
+    )
+    .sort(
+      (a, b) => {
+        const getBucket = (
+          value:
+            number | null
+        ) => {
+          if (
+            value !== null &&
+            value >= 1 &&
+            value <= 6
+          ) {
+            return 0;
+          }
+
+          if (
+            value === null
+          ) {
+            return 1;
+          }
+
+          if (
+            value === 0
+          ) {
+            return 2;
+          }
+
+          return 3;
+        };
+
+        const bucketA =
+          getBucket(
+            a.webDisplayOrder
+          );
+
+        const bucketB =
+          getBucket(
+            b.webDisplayOrder
+          );
+
+        if (
+          bucketA !==
+          bucketB
+        ) {
+          return (
+            bucketA -
+            bucketB
+          );
+        }
+
+        if (
+          bucketA === 0 &&
+          a.webDisplayOrder !==
+            null &&
+          b.webDisplayOrder !==
+            null
+        ) {
+          return (
+            a.webDisplayOrder -
+            b.webDisplayOrder
+          );
+        }
+
+        return (
+          a.title || ""
+        ).localeCompare(
+          b.title || ""
+        );
+      }
+    );
+
+
+    
+  const [
+    loadingListings,
+    setLoadingListings,
+  ] = useState(true);
+
+  /* =======================================================
+     UPCOMING PROJECTS
+  ======================================================= */
+
+  const [
+    upcomingProjects,
+    setUpcomingProjects,
+  ] = useState<
+    UpcomingProject[]
+  >([]);
+
+  const [
+    loadingUpcoming,
+    setLoadingUpcoming,
+  ] = useState(false);
+
+  /* =======================================================
+     BUILDING FORM
+  ======================================================= */
+
+  const [
+    buildingForm,
+    setBuildingForm,
+  ] = useState({
+    buildId: "",
+    buildingName: "",
+    placeId: "",
+    areaId: "",
+    buildArea: "",
   });
-  const [listingImages, setListingImages] = useState<FileList | null>(null);
-  const [savingListing, setSavingListing] = useState(false);
 
-  // New upcoming project form states
-  const [projectForm, setProjectForm] = useState({
-    title: "",
-    description: "",
-    type: "Apartments",
-    location: "",
-    city: "Dubai",
-    launchPrice: "",
-    handover: "",
-  });
-  const [projectFile, setProjectFile] = useState<File | null>(null);
-  const [savingProject, setSavingProject] = useState(false);
+  const [
+    places,
+    setPlaces,
+  ] = useState<
+    PlaceOption[]
+  >([]);
 
-  // New User form states
-  const [userForm, setUserForm] = useState({
+  const [
+    areas,
+    setAreas,
+  ] = useState<
+    AreaOption[]
+  >([]);
+
+  const [
+    loadingPlaces,
+    setLoadingPlaces,
+  ] = useState(false);
+
+  const [
+    loadingAreas,
+    setLoadingAreas,
+  ] = useState(false);
+
+  const [
+    savingBuilding,
+    setSavingBuilding,
+  ] = useState(false);
+
+  const [
+    editingBuildingId,
+    setEditingBuildingId,
+  ] = useState<
+    string | null
+  >(null);
+const filteredUpcomingProjects =
+  upcomingProjects.filter(
+    (project) => {
+      if (
+        !normalizedSearch
+      ) {
+        return true;
+      }
+
+      return [
+        project.id,
+        project.title,
+        project.placeName,
+        project.areaName,
+      ].some(
+        (value) =>
+          String(
+            value || ""
+          )
+            .toLowerCase()
+            .includes(
+              normalizedSearch
+            )
+      );
+    }
+  );
+  /* =======================================================
+     USERS
+  ======================================================= */
+
+  const [
+    portalUsers,
+    setPortalUsers,
+  ] = useState<
+    PortalUser[]
+  >([]);
+const filteredPortalUsers =
+  portalUsers.filter(
+    (user) => {
+      if (
+        !normalizedSearch
+      ) {
+        return true;
+      }
+
+      return [
+        user.username,
+        user.email,
+        user.role,
+        user.mfaType,
+      ].some(
+        (value) =>
+          String(
+            value || ""
+          )
+            .toLowerCase()
+            .includes(
+              normalizedSearch
+            )
+      );
+    }
+  );
+  const [
+    loadingUsers,
+    setLoadingUsers,
+  ] = useState(false);
+
+  const [
+    userForm,
+    setUserForm,
+  ] = useState({
     username: "",
     password: "",
     email: "",
-    role: "Editor", // Default to editor
+    role: "Editor",
     mfaType: "Email OTP",
   });
-  const [savingUser, setSavingUser] = useState(false);
 
-  // General messages
-  const [statusMessage, setStatusMessage] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
-  const [syncing, setSyncing] = useState(false);
+  const [
+    savingUser,
+    setSavingUser,
+  ] = useState(false);
 
-  // Check auth cookie on mount
-  const checkAuth = async () => {
-    try {
-      setCheckingAuth(true);
-      const res = await fetch("/api/admin/check-auth");
-      const data = await res.json();
-      if (data.authenticated) {
-        setIsAuthenticated(true);
-        setUserRole(data.role || "Viewer");
-        setUserUsername(data.username || "");
-      } else {
-        setIsAuthenticated(false);
-        setUserRole("Viewer");
-        setUserUsername("");
-      }
-    } catch (err) {
-      console.error("Auth check failed:", err);
-    } finally {
-      setCheckingAuth(false);
-    }
-  };
+  /* =======================================================
+     BOOKINGS
+  ======================================================= */
+const [
+  nationalityRules,
+  setNationalityRules,
+] = useState<
+  NationalityRule[]
+>([]);
 
-  useEffect(() => {
-    checkAuth();
-  }, []);
 
-  // Fetch listings, upcoming projects, and portal users
-  const fetchProperties = async () => {
-    try {
-      setLoadingListings(true);
-      const { properties: data } = await getProperties({ pageSize: 10 });
-      setProperties(data);
-    } catch (err: any) {
-      setErrorMessage(err.message || "Failed to load listings.");
-    } finally {
-      setLoadingListings(false);
-    }
-  };
-
-  const fetchUpcomingProjects = async () => {
-    try {
-      setLoadingUpcoming(true);
-      const res = await fetch("/api/upcoming-projects");
-      if (!res.ok) throw new Error("Failed to fetch upcoming projects");
-      const data = await res.json();
-      setUpcomingProjects(data);
-    } catch (err: any) {
-      setErrorMessage(err.message || "Failed to load upcoming projects.");
-    } finally {
-      setLoadingUpcoming(false);
-    }
-  };
-
-  const fetchPortalUsers = async () => {
-    if (userRole !== "Super Admin") return;
-    try {
-      setLoadingUsers(true);
-      const res = await fetch("/api/admin/users");
-      if (!res.ok) throw new Error("Failed to fetch users");
-      const data = await res.json();
-      setPortalUsers(data);
-    } catch (err: any) {
-      setErrorMessage(err.message || "Failed to load portal users.");
-    } finally {
-      setLoadingUsers(false);
-    }
-  };
-
-  const fetchBookings = async () => { if (userRole !== "Super Admin") return; const res = await fetch("/api/admin/bookings", { cache: "no-store" }); if (res.ok) setBookings(await res.json()); };
-  const fetchNationalityRules = async () => { if (userRole !== "Super Admin") return; const res = await fetch("/api/admin/nationality-rejections"); if (res.ok) setNationalityRules(await res.json()); };
-  const saveNationalityRule = async (event: React.FormEvent) => {
-    event.preventDefault();
-    if (!nationalityInput.trim()) return;
-    setSavingNationalityRule(true);
-    const res = await fetch("/api/admin/nationality-rejections", { method: editingRuleId ? "PATCH" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(editingRuleId ? { id: editingRuleId, nationality: nationalityInput.trim() } : { nationality: nationalityInput.trim() }) });
-    const data = await res.json();
-    setSavingNationalityRule(false);
-    if (!res.ok) return setErrorMessage(data.error || "Unable to save nationality rule.");
-    setNationalityInput(""); setEditingRuleId(null); setStatusMessage("Nationality auto-rejection rule saved."); fetchNationalityRules();
-  };
-  const updateNationalityRule = async (id: number, data: Record<string, unknown>) => { const res = await fetch("/api/admin/nationality-rejections", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, ...data }) }); if (res.ok) fetchNationalityRules(); else setErrorMessage((await res.json()).error || "Unable to update rule."); };
-  const removeNationalityRule = async (id: number) => { if (!window.confirm("Remove this nationality auto-rejection rule?")) return; const res = await fetch(`/api/admin/nationality-rejections?id=${id}`, { method: "DELETE" }); if (res.ok) { setStatusMessage("Nationality rule removed."); fetchNationalityRules(); } else setErrorMessage((await res.json()).error || "Unable to remove rule."); };
-  const updateBookingStatus = async (id: number, status: "Confirmed" | "Declined") => { const reason = status === "Declined" ? window.prompt("Please enter the reason for declining this booking. This will be emailed to the customer:") : undefined; if (status === "Declined" && !reason?.trim()) return; const res = await fetch("/api/admin/bookings", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, status, reason }) }); if (res.ok) { if (selectedBooking?.id === id) setSelectedBooking(null); fetchBookings(); } else setErrorMessage((await res.json()).error || "Unable to update booking."); };
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchProperties();
-      fetchUpcomingProjects();
-      if (userRole === "Super Admin") {
-        fetchPortalUsers();
-        fetchBookings();
-        fetchNationalityRules();
-      }
-    }
-  }, [isAuthenticated, userRole]);
-
-  // Keep live booking requests visible without requiring the administrator to refresh.
-  useEffect(() => {
-    if (!isAuthenticated || userRole !== "Super Admin" || activeTab !== "bookings") return;
-    fetchBookings();
-    const interval = window.setInterval(fetchBookings, 8000);
-    const refreshOnFocus = () => fetchBookings();
-    window.addEventListener("focus", refreshOnFocus);
-    return () => { window.clearInterval(interval); window.removeEventListener("focus", refreshOnFocus); };
-  }, [isAuthenticated, userRole, activeTab]);
-
-  // Handle Password submission
-  const handleLoginSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoginError("");
-    setLoggingIn(true);
-
-    try {
-      const res = await fetch("/api/admin/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: usernameInput, password: passwordInput }),
-      });
-
-      const data = await res.json();
-      if (res.ok && data.requireOtp) {
-        setOtpRequired(true);
-        setOtpMfaType(data.mfaType);
-        setOtpEmailSentTo(data.email || "");
-        setOtpMockCode(data.mockCode || ""); // Seed local mock testing helper!
-        setLoginError("");
-      } else {
-        setLoginError(data.error || "Invalid username or password.");
-      }
-    } catch (err) {
-      setLoginError("Login server error. Try again.");
-    } finally {
-      setLoggingIn(false);
-    }
-  };
-
-  // Handle OTP submission
-  const handleOtpSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoginError("");
-    setOtpVerifying(true);
-
-    try {
-      const res = await fetch("/api/admin/verify-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: usernameInput, code: otpInput }),
-      });
-
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setIsAuthenticated(true);
-        setUserRole(data.role);
-        setUserUsername(data.username);
-        
-        // Reset states
-        setUsernameInput("");
-        setPasswordInput("");
-        setOtpInput("");
-        setOtpRequired(false);
-      } else {
-        setLoginError(data.error || "Invalid or expired OTP code.");
-      }
-    } catch (err) {
-      setLoginError("OTP verification error. Try again.");
-    } finally {
-      setOtpVerifying(false);
-    }
-  };
-
-  // Handle Logout
-  const handleLogout = async () => {
-    try {
-      await fetch("/api/admin/logout", { method: "POST" });
-      setIsAuthenticated(false);
-      setUserRole("Viewer");
-      setUserUsername("");
-      setActiveTab("welcome");
-      setStatusMessage("");
-      setErrorMessage("");
-      setOtpRequired(false);
-    } catch (e) {
-      console.error("Logout failed:", e);
-    }
-  };
-
-  // Sync properties from ERP
-  const handleSyncErp = async () => {
-    if (userRole === "Editor" || userRole === "Viewer") return;
-    try {
-      setSyncing(true);
-      setStatusMessage("Syncing with ERP system...");
-      setErrorMessage("");
-      
-      const res = await fetch("/api/sync", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ apiKey: "mock-api-key" }),
-      });
-
-      if (!res.ok) throw new Error("Sync request failed.");
-      
-      const data = await res.json();
-      if (data.success) {
-        setStatusMessage(
-          `ERP Sync complete! Inserted: ${data.results.inserted}, Updated: ${data.results.updated}. Preserved manual pictures.`
-        );
-        fetchProperties();
-      } else {
-        throw new Error(data.error || "Failed to sync.");
-      }
-    } catch (err: any) {
-      setErrorMessage(err.message || "Failed to complete ERP sync.");
-      setStatusMessage("");
-    } finally {
-      setSyncing(false);
-    }
-  };
-
-  // Properties are read-only here because the backend manages them from ERP.
-  const handleAddPropertySubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMessage("Properties are managed by the ERP backend. Use ERP Sync to refresh frontend listings.");
-  };
-
-  // Handle manual upcoming project submit
-  const handleAddProjectSubmit = async (e: React.FormEvent) => {
-    if (userRole === "Editor" || userRole === "Viewer") return;
-    e.preventDefault();
-    setSavingProject(true);
-    setErrorMessage("");
-    setStatusMessage("");
-
-    try {
-      const formData = new FormData();
-      formData.append("title", projectForm.title);
-      formData.append("description", projectForm.description);
-      formData.append("type", projectForm.type);
-      formData.append("location", projectForm.location);
-      formData.append("city", projectForm.city);
-      formData.append("launchPrice", projectForm.launchPrice);
-      formData.append("handover", projectForm.handover);
-      if (projectFile) {
-        formData.append("image", projectFile);
+const filteredNationalityRules =
+  nationalityRules.filter(
+    (rule) => {
+      if (
+        !normalizedSearch
+      ) {
+        return true;
       }
 
-      const res = await fetch("/api/upcoming-projects", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!res.ok) throw new Error("Failed to add project.");
-      
-      const data = await res.json();
-      if (data.success) {
-        setStatusMessage("Upcoming project added successfully!");
-        setProjectForm({
-          title: "",
-          description: "",
-          type: "Apartments",
-          location: "",
-          city: "Dubai",
-          launchPrice: "",
-          handover: "",
-        });
-        setProjectFile(null);
-        fetchUpcomingProjects();
-        setActiveTab("upcoming");
-      } else {
-        throw new Error(data.error || "Failed to save project.");
+      return [
+        rule.id,
+        rule.nationality,
+        rule.country,
+      ].some(
+        (value) =>
+          String(
+            value || ""
+          )
+            .toLowerCase()
+            .includes(
+              normalizedSearch
+            )
+      );
+    }
+  );
+  const [
+    bookings,
+    setBookings,
+  ] = useState<
+    Booking[]
+  >([]);
+const filteredBookings =
+  bookings.filter(
+    (booking) => {
+      if (
+        !normalizedSearch
+      ) {
+        return true;
       }
-    } catch (err: any) {
-      setErrorMessage(err.message || "Failed to add upcoming project.");
-    } finally {
-      setSavingProject(false);
+
+      return [
+        booking.id,
+        booking.propertyId,
+        booking.propertyName,
+        booking.unitReference,
+        booking.unitType,
+        booking.name,
+        booking.email,
+        booking.phone,
+        booking.nationality,
+        booking.status,
+      ].some(
+        (value) =>
+          String(
+            value || ""
+          )
+            .toLowerCase()
+            .includes(
+              normalizedSearch
+            )
+      );
     }
+  );
+  const [
+    selectedBooking,
+    setSelectedBooking,
+  ] = useState<
+    Booking | null
+  >(null);
+const [
+  alertConfig,
+  setAlertConfig,
+] = useState<{
+  open: boolean;
+  type: AlertType;
+  title: string;
+  message: string;
+  confirmText: string;
+  showCancel: boolean;
+  inputRequired: boolean;
+  inputLabel: string;
+  inputPlaceholder: string;
+  inputValue: string;
+  loading: boolean;
+  onConfirm:
+    (() => void) |
+    null;
+}>({
+  open: false,
+
+  type:
+    "confirm",
+
+  title:
+    "",
+
+  message:
+    "",
+
+  confirmText:
+    "OK",
+
+  showCancel:
+    false,
+
+  inputRequired:
+    false,
+
+  inputLabel:
+    "",
+
+  inputPlaceholder:
+    "",
+
+  inputValue:
+    "",
+
+  loading:
+    false,
+
+  onConfirm:
+    null,
+});
+const closeAlert = () => {
+  setDeclineReason("");
+
+  setDecliningBookingId(
+    null
+  );
+
+  setAlertConfig(
+    (current) => ({
+      ...current,
+
+      open: false,
+
+      loading: false,
+
+      inputValue: "",
+
+      onConfirm: null,
+    })
+  );
+};
+  const showSuccess =
+  (
+    message:
+      string
+  ) => {
+    setAlertConfig({
+      open: true,
+
+      type:
+        "success",
+
+      title:
+        "Success",
+
+      message,
+
+      confirmText:
+        "OK",
+
+      showCancel:
+        false,
+
+      inputRequired:
+        false,
+
+      inputLabel:
+        "",
+
+      inputPlaceholder:
+        "",
+
+      inputValue:
+        "",
+
+      loading:
+        false,
+
+      onConfirm:
+        closeAlert,
+    });
   };
+  const showError =
+  (
+    message:
+      string
+  ) => {
+    setAlertConfig({
+      open: true,
 
-  // Delete upcoming project
-  const handleDeleteProject = async (id: number) => {
-    if (userRole === "Editor" || userRole === "Viewer") return;
-    if (!confirm("Are you sure you want to delete this upcoming project?")) return;
+      type:
+        "error",
 
-    try {
-      const res = await fetch(`/api/upcoming-projects?id=${id}`, {
-        method: "DELETE",
-      });
+      title:
+        "Error",
 
-      if (!res.ok) throw new Error("Failed to delete project.");
+      message,
 
-      setStatusMessage("Upcoming project deleted successfully.");
-      setUpcomingProjects(upcomingProjects.filter((p) => p.id !== id));
-    } catch (err: any) {
-      setErrorMessage(err.message || "Failed to delete project.");
-    }
+      confirmText:
+        "Close",
+
+      showCancel:
+        false,
+
+      inputRequired:
+        false,
+
+      inputLabel:
+        "",
+
+      inputPlaceholder:
+        "",
+
+      inputValue:
+        "",
+
+      loading:
+        false,
+
+      onConfirm:
+        closeAlert,
+    });
   };
+  /* =======================================================
+     NATIONALITY RULES
+  ======================================================= */
 
-  // Create new user submit
-  const handleCreateUserSubmit = async (e: React.FormEvent) => {
-    if (userRole !== "Super Admin") return;
-    e.preventDefault();
-    setSavingUser(true);
-    setErrorMessage("");
-    setStatusMessage("");
+  
 
-    try {
-      const res = await fetch("/api/admin/users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(userForm),
-      });
+  /* =======================================================
+     MESSAGES
+  ======================================================= */
 
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setStatusMessage(`User "${userForm.username}" added successfully!`);
-        setUserForm({
-          username: "",
-          password: "",
-          email: "",
-          role: "Editor",
-          mfaType: "Email OTP",
-        });
-        fetchPortalUsers();
-        
-        // Show QR registration setup dialog immediately if Google Authenticator was selected!
-        if (data.user.otpSecret) {
-          openQrModal(data.user.username, data.user.otpSecret);
-        }
-      } else {
-        throw new Error(data.error || "Failed to create user.");
-      }
-    } catch (err: any) {
-      setErrorMessage(err.message || "Failed to create user.");
-    } finally {
-      setSavingUser(false);
-    }
-  };
+  const [
+    statusMessage,
+    setStatusMessage,
+  ] = useState("");
 
-  // Delete user
-  const handleDeleteUser = async (id: number, targetUsername: string) => {
-    if (userRole !== "Super Admin") return;
-    if (targetUsername === userUsername) {
-      alert("You cannot delete your own logged-in user profile.");
+  const [
+    errorMessage,
+    setErrorMessage,
+  ] = useState("");
+
+  const [
+    syncing,
+    setSyncing,
+  ] = useState(false);
+
+  /* =======================================================
+     TEMP LOGIN
+  ======================================================= */
+
+ const handleLoginSubmit = (
+  event:
+    React.FormEvent
+) => {
+  event.preventDefault();
+
+  setLoginError("");
+  setLoggingIn(true);
+
+  try {
+    const username =
+      usernameInput.trim();
+
+    const password =
+      passwordInput.trim();
+
+    if (!username) {
+      setLoginError(
+        "Please enter username."
+      );
+
       return;
     }
-    if (!confirm(`Are you sure you want to delete user "${targetUsername}"?`)) return;
 
+    if (!password) {
+      setLoginError(
+        "Please enter password."
+      );
+
+      return;
+    }
+
+    if (
+      username !==
+        TEMP_ADMIN_USERNAME ||
+      password !==
+        TEMP_ADMIN_PASSWORD
+    ) {
+      setLoginError(
+        "Invalid username or password."
+      );
+
+      return;
+    }
+
+    setIsAuthenticated(
+      true
+    );
+
+    setUserRole(
+      "Super Admin"
+    );
+
+    setUserUsername(
+      username
+    );
+
+    setPasswordInput(
+      ""
+    );
+
+    setLoginError(
+      ""
+    );
+  } finally {
+    setLoggingIn(
+      false
+    );
+  }
+};
+
+const handleLogout = () => {
+  setIsAuthenticated(false);
+
+  setUserRole("Viewer");
+
+  setUserUsername("");
+
+  setUsernameInput("");
+
+  setPasswordInput("");
+
+  changeTab("welcome");
+
+  setStatusMessage("");
+  setErrorMessage("");
+};
+
+  /* =======================================================
+     FETCH PROPERTIES
+  ======================================================= */
+
+ const fetchProperties =
+  async () => {
     try {
-      const res = await fetch(`/api/admin/users?id=${id}`, {
-        method: "DELETE",
-      });
+      setLoadingListings(
+        true
+      );
 
-      if (!res.ok) throw new Error("Failed to delete user.");
+      const response =
+        await fetch(
+          `${API_URL}/api/admin/properties`,
+          {
+            cache:
+              "no-store",
+          }
+        );
 
-      setStatusMessage(`User "${targetUsername}" deleted successfully.`);
-      setPortalUsers(portalUsers.filter((u) => u.id !== id));
-    } catch (err: any) {
-      setErrorMessage(err.message || "Failed to delete user.");
+      const result =
+        await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          result.error ||
+            "Unable to load property listings."
+        );
+      }
+
+      setProperties(
+        Array.isArray(
+          result.data
+        )
+          ? result.data
+          : []
+      );
+    } catch (error) {
+      console.error(
+        "Property load failed:",
+        error
+      );
+
+      setProperties([]);
+
+      showError(
+        error instanceof Error
+          ? error.message
+          : "Failed to load property listings."
+      );
+    } finally {
+      setLoadingListings(
+        false
+      );
     }
   };
 
-  const openQrModal = (username: string, secret: string) => {
-    setQrModalUsername(username);
-    setQrModalSecret(secret);
-    setShowQrModal(true);
+
+ const handleWebDisplayChange =
+  async (
+    property:
+      AdminProperty,
+    value:
+      string
+  ) => {
+    try {
+      const webDisplayOrder =
+        value === "normal"
+          ? null
+          : Number(value);
+
+      /* ===================================================
+         FRONTEND DUPLICATE PRIORITY CHECK
+      =================================================== */
+
+      if (
+        webDisplayOrder !==
+          null &&
+        webDisplayOrder >=
+          1 &&
+        webDisplayOrder <=
+          6
+      ) {
+        const existing =
+          properties.find(
+            (
+              item
+            ) =>
+              item.id !==
+                property.id &&
+              item.webDisplayOrder ===
+                webDisplayOrder
+          );
+
+        if (existing) {
+          showError(
+            `Top Priority ${webDisplayOrder} is already assigned to ${existing.title}.`
+          );
+
+          return;
+        }
+      }
+
+      /* ===================================================
+         API UPDATE
+      =================================================== */
+
+      const response =
+        await fetch(
+          `${API_URL}/api/admin/properties/${encodeURIComponent(
+            property.id
+          )}/web-display`,
+          {
+            method:
+              "PATCH",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body:
+              JSON.stringify({
+                webDisplayOrder,
+              }),
+          }
+        );
+
+      const result =
+        await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          result.error ||
+            "Unable to update website display."
+        );
+      }
+
+      /* ===================================================
+         UPDATE LOCAL STATE IMMEDIATELY
+      =================================================== */
+
+      setProperties(
+        (
+          current
+        ) =>
+          current.map(
+            (
+              item
+            ) =>
+              item.id ===
+              property.id
+                ? {
+                    ...item,
+
+                    webDisplayOrder,
+                  }
+                : item
+          )
+      );
+
+      /* ===================================================
+         SUCCESS
+      =================================================== */
+
+      if (
+        webDisplayOrder ===
+        null
+      ) {
+        showSuccess(
+          "Building set as Normal Listing."
+        );
+      } else if (
+        webDisplayOrder ===
+        0
+      ) {
+        showSuccess(
+          "Building hidden from website."
+        );
+      } else {
+        showSuccess(
+          `Building set as Top Priority ${webDisplayOrder}.`
+        );
+      }
+    } catch (error) {
+      showError(
+        error instanceof Error
+          ? error.message
+          : "Unable to update website display."
+      );
+    }
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("en-AE", {
-      style: "currency",
-      currency: "AED",
-      maximumFractionDigits: 0,
-    }).format(price);
+  /* =======================================================
+     FETCH PLACES
+  ======================================================= */
+
+  const fetchPlaces =
+    async () => {
+      try {
+        setLoadingPlaces(
+          true
+        );
+
+        const response =
+          await fetch(
+            `${API_URL}/api/upcoming-projects/places`,
+            {
+              cache:
+                "no-store",
+            }
+          );
+
+        const result =
+          await response.json();
+
+        if (
+          !response.ok
+        ) {
+          throw new Error(
+            result.error ||
+              "Unable to load places."
+          );
+        }
+
+        setPlaces(
+          Array.isArray(
+            result.data
+          )
+            ? result.data
+            : []
+        );
+      } catch (error) {
+        console.error(
+          "Place load failed:",
+          error
+        );
+
+        setPlaces(
+          []
+        );
+
+        showError(
+          error instanceof
+            Error
+            ? error.message
+            : "Unable to load places."
+        );
+      } finally {
+        setLoadingPlaces(
+          false
+        );
+      }
+    };
+
+  /* =======================================================
+     AREA LOAD
+  ======================================================= */
+
+  useEffect(() => {
+    if (
+      !buildingForm.placeId
+    ) {
+      setAreas(
+        []
+      );
+
+      return;
+    }
+
+    let cancelled =
+      false;
+
+    async function loadAreas() {
+      try {
+        setLoadingAreas(
+          true
+        );
+
+        const response =
+          await fetch(
+            `${API_URL}/api/upcoming-projects/areas?placeId=${encodeURIComponent(
+              buildingForm.placeId
+            )}`,
+            {
+              cache:
+                "no-store",
+            }
+          );
+
+        const result =
+          await response.json();
+
+        if (
+          !response.ok
+        ) {
+          throw new Error(
+            result.error ||
+              "Unable to load areas."
+          );
+        }
+
+        if (
+          cancelled
+        ) {
+          return;
+        }
+
+        const loadedAreas:
+          AreaOption[] =
+          Array.isArray(
+            result.data
+          )
+            ? result.data
+            : [];
+
+        setAreas(
+          loadedAreas
+        );
+
+        /*
+         * Keep selected Area during EDIT
+         * if it still belongs to the Place.
+         */
+
+        setBuildingForm(
+          (
+            current
+          ) => {
+            if (
+              !current.areaId
+            ) {
+              return current;
+            }
+
+            const valid =
+              loadedAreas.some(
+                (
+                  area
+                ) =>
+                  area.areaId ===
+                  current.areaId
+              );
+
+            if (
+              valid
+            ) {
+              return current;
+            }
+
+            return {
+              ...current,
+              areaId: "",
+            };
+          }
+        );
+      } catch (error) {
+        if (
+          cancelled
+        ) {
+          return;
+        }
+
+        console.error(
+          "Area load failed:",
+          error
+        );
+
+        setAreas(
+          []
+        );
+
+        showError(
+          error instanceof
+            Error
+            ? error.message
+            : "Unable to load areas."
+        );
+      } finally {
+        if (
+          !cancelled
+        ) {
+          setLoadingAreas(
+            false
+          );
+        }
+      }
+    }
+
+    loadAreas();
+
+    return () => {
+      cancelled =
+        true;
+    };
+  }, [
+    buildingForm.placeId,
+  ]);
+useEffect(() => {
+  if (!statusMessage && !errorMessage) {
+    return;
+  }
+
+  const timer = window.setTimeout(() => {
+    setStatusMessage("");
+    setErrorMessage("");
+  }, 4000);
+
+  return () => {
+    window.clearTimeout(timer);
+  };
+}, [statusMessage, errorMessage]);
+  /* =======================================================
+     FETCH UPCOMING PROJECTS
+  ======================================================= */
+const changeTab = (
+  tab:
+    | "welcome"
+    | "listings"
+    | "upcoming"
+    | "sync"
+    | "users"
+    | "bookings"
+    | "nationality-rules"
+) => {
+  setActiveTab(tab);
+
+  setSearchText("");
+
+  closeAlert();
+
+  setStatusMessage("");
+  setErrorMessage("");
+};
+  const fetchUpcomingProjects =
+    async () => {
+      try {
+        setLoadingUpcoming(
+          true
+        );
+
+        const response =
+          await fetch(
+            `${API_URL}/api/upcoming-projects`,
+            {
+              cache:
+                "no-store",
+            }
+          );
+
+        const result =
+          await response.json();
+
+        if (
+          !response.ok
+        ) {
+          throw new Error(
+            result.error ||
+              "Unable to load upcoming buildings."
+          );
+        }
+
+        setUpcomingProjects(
+          Array.isArray(
+            result.data
+          )
+            ? result.data
+            : []
+        );
+      } catch (error) {
+        console.error(
+          "Upcoming building load failed:",
+          error
+        );
+
+        setUpcomingProjects(
+          []
+        );
+
+        showError(
+          error instanceof
+            Error
+            ? error.message
+            : "Unable to load upcoming buildings."
+        );
+      } finally {
+        setLoadingUpcoming(
+          false
+        );
+      }
+    };
+
+  /* =======================================================
+     INITIAL LOAD AFTER LOGIN
+  ======================================================= */
+
+  useEffect(() => {
+    if (
+      !isAuthenticated
+    ) {
+      return;
+    }
+
+    fetchProperties();
+    fetchUpcomingProjects();
+    fetchPlaces();
+  }, [
+    isAuthenticated,
+  ]);
+
+  /* =======================================================
+     OPEN UPCOMING TAB
+  ======================================================= */
+
+const openUpcomingTab = () => {
+  changeTab("upcoming");
+
+  fetchUpcomingProjects();
+
+  if (places.length === 0) {
+    fetchPlaces();
+  }
+};
+  /* =======================================================
+     RESET BUILDING FORM
+  ======================================================= */
+
+  const resetBuildingForm =
+    () => {
+      setBuildingForm({
+        buildId: "",
+        buildingName:
+          "",
+        placeId: "",
+        areaId: "",
+        buildArea: "",
+      });
+
+      setAreas(
+        []
+      );
+
+      setEditingBuildingId(
+        null
+      );
+    };
+
+  /* =======================================================
+     ADD / UPDATE UPCOMING BUILDING
+  ======================================================= */
+
+  const handleAddBuildingSubmit =
+    async (
+      event:
+        React.FormEvent
+    ) => {
+      event.preventDefault();
+
+      showSuccess(
+        ""
+      );
+
+      showError(
+        ""
+      );
+
+      const buildId =
+        buildingForm.buildId.trim();
+
+      const buildingName =
+        buildingForm.buildingName.trim();
+
+      const placeId =
+        buildingForm.placeId.trim();
+
+      const areaId =
+        buildingForm.areaId.trim();
+
+      if (
+        !buildId
+      ) {
+        showError(
+          "Building ID is required."
+        );
+
+        return;
+      }
+
+      if (
+        buildId.length >
+        7
+      ) {
+        showError(
+          "Building ID cannot exceed 7 characters."
+        );
+
+        return;
+      }
+
+      if (
+        !buildingName
+      ) {
+        showError(
+          "Building name is required."
+        );
+
+        return;
+      }
+
+      if (
+        !placeId
+      ) {
+        showError(
+          "Please select a place."
+        );
+
+        return;
+      }
+
+      if (
+        !areaId
+      ) {
+        showError(
+          "Please select an area."
+        );
+
+        return;
+      }
+
+      if (
+        buildingForm.buildArea &&
+        (
+          !Number.isFinite(
+            Number(
+              buildingForm.buildArea
+            )
+          ) ||
+          Number(
+            buildingForm.buildArea
+          ) <= 0
+        )
+      ) {
+        showError(
+          "Sq.Ft. must be a valid number."
+        );
+
+        return;
+      }
+
+      const isEditing =
+        editingBuildingId !==
+        null;
+
+      try {
+        setSavingBuilding(
+          true
+        );
+
+        const url =
+          isEditing
+            ? `${API_URL}/api/upcoming-projects/${encodeURIComponent(
+                editingBuildingId
+              )}`
+            : `${API_URL}/api/upcoming-projects`;
+
+        const response =
+          await fetch(
+            url,
+            {
+              method:
+                isEditing
+                  ? "PUT"
+                  : "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+              },
+
+              body:
+                JSON.stringify({
+                  buildId,
+
+                  buildingName,
+
+                  placeId,
+
+                  areaId,
+
+                  buildArea:
+                    buildingForm.buildArea ||
+                    null,
+                }),
+            }
+          );
+
+        const result =
+          await response.json();
+
+        if (
+          !response.ok
+        ) {
+          throw new Error(
+            result.error ||
+              "Unable to save upcoming building."
+          );
+        }
+
+        showSuccess(
+          isEditing
+            ? "Upcoming building updated successfully."
+            : "Upcoming building added successfully."
+        );
+
+        resetBuildingForm();
+
+        await fetchUpcomingProjects();
+      } catch (error) {
+        console.error(
+          "Save upcoming building failed:",
+          error
+        );
+
+        showError(
+          error instanceof
+            Error
+            ? error.message
+            : "Unable to save upcoming building."
+        );
+      } finally {
+        setSavingBuilding(
+          false
+        );
+      }
+    };
+
+  /* =======================================================
+     EDIT UPCOMING BUILDING
+  ======================================================= */
+
+  const handleEditUpcomingProject =
+    (
+      project:
+        UpcomingProject
+    ) => {
+      showSuccess(
+        ""
+      );
+
+      showError(
+        ""
+      );
+
+      setEditingBuildingId(
+        project.id
+      );
+
+      setBuildingForm({
+        buildId:
+          project.id,
+
+        buildingName:
+          project.title,
+
+        placeId:
+          project.placeId,
+
+        areaId:
+          project.areaId ||
+          "",
+
+        buildArea:
+          project.buildArea !==
+          null
+            ? String(
+                project.buildArea
+              )
+            : "",
+      });
+
+      window.scrollTo({
+        top: 0,
+        behavior:
+          "smooth",
+      });
+    };
+
+  /* =======================================================
+     SOFT DELETE UPCOMING BUILDING
+     Backend should set:
+     IsUpcomingProject = 0
+  ======================================================= */
+
+const handleDeleteUpcomingProject =
+  (
+    buildId:
+      string
+  ) => {
+    setAlertConfig({
+      open: true,
+
+      type:
+        "warning",
+
+      title:
+        "Remove Upcoming Project",
+
+      message:
+        "Are you sure you want to remove this building from Upcoming Projects?",
+
+      confirmText:
+        "Remove",
+
+      showCancel:
+        true,
+
+      inputRequired:
+        false,
+
+      inputLabel:
+        "",
+
+      inputPlaceholder:
+        "",
+
+      inputValue:
+        "",
+
+      loading:
+        false,
+
+      onConfirm:
+        () =>
+          confirmDeleteUpcomingProject(
+            buildId
+          ),
+    });
   };
 
-  // Liveness Check screen
-  if (checkingAuth) {
+  const confirmDeleteUpcomingProject =
+  async (
+    buildId:
+      string
+  ) => {
+    try {
+      setAlertConfig(
+        (current) => ({
+          ...current,
+
+          loading:
+            true,
+        })
+      );
+
+      const response =
+        await fetch(
+          `${API_URL}/api/upcoming-projects/${encodeURIComponent(
+            buildId
+          )}`,
+          {
+            method:
+              "DELETE",
+          }
+        );
+
+      const result =
+        await response.json();
+
+      if (
+        !response.ok
+      ) {
+        throw new Error(
+          result.error ||
+            "Unable to remove upcoming building."
+        );
+      }
+
+      if (
+        editingBuildingId ===
+        buildId
+      ) {
+        resetBuildingForm();
+      }
+
+      await fetchUpcomingProjects();
+
+      showSuccess(
+        "Building removed from Upcoming Projects successfully."
+      );
+    } catch (error) {
+      showError(
+        error instanceof Error
+          ? error.message
+          : "Unable to remove upcoming building."
+      );
+    }
+  };
+
+  /* =======================================================
+     USERS
+  ======================================================= */
+
+  const fetchPortalUsers =
+    async () => {
+      if (
+        userRole !==
+        "Super Admin"
+      ) {
+        return;
+      }
+
+      try {
+        setLoadingUsers(
+          true
+        );
+
+        const response =
+          await fetch(
+            `${API_URL}/api/admin/users`,
+            {
+              cache:
+                "no-store",
+            }
+          );
+
+        if (
+          !response.ok
+        ) {
+          throw new Error(
+            "Failed to load portal users."
+          );
+        }
+
+        const result =
+          await response.json();
+
+        setPortalUsers(
+          Array.isArray(
+            result
+          )
+            ? result
+            : result.data ||
+                []
+        );
+      } catch (error) {
+        console.error(
+          error
+        );
+      } finally {
+        setLoadingUsers(
+          false
+        );
+      }
+    };
+
+  /* =======================================================
+     BOOKINGS
+  ======================================================= */
+
+ const fetchBookings =
+  async () => {
+    if (
+      userRole !==
+      "Super Admin"
+    ) {
+      return;
+    }
+
+    try {
+      const response =
+        await fetch(
+          `${API_URL}/api/admin/bookings`,
+          {
+            cache:
+              "no-store",
+          }
+        );
+
+      const result =
+        await response.json();
+
+      if (
+        !response.ok
+      ) {
+        throw new Error(
+          result.error ||
+            "Unable to load booking requests."
+        );
+      }
+
+      setBookings(
+        Array.isArray(
+          result.data
+        )
+          ? result.data
+          : []
+      );
+    } catch (error) {
+      console.error(
+        "Booking load failed:",
+        error
+      );
+
+      setBookings(
+        []
+      );
+
+      showError(
+        error instanceof
+          Error
+          ? error.message
+          : "Unable to load booking requests."
+      );
+    }
+  };
+const requestBookingConfirmation =
+  (
+    bookingId:
+      number
+  ) => {
+    setAlertConfig({
+      open: true,
+
+      type:
+        "confirm",
+
+      title:
+        "Confirm Booking",
+
+      message:
+        "Are you sure you want to confirm this booking?",
+
+      confirmText:
+        "Confirm",
+
+      showCancel:
+        true,
+
+      inputRequired:
+        false,
+
+      inputLabel:
+        "",
+
+      inputPlaceholder:
+        "",
+
+      inputValue:
+        "",
+
+      loading:
+        false,
+
+      onConfirm:
+        () =>
+          updateBookingStatus(
+            bookingId,
+            "Confirmed",
+            null
+          ),
+    });
+  };
+  
+const requestBookingDecline = (
+  bookingId: number
+) => {
+  setDecliningBookingId(
+    bookingId
+  );
+
+  setDeclineReason("");
+
+  setAlertConfig({
+    open: true,
+
+    type: "warning",
+
+    title: "Decline Booking",
+
+    message:
+      "Please enter the reason for declining this booking.",
+
+    confirmText: "Decline",
+
+    showCancel: true,
+
+    inputRequired: true,
+
+    inputLabel:
+      "Decline Reason",
+
+    inputPlaceholder:
+      "Enter reason...",
+
+    inputValue: "",
+
+    loading: false,
+
+    /*
+     * DON'T store decline function here.
+     */
+    onConfirm: null,
+  });
+};
+
+const submitBookingDecline = async () => {
+  const reason =
+    declineReason.trim();
+
+  console.log(
+    "Declining booking:",
+    decliningBookingId
+  );
+
+  console.log(
+    "Decline reason:",
+    reason
+  );
+
+  if (
+    decliningBookingId ===
+    null
+  ) {
+    showError(
+      "Booking ID is missing."
+    );
+
+    return;
+  }
+
+  if (!reason) {
+    showError(
+      "Please enter a reason for declining the booking."
+    );
+
+    return;
+  }
+
+  await updateBookingStatus(
+    decliningBookingId,
+    "Declined",
+    reason
+  );
+};
+
+  const confirmBookingDecline =
+  (
+    bookingId:
+      number
+  ) => {
+    const reason =
+      alertConfig.inputValue.trim();
+
+    if (
+      !reason
+    ) {
+      return;
+    }
+
+    updateBookingStatus(
+      bookingId,
+      "Declined",
+      reason
+    );
+  };
+  const updateBookingStatus =
+  async (
+    bookingId:
+      number,
+
+    status:
+      | "Confirmed"
+      | "Declined",
+
+    reason:
+      string | null
+  ) => {
+    try {
+      setAlertConfig(
+        (current) => ({
+          ...current,
+
+          loading:
+            true,
+        })
+      );
+
+      const response =
+        await fetch(
+          `${API_URL}/api/admin/bookings/${bookingId}`,
+          {
+            method:
+              "PATCH",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body:
+              JSON.stringify({
+                status,
+                reason,
+              }),
+          }
+        );
+
+      const result =
+        await response.json();
+
+      if (
+        !response.ok
+      ) {
+        throw new Error(
+          result.error ||
+            "Unable to update booking."
+        );
+      }
+
+   setSelectedBooking(null);
+
+setDecliningBookingId(null);
+
+setDeclineReason("");
+      await fetchBookings();
+
+      showSuccess(
+        status ===
+          "Confirmed"
+          ? "Booking confirmed successfully."
+          : "Booking declined successfully."
+      );
+    } catch (error) {
+      showError(
+        error instanceof Error
+          ? error.message
+          : "Unable to update booking."
+      );
+    }
+  };
+
+  /* =======================================================
+     NATIONALITY RULES
+  ======================================================= */
+
+const fetchNationalityRules = async () => {
+  try {
+    const response = await fetch(
+      `${API_URL}/api/admin/nationality-rules`,
+      {
+        cache: "no-store",
+      }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        result.error ||
+          "Unable to load auto-rejection nationalities."
+      );
+    }
+
+    setNationalityRules(
+      Array.isArray(result.data)
+        ? result.data
+        : []
+    );
+  } catch (error) {
+    console.error(
+      "Nationality rules load failed:",
+      error
+    );
+
+    setNationalityRules([]);
+
+    showError(
+      error instanceof Error
+        ? error.message
+        : "Unable to load auto-rejection nationalities."
+    );
+  }
+};
+
+const fetchAvailableNationalities = async () => {
+  try {
+    const response = await fetch(
+      `${API_URL}/api/admin/nationality-rules/available`,
+      {
+        cache: "no-store",
+      }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        result.error ||
+          "Unable to load available nationalities."
+      );
+    }
+
+    setAvailableNationalities(
+      Array.isArray(result.data)
+        ? result.data
+        : []
+    );
+  } catch (error) {
+    console.error(
+      "Available nationality load failed:",
+      error
+    );
+
+    setAvailableNationalities([]);
+
+    showError(
+      error instanceof Error
+        ? error.message
+        : "Unable to load available nationalities."
+    );
+  }
+};
+
+const handleAddNationalityRule = async (
+  event: React.FormEvent
+) => {
+  event.preventDefault();
+
+  if (!selectedNationalityId) {
+    showError(
+      "Please select a nationality."
+    );
+
+    return;
+  }
+
+  try {
+    setSavingNationalityRule(true);
+    showSuccess("");
+    showError("");
+
+    const response = await fetch(
+      `${API_URL}/api/admin/nationality-rules`,
+      {
+        method: "POST",
+
+        headers: {
+          "Content-Type":
+            "application/json",
+        },
+
+        body: JSON.stringify({
+          nationId:
+            selectedNationalityId,
+        }),
+      }
+    );
+
+    const result =
+      await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        result.error ||
+          "Unable to add nationality."
+      );
+    }
+
+    const selected =
+      availableNationalities.find(
+        (item) =>
+          item.id ===
+          selectedNationalityId
+      );
+
+    setSelectedNationalityId("");
+
+    showSuccess(
+      selected
+        ? `${selected.nationality} added to auto rejection.`
+        : "Nationality added to auto rejection."
+    );
+
+    await Promise.all([
+      fetchNationalityRules(),
+      fetchAvailableNationalities(),
+    ]);
+  } catch (error) {
+    showError(
+      error instanceof Error
+        ? error.message
+        : "Unable to add nationality."
+    );
+  } finally {
+    setSavingNationalityRule(false);
+  }
+};
+const handleRemoveNationalityRule =
+  (
+    rule:
+      NationalityRule
+  ) => {
+    setAlertConfig({
+      open: true,
+
+      type:
+        "warning",
+
+      title:
+        "Remove Auto-Rejection Rule",
+
+      message:
+        `Remove ${rule.nationality} from auto rejection?`,
+
+      confirmText:
+        "Remove",
+
+      showCancel:
+        true,
+
+      inputRequired:
+        false,
+
+      inputLabel:
+        "",
+
+      inputPlaceholder:
+        "",
+
+      inputValue:
+        "",
+
+      loading:
+        false,
+
+      onConfirm:
+        () =>
+          confirmRemoveNationalityRule(
+            rule
+          ),
+    });
+  };
+ const confirmRemoveNationalityRule =
+  async (
+    rule:
+      NationalityRule
+  ) => {
+    try {
+      setAlertConfig(
+        (current) => ({
+          ...current,
+
+          loading:
+            true,
+        })
+      );
+
+      const response =
+        await fetch(
+          `${API_URL}/api/admin/nationality-rules/${encodeURIComponent(
+            rule.id
+          )}`,
+          {
+            method:
+              "DELETE",
+          }
+        );
+
+      const result =
+        await response.json();
+
+      if (
+        !response.ok
+      ) {
+        throw new Error(
+          result.error ||
+            "Unable to remove nationality."
+        );
+      }
+
+      await Promise.all([
+        fetchNationalityRules(),
+        fetchAvailableNationalities(),
+      ]);
+
+      showSuccess(
+        `${rule.nationality} removed from auto rejection.`
+      );
+    } catch (error) {
+      showError(
+        error instanceof Error
+          ? error.message
+          : "Unable to remove nationality."
+      );
+    }
+  };
+  /* =======================================================
+     SYNC ERP
+  ======================================================= */
+
+  const handleSyncErp =
+    async () => {
+      try {
+        setSyncing(
+          true
+        );
+
+        showSuccess(
+          "Syncing with ERP..."
+        );
+
+        showError(
+          ""
+        );
+
+        const response =
+          await fetch(
+            `${API_URL}/api/sync`,
+            {
+              method:
+                "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+              },
+            }
+          );
+
+        const result =
+          await response.json();
+
+        if (
+          !response.ok
+        ) {
+          throw new Error(
+            result.error ||
+              "ERP sync failed."
+          );
+        }
+
+        showSuccess(
+          "ERP synchronization completed successfully."
+        );
+
+        await fetchProperties();
+      } catch (error) {
+        showSuccess(
+          ""
+        );
+
+        showError(
+          error instanceof
+            Error
+            ? error.message
+            : "ERP sync failed."
+        );
+      } finally {
+        setSyncing(
+          false
+        );
+      }
+    };
+
+  /* =======================================================
+     FORMAT AREA
+  ======================================================= */
+
+  const formatArea = (
+    area:
+      number | null
+  ) => {
+    if (
+      area === null ||
+      Number(area) <=
+        0
+    ) {
+      return "-";
+    }
+
+    return `${Number(
+      area
+    ).toLocaleString(
+      "en-AE"
+    )} Sq.Ft.`;
+  };
+
+  /* =======================================================
+     AUTH LOADING
+  ======================================================= */
+
+  if (
+    checkingAuth
+  ) {
     return (
-      <div className={styles.loginWrapper}>
-        <div className={styles.loginCard} style={{ padding: "60px 40px" }}>
-          <h2 style={{ color: "#0f4c81" }}>Checking System Auth...</h2>
-          <p style={{ marginTop: "12px", marginBottom: 0 }}>Verifying secure administrative cookie session...</p>
+      <div
+        className={
+          styles.loginWrapper
+        }
+      >
+        <div
+          className={
+            styles.loginCard
+          }
+        >
+          Loading...
         </div>
       </div>
     );
   }
 
-  // 1. UN-AUTHENTICATED LOGIN SCREEN (With 2-step OTP flow)
-  if (!isAuthenticated) {
+  /* =======================================================
+     LOGIN
+  ======================================================= */
+
+  if (
+    !isAuthenticated
+  ) {
     return (
-      <div className={styles.loginWrapper}>
-        <div className={styles.loginCard}>
-          <img src="/bin-shabib-group.webp" alt="Logo" className={styles.loginLogo} />
-          
-          {!otpRequired ? (
-            // STEP 1: Username + Password Form
-            <div>
-              <h2>Admin Portal Sign In</h2>
-              <p>Provide secure credentials to enter your management dashboard</p>
+      <div
+        className={
+          styles.loginWrapper
+        }
+      >
+        <div
+          className={
+            styles.loginCard
+          }
+        >
+          <img
+            src="/bin-shabib-group.webp"
+            alt="Bin Shabib Real Estate"
+            className={
+              styles.loginLogo
+            }
+          />
 
-              {loginError && <div className={styles.statusError} style={{ padding: "8px 12px", fontSize: "12px", marginBottom: "16px" }}>{loginError}</div>}
+          <h2>
+            Admin Portal
+          </h2>
 
-              <form onSubmit={handleLoginSubmit}>
-                <div className={styles.formGroup} style={{ marginBottom: "16px", textAlign: "left" }}>
-                  <label className={styles.label}>Username</label>
-                  <input
-                    type="text"
-                    value={usernameInput}
-                    onChange={(e) => setUsernameInput(e.target.value)}
-                    placeholder="e.g. admin"
-                    className={styles.input}
-                    required
-                  />
-                </div>
+          <p>
+            Enter the
+            administrator
+            username to
+            continue.
+          </p>
 
-                <div className={styles.formGroup} style={{ marginBottom: "24px", textAlign: "left" }}>
-                  <label className={styles.label}>Password</label>
-                  <input
-                    type="password"
-                    value={passwordInput}
-                    onChange={(e) => setPasswordInput(e.target.value)}
-                    placeholder="••••••••••••"
-                    className={styles.input}
-                    required
-                  />
-                </div>
-
-                <button type="submit" disabled={loggingIn} className={`${styles.btn} ${styles.btnPrimary}`} style={{ width: "100%", padding: "12px" }}>
-                  {loggingIn ? "Verifying Credentials..." : "Continue"}
-                </button>
-              </form>
-            </div>
-          ) : (
-            // STEP 2: One-Time Password Verification Form
-            <div>
-              <h2>Enter Security OTP Code</h2>
-              
-              {otpMfaType === "Email OTP" ? (
-                <p>A 6-digit OTP code has been generated and sent to your email <strong>{otpEmailSentTo}</strong>.</p>
-              ) : (
-                <p>Open your 2FA authenticator app (Google Authenticator) and enter the 6-digit code for your account.</p>
-              )}
-
-              {loginError && <div className={styles.statusError} style={{ padding: "8px 12px", fontSize: "12px", marginBottom: "16px" }}>{loginError}</div>}
-
-              <form onSubmit={handleOtpSubmit}>
-                <div className={styles.formGroup} style={{ marginBottom: "20px", textAlign: "left" }}>
-                  <label className={styles.label}>6-Digit OTP Code</label>
-                  <input
-                    type="text"
-                    value={otpInput}
-                    onChange={(e) => setOtpInput(e.target.value)}
-                    placeholder="e.g. 123456"
-                    className={styles.input}
-                    style={{ textAlign: "center", fontSize: "20px", letterSpacing: "4px", fontWeight: "bold" }}
-                    maxLength={6}
-                    required
-                  />
-                </div>
-
-                {/* Local development mock helper so they can see code without opening console! */}
-                {otpMockCode && (
-                  <div style={{ background: "#f1f5f9", padding: "10px", borderRadius: "8px", fontSize: "11px", color: "#475569", marginBottom: "20px", border: "1px dashed #cbd5e1" }}>
-                    ℹ️ Local Testing Mock OTP: <strong>{otpMockCode}</strong>
-                  </div>
-                )}
-
-                <button type="submit" disabled={otpVerifying} className={`${styles.btn} ${styles.btnPrimary}`} style={{ width: "100%", padding: "12px" }}>
-                  {otpVerifying ? "Verifying Code..." : "Access Dashboard"}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => { setOtpRequired(false); setLoginError(""); setOtpInput(""); }}
-                  className={`${styles.btn} ${styles.btnSecondary}`}
-                  style={{ width: "100%", padding: "10px", marginTop: "10px" }}
-                >
-                  &larr; Back to password
-                </button>
-              </form>
+          {loginError && (
+            <div
+              className={
+                styles.statusError
+              }
+            >
+              {loginError}
             </div>
           )}
+
+          <form
+            onSubmit={
+              handleLoginSubmit
+            }
+          >
+            <div
+              className={
+                styles.formGroup
+              }
+            >
+              <label
+                className={
+                  styles.label
+                }
+              >
+                Username
+              </label>
+
+              <input
+                type="text"
+                value={
+                  usernameInput
+                }
+                onChange={(
+                  event
+                ) =>
+                  setUsernameInput(
+                    event.target
+                      .value
+                  )
+                }
+                placeholder="admin"
+                className={
+                  styles.input
+                }
+                required
+              />
+            </div>
+
+            <div
+              className={
+                styles.formGroup
+              }
+              style={{
+                marginTop:
+                  "16px",
+              }}
+            >
+              <label
+                className={
+                  styles.label
+                }
+              >
+                Password
+              </label>
+
+              <input
+                type="password"
+                value={
+                  passwordInput
+                }
+                onChange={(
+                  event
+                ) =>
+                  setPasswordInput(
+                    event.target
+                      .value
+                  )
+                }
+                placeholder="Enter Password"
+                className={
+                  styles.input
+                }
+                 required
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={
+                loggingIn
+              }
+              className={`${styles.btn} ${styles.btnPrimary}`}
+              style={{
+                width:
+                  "100%",
+
+                marginTop:
+                  "24px",
+
+                padding:
+                  "12px",
+              }}
+            >
+              {loggingIn
+                ? "Opening..."
+                : "Continue"}
+            </button>
+          </form>
         </div>
       </div>
     );
   }
 
-  // 2. AUTHENTICATED: SHOW SPLIT SIDEBAR WORDPRESS-STYLE DASHBOARD
+
+
+  /* =======================================================
+     DASHBOARD
+  ======================================================= */
+
   return (
-    <div className={styles.dashboardWrapper}>
-      
-      {/* LEFT SIDEBAR (Wordpress side menu) */}
-      <aside className={styles.sidebar}>
-        <div className={styles.sidebarHeader}>
-          <img src="/bin-shabib-group.webp" alt="Logo" className={styles.sidebarLogo} />
-          <div className={styles.sidebarTitle}>Bin Shabib Panel</div>
-          <div className={styles.sidebarSub}>Role: {userRole}</div>
+    <div
+      className={
+        styles.dashboardWrapper
+      }
+    >
+      {/* ===================================================
+          SIDEBAR
+      =================================================== */}
+
+      <aside
+        className={
+          styles.sidebar
+        }
+      >
+        <div
+          className={
+            styles.sidebarHeader
+          }
+        >
+         
+
+          <div
+            className={
+              styles.sidebarTitle
+            }
+          >
+            Bin Shabib Panel
+          </div>
+
+          <div
+            className={
+              styles.sidebarSub
+            }
+          >
+            Role:{" "}
+            {userRole}
+          </div>
         </div>
 
-        <nav className={styles.sidebarMenu}>
+        <nav
+          className={
+            styles.sidebarMenu
+          }
+        >
           <button
-            onClick={() => { setActiveTab("welcome"); setStatusMessage(""); setErrorMessage(""); }}
-            className={`${styles.menuItem} ${activeTab === "welcome" ? styles.menuItemActive : ""}`}
+            type="button"
+           onClick={() => {
+  changeTab("welcome");
+}}
+            className={`${styles.menuItem} ${
+              activeTab ===
+              "welcome"
+                ? styles.menuItemActive
+                : ""
+            }`}
           >
-            🏠 Welcome & stats
+            🏠 Welcome &
+            stats
           </button>
-          
-          <button
-            onClick={() => { setActiveTab("listings"); setStatusMessage(""); setErrorMessage(""); }}
-            className={`${styles.menuItem} ${activeTab === "listings" ? styles.menuItemActive : ""}`}
-          >
-            🏢 Active Listings ({properties.length})
-          </button>
-          
-          {/* Editor/Viewer Roles cannot see projects block */}
-          {(userRole === "Super Admin" || userRole === "Manager" || userRole === "Viewer") && (
-            <button
-              onClick={() => { setActiveTab("upcoming"); setStatusMessage(""); setErrorMessage(""); }}
-              className={`${styles.menuItem} ${activeTab === "upcoming" ? styles.menuItemActive : ""}`}
-            >
-              🏗️ Upcoming Projects ({upcomingProjects.length})
-            </button>
-          )}
-          
-          {/* Editors/Viewers cannot see Sync block */}
-          {userRole !== "Editor" && userRole !== "Viewer" && (
-            <button
-              onClick={() => { setActiveTab("sync"); setStatusMessage(""); setErrorMessage(""); }}
-              className={`${styles.menuItem} ${activeTab === "sync" ? styles.menuItemActive : ""}`}
-            >
-              🔄 Sync ERP Database
-            </button>
-          )}
 
-          {/* User Management block - ONLY visible to Super Admin */}
-          {userRole === "Super Admin" && (
-            <button
-              onClick={() => { setActiveTab("users"); setStatusMessage(""); setErrorMessage(""); }}
-              className={`${styles.menuItem} ${activeTab === "users" ? styles.menuItemActive : ""}`}
-            >
-              👥 Portal Users ({portalUsers.length})
-            </button>
+          <button
+            type="button"
+           onClick={() => {
+  changeTab("listings");
+
+  fetchProperties();
+}}
+            className={`${styles.menuItem} ${
+              activeTab ===
+              "listings"
+                ? styles.menuItemActive
+                : ""
+            }`}
+          >
+            🏢 Active Listings
+            ({properties.length})
+          </button>
+
+          <button
+            type="button"
+            onClick={
+              openUpcomingTab
+            }
+            className={`${styles.menuItem} ${
+              activeTab ===
+              "upcoming"
+                ? styles.menuItemActive
+                : ""
+            }`}
+          >
+            🏗️ Upcoming
+            Projects (
+            {
+              upcomingProjects.length
+            }
+            )
+          </button>
+
+          {/* <button
+            type="button"
+           onClick={() => {
+  changeTab("sync");
+}}
+            className={`${styles.menuItem} ${
+              activeTab ===
+              "sync"
+                ? styles.menuItemActive
+                : ""
+            }`}
+          >
+            🔄 Sync ERP
+            Database
+          </button> */}
+
+          {userRole ===
+            "Super Admin" && (
+            <>
+              {/* <button
+                type="button"
+                onClick={() => {
+                 changeTab("users");
+
+                  fetchPortalUsers();
+                }}
+                className={`${styles.menuItem} ${
+                  activeTab ===
+                  "users"
+                    ? styles.menuItemActive
+                    : ""
+                }`}
+              >
+                👥 Portal Users
+                (
+                {
+                  portalUsers.length
+                }
+                )
+              </button> */}
+
+              <button
+                type="button"
+                onClick={() => {
+                 changeTab("bookings");
+
+                  fetchBookings();
+                }}
+                className={`${styles.menuItem} ${
+                  activeTab ===
+                  "bookings"
+                    ? styles.menuItemActive
+                    : ""
+                }`}
+              >
+                📋 Booking
+                Requests (
+                {
+                  bookings.length
+                }
+                )
+              </button>
+
+             <button
+  type="button"
+ onClick={() => {
+  changeTab("nationality-rules");
+
+  fetchNationalityRules();
+  fetchAvailableNationalities();
+}}
+  className={`${styles.menuItem} ${
+    activeTab ===
+    "nationality-rules"
+      ? styles.menuItemActive
+      : ""
+  }`}
+>
+  🛡️ Nationality Rules ({filteredNationalityRules.length})
+</button>
+            </>
           )}
-          {userRole === "Super Admin" && <button onClick={() => { setActiveTab("bookings"); fetchBookings(); }} className={`${styles.menuItem} ${activeTab === "bookings" ? styles.menuItemActive : ""}`}>📋 Booking Requests ({bookings.length})</button>}
-          {userRole === "Super Admin" && <button onClick={() => { setActiveTab("nationality-rules"); fetchNationalityRules(); }} className={`${styles.menuItem} ${activeTab === "nationality-rules" ? styles.menuItemActive : ""}`}>🛡️ Nationality Rules ({nationalityRules.filter((rule) => rule.isActive).length})</button>}
         </nav>
 
-        <div className={styles.sidebarFooter}>
-          <div style={{ padding: "0 16px 12px", fontSize: "11px", color: "rgba(255, 255, 255, 0.4)" }}>
-            Logged in as: <strong>{userUsername}</strong>
+        <div
+          className={
+            styles.sidebarFooter
+          }
+        >
+          <div
+            style={{
+              padding:
+                "0 16px 12px",
+
+              fontSize:
+                "11px",
+
+              color:
+                "rgba(255,255,255,.45)",
+            }}
+          >
+            Logged in as:{" "}
+            <strong>
+              {userUsername}
+            </strong>
           </div>
-          <button onClick={handleLogout} className={styles.menuItem} style={{ color: "#f87171" }}>
-            🚪 Log Out Session
+
+          <button
+            type="button"
+            onClick={
+              handleLogout
+            }
+            className={
+              styles.menuItem
+            }
+            style={{
+              color:
+                "#f87171",
+            }}
+          >
+            🚪 Log Out
+            Session
           </button>
-          <div className={styles.developerCredit}>
-            Developed by <span>MUHAMMAD BILAL</span>
-          </div>
+
+          
         </div>
       </aside>
 
-      {/* RIGHT CONTENT PANEL */}
-      <main className={styles.contentArea}>
-        
-        {/* Messages */}
-        {statusMessage && <div className={styles.statusBanner}>{statusMessage}</div>}
-        {errorMessage && <div className={styles.statusError}>{errorMessage}</div>}
+      {/* ===================================================
+          CONTENT
+      =================================================== */}
 
-        {/* TAB 1: WELCOME SCREEN */}
-        {activeTab === "welcome" && (
+      <main
+        className={
+          styles.contentArea
+        }
+      >
+        {[
+  "listings",
+  "upcoming",
+  "users",
+  "bookings",
+  "nationality-rules",
+].includes(
+  activeTab
+) && (
+  <div
+    className={
+      styles.adminSearchBar
+    }
+  >
+    <div
+      className={
+        styles.adminSearchInputWrapper
+      }
+    >
+      <span
+        className={
+          styles.adminSearchIcon
+        }
+      >
+        🔍
+      </span>
+
+      <input
+        type="search"
+        value={
+          searchText
+        }
+        onChange={(
+          event
+        ) =>
+          setSearchText(
+            event.target
+              .value
+          )
+        }
+        placeholder={
+        "Search..."
+        }
+        className={
+          styles.adminSearchInput
+        }
+      />
+
+      {searchText && (
+        <button
+          type="button"
+          onClick={() =>
+            setSearchText(
+              ""
+            )
+          }
+          className={
+            styles.adminSearchClear
+          }
+          aria-label="Clear search"
+        >
+          ×
+        </button>
+      )}
+    </div>
+  </div>
+)}
+        {statusMessage && (
+          <div
+            className={
+              styles.statusBanner
+            }
+          >
+            {statusMessage}
+          </div>
+        )}
+
+        {errorMessage && (
+          <div
+            className={
+              styles.statusError
+            }
+          >
+            {errorMessage}
+          </div>
+        )}
+
+        {/* =================================================
+            WELCOME
+        ================================================= */}
+
+        {activeTab ===
+          "welcome" && (
           <div>
-            <div className={styles.contentHeader}>
+            <div
+              className={
+                styles.contentHeader
+              }
+            >
               <div>
-                <h2>Dashboard Home</h2>
-                <p>Welcome, {userUsername}! Access Level: {userRole}</p>
+                <h2>
+                  Dashboard Home
+                </h2>
+
+                <p>
+                  Welcome,{" "}
+                  {userUsername}.
+                  Access Level:{" "}
+                  {userRole}
+                </p>
               </div>
             </div>
 
-            <div className={styles.welcomeBanner}>
-              <h3>Welcome to ABDULWAHED BIN SHABIB REAL ESTATE L.L.C Portal</h3>
+            <div
+              className={
+                styles.welcomeBanner
+              }
+            >
+              <h3>
+                ABDULWAHED BIN
+                SHABIB REAL ESTATE
+                L.L.C
+              </h3>
+
               <p>
-                From this panel, you can manage active property listings, publish new upcoming projects, and coordinate users. Depending on your administrative group role, different functionalities are enabled.
-              </p>
-              <p style={{ fontWeight: 600, color: "#0f4c81" }}>
-                Notice: The portal is configured for direct owner management of ABDULWAHED BIN SHABIB REAL ESTATE L.L.C residential and commercial rental portfolios.
+                Manage active
+                property listings,
+                upcoming projects,
+                bookings and
+                administrative
+                settings.
               </p>
             </div>
 
-            {/* WordPress Statistics Grid */}
-            <div className={styles.statsGrid}>
-              <div className={styles.statCard}>
-                <div className={styles.statIcon}>🏢</div>
-                <div className={styles.statInfo}>
-                  <div className={styles.statTitle}>Active Properties</div>
-                  <div className={styles.statValue}>{properties.length}</div>
+            <div
+              className={
+                styles.statsGrid
+              }
+            >
+              <div
+                className={
+                  styles.statCard
+                }
+              >
+                <div
+                  className={
+                    styles.statIcon
+                  }
+                >
+                  🏢
                 </div>
-              </div>
 
-              {(userRole === "Super Admin" || userRole === "Manager" || userRole === "Viewer") && (
-                <div className={styles.statCard}>
-                  <div className={styles.statIcon}>🏗️</div>
-                  <div className={styles.statInfo}>
-                    <div className={styles.statTitle}>Upcoming Projects</div>
-                    <div className={styles.statValue}>{upcomingProjects.length}</div>
+                <div
+                  className={
+                    styles.statInfo
+                  }
+                >
+                  <div
+                    className={
+                      styles.statTitle
+                    }
+                  >
+                    Active
+                    Properties
+                  </div>
+
+                  <div
+                    className={
+                      styles.statValue
+                    }
+                  >
+                    {
+                      properties.length
+                    }
                   </div>
                 </div>
-              )}
+              </div>
 
-              <div className={styles.statCard}>
-                <div className={styles.statIcon}>👥</div>
-                <div className={styles.statInfo}>
-                  <div className={styles.statTitle}>Account Access</div>
-                  <div className={styles.statValue} style={{ fontSize: "14px", fontWeight: "700" }}>{userRole}</div>
+              <div
+                className={
+                  styles.statCard
+                }
+              >
+                <div
+                  className={
+                    styles.statIcon
+                  }
+                >
+                  🏗️
+                </div>
+
+                <div
+                  className={
+                    styles.statInfo
+                  }
+                >
+                  <div
+                    className={
+                      styles.statTitle
+                    }
+                  >
+                    Upcoming
+                    Projects
+                  </div>
+
+                  <div
+                    className={
+                      styles.statValue
+                    }
+                  >
+                    {
+                      upcomingProjects.length
+                    }
+                  </div>
                 </div>
               </div>
 
-              <div className={styles.statCard}>
-                <div className={styles.statIcon}>🔌</div>
-                <div className={styles.statInfo}>
-                  <div className={styles.statTitle}>System Database</div>
-                  <div className={styles.statValue} style={{ fontSize: "14px", color: "#16a34a", fontWeight: "700" }}>SQLite Live</div>
+              <div
+                className={
+                  styles.statCard
+                }
+              >
+                <div
+                  className={
+                    styles.statIcon
+                  }
+                >
+                  👥
+                </div>
+
+                <div
+                  className={
+                    styles.statInfo
+                  }
+                >
+                  <div
+                    className={
+                      styles.statTitle
+                    }
+                  >
+                    Access
+                  </div>
+
+                  <div
+                    className={
+                      styles.statValue
+                    }
+                    style={{
+                      fontSize:
+                        "14px",
+                    }}
+                  >
+                    {userRole}
+                  </div>
                 </div>
               </div>
-            </div>
-
-            <h3>Quick Administrative Tasks</h3>
-            <div className={styles.quickActionsGrid} style={{ marginTop: "16px" }}>
-              {(userRole === "Super Admin" || userRole === "Manager") && (
-                <div onClick={() => setActiveTab("upcoming")} className={styles.actionCard}>
-                  <h4>🏗️ Publish Upcoming Project</h4>
-                  <p>Post a new building launch under Browse New Projects section with handover quarters and prices.</p>
-                </div>
-              )}
-              {(userRole === "Super Admin" || userRole === "Manager") && (
-                <div onClick={() => setActiveTab("sync")} className={styles.actionCard}>
-                  <h4>🔄 Synchronize Web ERP</h4>
-                  <p>Trigger the automatic sync task to merge records from the master developer property API.</p>
-                </div>
-              )}
-              {userRole === "Super Admin" && (
-                <div onClick={() => setActiveTab("users")} className={styles.actionCard}>
-                  <h4>👥 Manage Portal Users ({portalUsers.length})</h4>
-                  <p>Add/delete admin staff, assign access permissions and select MFA verification schemes.</p>
-                </div>
-              )}
-              {userRole === "Super Admin" && <div onClick={() => setActiveTab("nationality-rules")} className={styles.actionCard}><h4>🛡️ Nationality Auto-Rejection</h4><p>Maintain the active nationalities that should be automatically declined on new bookings and enquiries.</p></div>}
             </div>
           </div>
         )}
 
-        {/* TAB 2: ACTIVE LISTINGS MANAGER */}
-        {activeTab === "listings" && (
+        {/* =================================================
+            ACTIVE LISTINGS
+        ================================================= */}
+{/* =================================================
+    ACTIVE LISTINGS
+================================================= */}
+
+{activeTab ===
+  "listings" && (
+  <div>
+    {/* =============================================
+        HEADER
+    ============================================= */}
+
+    <div
+      className={
+        styles.contentHeader
+      }
+    >
+      <div>
+        <h2>
+          Active Listings (
+          {properties.length})
+        </h2>
+
+      
+      </div>
+    </div>
+
+    {/* =============================================
+        FILTERS
+    ============================================= */}
+
+    <div
+      className={
+        styles.listingFilterBar
+      }
+    >
+      <button
+        type="button"
+        onClick={() =>
+          setListingFilter(
+            "all"
+          )
+        }
+        className={`${styles.listingFilterBtn} ${
+          listingFilter ===
+          "all"
+            ? styles.listingFilterActive
+            : ""
+        }`}
+      >
+        All
+        <span
+          className={
+            styles.listingFilterCount
+          }
+        >
+          {properties.length}
+        </span>
+      </button>
+
+      <button
+        type="button"
+        onClick={() =>
+          setListingFilter(
+            "top"
+          )
+        }
+        className={`${styles.listingFilterBtn} ${
+          listingFilter ===
+          "top"
+            ? styles.listingFilterActive
+            : ""
+        }`}
+      >
+        Top Priority
+        <span
+          className={
+            styles.listingFilterCount
+          }
+        >
+          {
+            topPriorityCount
+          }
+        </span>
+      </button>
+
+      <button
+        type="button"
+        onClick={() =>
+          setListingFilter(
+            "normal"
+          )
+        }
+        className={`${styles.listingFilterBtn} ${
+          listingFilter ===
+          "normal"
+            ? styles.listingFilterActive
+            : ""
+        }`}
+      >
+        Normal Listing
+        <span
+          className={
+            styles.listingFilterCount
+          }
+        >
+          {
+            normalListingCount
+          }
+        </span>
+      </button>
+
+      <button
+        type="button"
+        onClick={() =>
+          setListingFilter(
+            "hidden"
+          )
+        }
+        className={`${styles.listingFilterBtn} ${
+          listingFilter ===
+          "hidden"
+            ? styles.listingFilterActive
+            : ""
+        }`}
+      >
+        Hidden
+        <span
+          className={
+            styles.listingFilterCount
+          }
+        >
+          {
+            hiddenListingCount
+          }
+        </span>
+      </button>
+    </div>
+
+    {/* =============================================
+        LIST
+    ============================================= */}
+
+    {loadingListings ? (
+      <div
+        className={
+          styles.loading
+        }
+      >
+        Loading properties...
+      </div>
+    ) : (
+      <div
+        className={
+          styles.tableCard
+        }
+      >
+        <div
+          className={
+            styles.tableHeader
+          }
+        >
           <div>
-            <div className={styles.contentHeader}>
-              <div>
-                <h2>Active Listings ({properties.length})</h2>
-                <p>Property data is synchronized from ERP. Manual creation, edits, image uploads, and deletion are disabled.</p>
-              </div>
-            </div>
-
-            {loadingListings ? (
-              <div className={styles.loading}>Loading properties from database...</div>
-            ) : (
-              <div className={styles.tableCard}>
-                <div className={styles.tableHeader}>Database Records</div>
-                
-                {properties.length === 0 ? (
-                  <div className={styles.loading}>No listings found. Use Sync ERP Database to retrieve the latest property records.</div>
-                ) : (
-                  properties.map((prop) => {
-                    let imagesList: string[] = [];
-                    try {
-                      imagesList = JSON.parse(prop.images || "[]");
-                    } catch (e) {}
-
-                    return (
-                      <div key={prop.id} className={styles.row}>
-                        <div className={styles.thumbnailContainer}>
-                          {imagesList.length > 0 ? (
-                            <img src={imagesList[0]} alt={prop.title} className={styles.thumbnail} />
-                          ) : (
-                            <div className={styles.noImage}>No Pictures</div>
-                          )}
-                        </div>
-
-                        <div>
-                          <div className={styles.propTitle}>{prop.title}</div>
-                          <div className={styles.propLoc}>{prop.location}</div>
-                        </div>
-
-                        <div className={styles.price}>{formatPrice(prop.price)}</div>
-
-                        <div className={styles.specs}>
-                          {prop.beds} Beds | {prop.baths} Baths | {prop.area} Sq.Ft.
-                        </div>
-
-                        <div>
-                          <span className={`${styles.badge} ${styles.badgeErp}`}>ERP {prop.erpId ? `(${prop.erpId})` : "Managed"}</span>
-                        </div>
-
-                        <div className={styles.actionCell}>
-                          <span style={{ fontSize: "12px", color: "#64748b", fontStyle: "italic" }}>ERP managed</span>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            )}
+              BUILDING
           </div>
-        )}
 
-        {/* TAB 3: UPCOMING PROJECTS MANAGER */}
-        {activeTab === "upcoming" && (
-          <div>
-            <div className={styles.contentHeader}>
-              <div>
-                <h2>Upcoming Projects ({upcomingProjects.length})</h2>
-                <p>Manage launches published in the Browse New Projects section on the homepage.</p>
-              </div>
-            </div>
+          <div
+            className={
+              styles.tableHeaderCount
+            }
+          >
+            Showing{" "}
+            {
+              filteredAndSortedProperties.length
+            }{" "}
+            of{" "}
+            {
+              properties.length
+            }
+          </div>
+        </div>
 
-            {/* Manually Add Project Form Box - Hidden from Editors/Viewers */}
-            {userRole !== "Editor" && userRole !== "Viewer" && (
-              <div className={styles.form} style={{ marginBottom: "32px" }}>
-                <h3 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "16px", color: "#0b1a30" }}>
-                  Add Upcoming Project Manually
-                </h3>
-                <form onSubmit={handleAddProjectSubmit}>
-                  <div className={styles.formRow}>
-                    <div className={styles.formGroup}>
-                      <label className={styles.label}>Project Title *</label>
-                      <input
-                        type="text"
-                        value={projectForm.title}
-                        onChange={(e) => setProjectForm({...projectForm, title: e.target.value})}
-                        placeholder="e.g. Provenza Residences"
-                        required
-                        className={styles.input}
-                      />
+        {filteredAndSortedProperties.length ===
+        0 ? (
+          <div
+            className={
+              styles.emptyListings
+            }
+          >
+            No properties found
+            for this filter.
+          </div>
+        ) : (
+          filteredAndSortedProperties.map(
+            (
+              property
+            ) => {
+              const currentPriority =
+                property.webDisplayOrder;
+
+              return (
+                <div
+                  key={
+                    property.id
+                  }
+                  className={
+                    styles.listingRow
+                  }
+                >
+                  {/* ===============================
+                      PROPERTY DETAILS
+                  =============================== */}
+
+                  <div
+                    className={
+                      styles.listingMain
+                    }
+                  >
+                    <div
+                      className={
+                        styles.listingTitle
+                      }
+                    >
+                      {
+                        property.title
+                      }
                     </div>
 
-                    <div className={styles.formGroup}>
-                      <label className={styles.label}>Project Type *</label>
-                      <select
-                        value={projectForm.type}
-                        onChange={(e) => setProjectForm({...projectForm, type: e.target.value})}
-                        className={styles.select}
-                      >
-                        <option value="Apartments">Apartments</option>
-                        <option value="Villas">Villas</option>
-                        <option value="Townhouses">Townhouses</option>
-                        <option value="Apartments & Penthouses">Apartments & Penthouses</option>
-                      </select>
+                    <div
+                      className={
+                        styles.listingLocation
+                      }
+                    >
+                      {
+                        property.location
+                      }
                     </div>
+                    <div
+  className={
+    styles.vacantUnitInfo
+  }
+>
+  {property.vacantUnits}{" "}
+  {property.vacantUnits === 1
+    ? "Vacant Unit"
+    : "Vacant Units"}
+</div>
                   </div>
 
-                  <div className={styles.formRow}>
-                    <div className={styles.formGroup}>
-                      <label className={styles.label}>Location *</label>
-                      <input
-                        type="text"
-                        value={projectForm.location}
-                        onChange={(e) => setProjectForm({...projectForm, location: e.target.value})}
-                        placeholder="e.g. JVC District 14, Dubai"
-                        required
-                        className={styles.input}
-                      />
-                    </div>
+                  {/* ===============================
+                      CONTROLS
+                  =============================== */}
 
-                    <div className={styles.formGroup}>
-                      <label className={styles.label}>City *</label>
-                      <select
-                        value={projectForm.city}
-                        onChange={(e) => setProjectForm({...projectForm, city: e.target.value})}
-                        className={styles.select}
-                      >
-                        <option value="Dubai">Dubai</option>
-                        <option value="Abu Dhabi">Abu Dhabi</option>
-                        <option value="Sharjah">Sharjah</option>
-                        <option value="Ajman">Ajman</option>
-                        <option value="Ras Al Khaimah">Ras Al Khaimah</option>
-                        <option value="Umm Al Quwain">Umm Al Quwain</option>
-                      </select>
-                    </div>
-                  </div>
+                  <div
+                    className={
+                      styles.listingControls
+                    }
+                  >
+                    {/* PRIORITY BADGE */}
 
-                  <div className={styles.formRow}>
-                    <div className={styles.formGroup}>
-                      <label className={styles.label}>Launch Price *</label>
-                      <input
-                        type="text"
-                        value={projectForm.launchPrice}
-                        onChange={(e) => setProjectForm({...projectForm, launchPrice: e.target.value})}
-                        placeholder="e.g. AED 650K"
-                        required
-                        className={styles.input}
-                      />
-                    </div>
-
-                    <div className={styles.formGroup}>
-                      <label className={styles.label}>Handover Date *</label>
-                      <input
-                        type="text"
-                        value={projectForm.handover}
-                        onChange={(e) => setProjectForm({...projectForm, handover: e.target.value})}
-                        placeholder="e.g. Q3 2027"
-                        required
-                        className={styles.input}
-                      />
-                    </div>
-                  </div>
-
-                  <div className={styles.formRow}>
-                    <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
-                      <label className={styles.label}>Description</label>
-                      <textarea
-                        value={projectForm.description}
-                        onChange={(e) => setProjectForm({...projectForm, description: e.target.value})}
-                        placeholder="Enter a brief teaser about this launch..."
-                        className={styles.textarea}
-                      />
-                    </div>
-                  </div>
-
-                  <div className={styles.formRow}>
-                    <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
-                      <label className={styles.label}>Cover Image File</label>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => setProjectFile(e.target.files ? e.target.files[0] : null)}
-                        className={styles.input}
-                        style={{ padding: "8px" }}
-                      />
-                    </div>
-                  </div>
-
-                  <div className={styles.submitRow}>
-                    <button type="submit" disabled={savingProject} className={`${styles.btn} ${styles.btnPrimary}`}>
-                      {savingProject ? "Saving..." : "Publish Launch Project"}
-                    </button>
-                  </div>
-                </form>
-              </div>
-            )}
-
-            {loadingUpcoming ? (
-              <div className={styles.loading}>Loading upcoming projects...</div>
-            ) : (
-              <div className={styles.tableCard}>
-                <div className={styles.tableHeader}>Currently Seeding Launches</div>
-                
-                {upcomingProjects.length === 0 ? (
-                  <div className={styles.loading}>No upcoming projects published yet.</div>
-                ) : (
-                  upcomingProjects.map((project) => (
-                    <div key={project.id} className={styles.row}>
-                      <div className={styles.thumbnailContainer}>
-                        <img src={project.image} alt={project.title} className={styles.thumbnail} />
-                      </div>
-
-                      <div>
-                        <div className={styles.propTitle}>{project.title}</div>
-                        <div className={styles.propLoc}>{project.location}</div>
-                      </div>
-
-                      <div className={styles.price}>{project.launchPrice}</div>
-
-                      <div className={styles.specs}>
-                        Type: {project.type} | City: {project.city}
-                      </div>
-
-                      <div>
-                        <span className={`${styles.badge} ${styles.badgeManual}`} style={{ backgroundColor: "#0f4c81", color: "white" }}>
-                          Handover {project.handover}
+                    {currentPriority !==
+                      null &&
+                      currentPriority >=
+                        1 &&
+                      currentPriority <=
+                        6 && (
+                        <span
+                          className={
+                            styles.priorityBadge
+                          }
+                        >
+                          #
+                          {
+                            currentPriority
+                          }
                         </span>
-                      </div>
+                      )}
 
-                      <div className={styles.actionCell}>
-                        {userRole !== "Editor" && userRole !== "Viewer" ? (
-                          <button onClick={() => handleDeleteProject(project.id)} className={`${styles.btn} ${styles.btnDanger}`}>
-                            Delete
-                          </button>
-                        ) : (
-                          <span style={{ fontSize: "12px", color: "#64748b", fontStyle: "italic" }}>View Only</span>
+                    {/* HIDDEN BADGE */}
+
+                    {currentPriority ===
+                      0 && (
+                      <span
+                        className={
+                          styles.hiddenBadge
+                        }
+                      >
+                        Hidden
+                      </span>
+                    )}
+
+                    {/* NORMAL BADGE */}
+
+                    {currentPriority ===
+                      null && (
+                      <span
+                        className={
+                          styles.normalBadge
+                        }
+                      >
+                        Normal
+                      </span>
+                    )}
+
+                    {/* DISPLAY DROPDOWN */}
+
+                    <div
+                      className={
+                        styles.webDisplayGroup
+                      }
+                    >
+                      <label>
+                        Website
+                        Display
+                      </label>
+
+                      <select
+                        value={
+                          currentPriority ===
+                          null
+                            ? "normal"
+                            : String(
+                                currentPriority
+                              )
+                        }
+                        onChange={(
+                          event
+                        ) =>
+                          handleWebDisplayChange(
+                            property,
+                            event
+                              .target
+                              .value
+                          )
+                        }
+                        className={
+                          styles.webDisplaySelect
+                        }
+                      >
+                        <option value="normal">
+                          Normal
+                          Listing
+                        </option>
+
+                        <option value="0">
+                          Hide from
+                          Website
+                        </option>
+
+                        {[
+                          1,
+                          2,
+                          3,
+                          4,
+                          5,
+                          6,
+                        ].map(
+                          (
+                            priority
+                          ) => {
+                            const usedBy =
+                              properties.find(
+                                (
+                                  item
+                                ) =>
+                                  item.id !==
+                                    property.id &&
+                                  item.webDisplayOrder ===
+                                    priority
+                              );
+
+                            return (
+                              <option
+                                key={
+                                  priority
+                                }
+                                value={
+                                  priority
+                                }
+                                disabled={
+                                  Boolean(
+                                    usedBy
+                                  )
+                                }
+                              >
+                                Top
+                                Priority{" "}
+                                {
+                                  priority
+                                }
+                                {usedBy
+                                  ? " - Used"
+                                  : ""}
+                              </option>
+                            );
+                          }
                         )}
+                      </select>
+
+                      <div
+                        className={
+                          styles.displayHint
+                        }
+                      >
+                        {currentPriority ===
+                        null
+                          ? "Normal listing"
+                          : currentPriority ===
+                            0
+                          ? "Hidden from website"
+                          : `Top Priority ${currentPriority}`}
                       </div>
                     </div>
-                  ))
-                )}
-              </div>
-            )}
-          </div>
+                  </div>
+                </div>
+              );
+            }
+          )
         )}
+      </div>
+    )}
+  </div>
+)}
 
-        {/* TAB 4: ADD ACTIVE PROPERTY FORM */}
-        {activeTab === "add-property" && userRole !== "Viewer" && (
+        {/* =================================================
+            UPCOMING PROJECTS
+        ================================================= */}
+
+        {activeTab ===
+          "upcoming" && (
           <div>
-            <div className={styles.contentHeader}>
+            <div
+              className={
+                styles.contentHeader
+              }
+            >
               <div>
-                <h2>ERP Property Management</h2>
-                <p>Properties are read from the backend ERP database. Create or edit them in ERP, then run ERP Sync.</p>
+                <h2>
+                  {editingBuildingId
+                    ? "Edit Upcoming Building"
+                    : "Add Upcoming Buildings"}
+                </h2>
+
+                <p>
+                  {editingBuildingId
+                    ? `Editing building ${editingBuildingId}`
+                    : "Create a new upcoming building"}
+                </p>
               </div>
             </div>
 
-            <form onSubmit={handleAddPropertySubmit} className={styles.form}>
-              <div className={styles.formRow}>
-                <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
-                  <label className={styles.label}>Property Title *</label>
+            {/* =============================================
+                FORM
+            ============================================= */}
+
+            <form
+              onSubmit={
+                handleAddBuildingSubmit
+              }
+              className={
+                styles.form
+              }
+            >
+              <div
+                className={
+                  styles.formRow
+                }
+              >
+                <div
+                  className={
+                    styles.formGroup
+                  }
+                >
+                  <label
+                    className={
+                      styles.label
+                    }
+                  >
+                    Building ID *
+                  </label>
+
                   <input
                     type="text"
-                    value={listingForm.title}
-                    onChange={(e) => setListingForm({...listingForm, title: e.target.value})}
-                    placeholder="e.g. Signature Beachfront Villa | Saadiyat Island"
+                    value={
+                      buildingForm.buildId
+                    }
+                    onChange={(
+                      event
+                    ) =>
+                      setBuildingForm(
+                        (
+                          current
+                        ) => ({
+                          ...current,
+
+                          buildId:
+                            event
+                              .target
+                              .value,
+                        })
+                      )
+                    }
+                    placeholder="e.g. P:895"
+                    maxLength={
+                      7
+                    }
                     required
-                    className={styles.input}
+                    disabled={
+                      editingBuildingId !==
+                      null
+                    }
+                    className={
+                      styles.input
+                    }
                   />
                 </div>
-              </div>
 
-              <div className={styles.formRow}>
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>Price (AED) *</label>
-                  <input
-                    type="number"
-                    value={listingForm.price}
-                    onChange={(e) => setListingForm({...listingForm, price: e.target.value})}
-                    placeholder="e.g. 18500000"
-                    required
-                    className={styles.input}
-                  />
-                </div>
+                <div
+                  className={
+                    styles.formGroup
+                  }
+                >
+                  <label
+                    className={
+                      styles.label
+                    }
+                  >
+                    Building Name
+                    *
+                  </label>
 
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>Location *</label>
                   <input
                     type="text"
-                    value={listingForm.location}
-                    onChange={(e) => setListingForm({...listingForm, location: e.target.value})}
-                    placeholder="e.g. Saadiyat Island, Abu Dhabi"
+                    value={
+                      buildingForm.buildingName
+                    }
+                    onChange={(
+                      event
+                    ) =>
+                      setBuildingForm(
+                        (
+                          current
+                        ) => ({
+                          ...current,
+
+                          buildingName:
+                            event
+                              .target
+                              .value,
+                        })
+                      )
+                    }
+                    placeholder="Enter building name"
                     required
-                    className={styles.input}
+                    className={
+                      styles.input
+                    }
                   />
                 </div>
               </div>
 
-              <div className={styles.formRow}>
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>Property Type</label>
-                  <select
-                    value={listingForm.type}
-                    onChange={(e) => setListingForm({...listingForm, type: e.target.value})}
-                    className={styles.select}
+              <div
+                className={
+                  styles.formRow
+                }
+              >
+                <div
+                  className={
+                    styles.formGroup
+                  }
+                >
+                  <label
+                    className={
+                      styles.label
+                    }
                   >
-                    <option value="Residential">Residential</option>
-                    <option value="Commercial">Commercial</option>
-                  </select>
-                </div>
+                    Place *
+                  </label>
 
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>Purpose (Rent is prioritized)</label>
                   <select
-                    value={listingForm.purpose}
-                    onChange={(e) => setListingForm({...listingForm, purpose: e.target.value})}
-                    className={styles.select}
-                  >
-                    <option value="Rent">Rent (Lease)</option>
-                    <option value="Buy">Buy (For Sale)</option>
-                  </select>
-                </div>
-              </div>
+                    value={
+                      buildingForm.placeId
+                    }
+                    onChange={(
+                      event
+                    ) =>
+                      setBuildingForm(
+                        (
+                          current
+                        ) => ({
+                          ...current,
 
-              <div className={styles.formRow}>
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>Status</label>
-                  <select
-                    value={listingForm.status}
-                    onChange={(e) => setListingForm({...listingForm, status: e.target.value})}
-                    className={styles.select}
-                  >
-                    <option value="Ready">Ready</option>
-                    <option value="Off-Plan">Off-Plan</option>
-                  </select>
-                </div>
+                          placeId:
+                            event
+                              .target
+                              .value,
 
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>Area (Sq. Ft.) *</label>
-                  <input
-                    type="number"
-                    value={listingForm.area}
-                    onChange={(e) => setListingForm({...listingForm, area: e.target.value})}
-                    placeholder="e.g. 7200"
+                          areaId:
+                            "",
+                        })
+                      )
+                    }
                     required
-                    className={styles.input}
-                  />
+                    disabled={
+                      loadingPlaces
+                    }
+                    className={
+                      styles.select
+                    }
+                  >
+                    <option value="">
+                      {loadingPlaces
+                        ? "Loading places..."
+                        : "Select place"}
+                    </option>
+
+                    {places.map(
+                      (
+                        place
+                      ) => (
+                        <option
+                          key={
+                            place.placeId
+                          }
+                          value={
+                            place.placeId
+                          }
+                        >
+                          {
+                            place.placeName
+                          }
+                        </option>
+                      )
+                    )}
+                  </select>
+                </div>
+
+                <div
+                  className={
+                    styles.formGroup
+                  }
+                >
+                  <label
+                    className={
+                      styles.label
+                    }
+                  >
+                    Area *
+                  </label>
+
+                  <select
+                    value={
+                      buildingForm.areaId
+                    }
+                    onChange={(
+                      event
+                    ) =>
+                      setBuildingForm(
+                        (
+                          current
+                        ) => ({
+                          ...current,
+
+                          areaId:
+                            event
+                              .target
+                              .value,
+                        })
+                      )
+                    }
+                    required
+                    disabled={
+                      !buildingForm.placeId ||
+                      loadingAreas
+                    }
+                    className={
+                      styles.select
+                    }
+                  >
+                    <option value="">
+                      {!buildingForm.placeId
+                        ? "Select place first"
+                        : loadingAreas
+                        ? "Loading areas..."
+                        : "Select area"}
+                    </option>
+
+                    {areas.map(
+                      (
+                        area
+                      ) => (
+                        <option
+                          key={
+                            area.areaId
+                          }
+                          value={
+                            area.areaId
+                          }
+                        >
+                          {
+                            area.areaName
+                          }
+                        </option>
+                      )
+                    )}
+                  </select>
                 </div>
               </div>
 
-              <div className={styles.formRow}>
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>Bedrooms</label>
+              <div
+                className={
+                  styles.formRow
+                }
+              >
+                <div
+                  className={
+                    styles.formGroup
+                  }
+                >
+                  <label
+                    className={
+                      styles.label
+                    }
+                  >
+                    Building Area
+                    (Sq.Ft.)
+                  </label>
+
                   <input
                     type="number"
-                    value={listingForm.beds}
-                    onChange={(e) => setListingForm({...listingForm, beds: e.target.value})}
                     min="0"
-                    className={styles.input}
-                  />
-                </div>
+                    step="0.01"
+                    value={
+                      buildingForm.buildArea
+                    }
+                    onChange={(
+                      event
+                    ) =>
+                      setBuildingForm(
+                        (
+                          current
+                        ) => ({
+                          ...current,
 
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>Bathrooms</label>
-                  <input
-                    type="number"
-                    value={listingForm.baths}
-                    onChange={(e) => setListingForm({...listingForm, baths: e.target.value})}
-                    min="0"
-                    className={styles.input}
+                          buildArea:
+                            event
+                              .target
+                              .value,
+                        })
+                      )
+                    }
+                    placeholder="Enter Sq.Ft."
+                    className={
+                      styles.input
+                    }
                   />
                 </div>
               </div>
 
-              <div className={styles.formRow}>
-                <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
-                  <label className={styles.label}>Description</label>
-                  <textarea
-                    value={listingForm.description}
-                    onChange={(e) => setListingForm({...listingForm, description: e.target.value})}
-                    placeholder="Detailed overview about rooms, views, amenities, community specs..."
-                    className={styles.textarea}
-                  />
-                </div>
-              </div>
+              <div
+                className={
+                  styles.submitRow
+                }
+              >
+                {editingBuildingId && (
+                  <button
+                    type="button"
+                    onClick={
+                      resetBuildingForm
+                    }
+                    className={`${styles.btn} ${styles.btnSecondary}`}
+                  >
+                    Cancel
+                  </button>
+                )}
 
-              <div className={styles.formRow}>
-                <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
-                  <label className={styles.label}>Property Pictures</label>
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    onChange={(e) => setListingImages(e.target.files)}
-                    className={styles.input}
-                    style={{ border: "1px dashed #cbd5e1", padding: "14px" }}
-                  />
-                  <span style={{ fontSize: "11px", color: "#64748b", marginTop: "4px" }}>
-                    Hold Ctrl or Cmd to select multiple files.
-                  </span>
-                </div>
-              </div>
-
-              <div className={styles.submitRow}>
-                    <button type="submit" disabled className={`${styles.btn} ${styles.btnPrimary}`}>
-                      Managed in ERP
+                <button
+                  type="submit"
+                  disabled={
+                    savingBuilding
+                  }
+                  className={`${styles.btn} ${styles.btnPrimary}`}
+                >
+                  {savingBuilding
+                    ? editingBuildingId
+                      ? "Updating..."
+                      : "Saving..."
+                    : editingBuildingId
+                    ? "Update Building"
+                    : "Add Building"}
                 </button>
               </div>
             </form>
+
+            {/* =============================================
+                UPCOMING BUILDINGS TABLE
+            ============================================= */}
+
+            <div
+              className={
+                styles.tableCard
+              }
+              style={{
+                marginTop:
+                  "28px",
+              }}
+            >
+              <div
+                className={
+                  styles.tableHeader
+                }
+              >
+                Upcoming Buildings
+                (
+                {
+                  upcomingProjects.length
+                }
+                )
+              </div>
+
+              {loadingUpcoming ? (
+                <div
+                  className={
+                    styles.loading
+                  }
+                >
+                  Loading upcoming
+                  buildings...
+                </div>
+              ) : filteredUpcomingProjects.length ===
+                0 ? (
+                <div
+                  className={
+                    styles.loading
+                  }
+                >
+                  No upcoming
+                  buildings found.
+                </div>
+              ) : (
+                <div
+                  style={{
+                    width:
+                      "100%",
+
+                    overflowX:
+                      "auto",
+                  }}
+                >
+                  <table
+                    className={
+                      styles.upcomingTable
+                    }
+                  >
+                    <thead>
+                      <tr>
+                        <th>
+                          Building ID
+                        </th>
+
+                        <th>
+                          Building Name
+                        </th>
+
+                        <th>
+                          Place
+                        </th>
+
+                        <th>
+                          Area
+                        </th>
+
+                        <th>
+                          Sq.Ft.
+                        </th>
+
+                        <th>
+                          Status
+                        </th>
+
+                        <th>
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {filteredUpcomingProjects.map(
+                        (
+                          project
+                        ) => (
+                          <tr
+                            key={
+                              project.id
+                            }
+                          >
+                            <td>
+                              <strong>
+                                {
+                                  project.id
+                                }
+                              </strong>
+                            </td>
+
+                            <td>
+                              {
+                                project.title
+                              }
+                            </td>
+
+                            <td>
+                              {
+                                project.placeName ||
+                                "-"
+                              }
+                            </td>
+
+                            <td>
+                              {
+                                project.areaName ||
+                                "-"
+                              }
+                            </td>
+
+                            <td>
+                              {formatArea(
+                                project.buildArea
+                              )}
+                            </td>
+
+                            <td>
+                              <span
+                                className={`${styles.badge} ${styles.badgeErp}`}
+                              >
+                                Upcoming
+                              </span>
+                            </td>
+
+                            <td>
+                              <div
+                                style={{
+                                  display:
+                                    "flex",
+
+                                  alignItems:
+                                    "center",
+
+                                  gap:
+                                    "8px",
+
+                                  flexWrap:
+                                    "wrap",
+                                }}
+                              >
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleEditUpcomingProject(
+                                      project
+                                    )
+                                  }
+                                  className={`${styles.btn} ${styles.btnSecondary}`}
+                                >
+                                  Edit
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleDeleteUpcomingProject(
+                                      project.id
+                                    )
+                                  }
+                                  className={`${styles.btn} ${styles.btnDanger}`}
+                                >
+                                  Remove
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        )
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
-        {/* TAB 5: SYNC ENGINE */}
-        {activeTab === "sync" && userRole !== "Editor" && userRole !== "Viewer" && (
+        {/* =================================================
+            SYNC
+        ================================================= */}
+
+        {activeTab ===
+          "sync" && (
           <div>
-            <div className={styles.contentHeader}>
+            <div
+              className={
+                styles.contentHeader
+              }
+            >
               <div>
-                <h2>Sync Properties from ERP</h2>
-                <p>Fetch and update the latest property information from the approved ERP source.</p>
+                <h2>
+                  Sync Properties
+                  from ERP
+                </h2>
+
+                <p>
+                  Refresh the
+                  property listing
+                  data from the ERP
+                  database.
+                </p>
               </div>
             </div>
 
-            <div className={styles.welcomeBanner}>
-              <h3>ERP Data Integrations</h3>
-              <p>
-                Pressing the sync trigger updates the website with ERP-managed property details, including pricing, availability, features, locations, and images. Properties cannot be created or changed manually in this portal.
-              </p>
+            <div
+              className={
+                styles.welcomeBanner
+              }
+            >
+              <h3>
+                ERP Data
+                Integration
+              </h3>
 
               <button
-                onClick={handleSyncErp}
-                disabled={syncing}
+                type="button"
+                onClick={
+                  handleSyncErp
+                }
+                disabled={
+                  syncing
+                }
                 className={`${styles.btn} ${styles.btnPrimary}`}
-                style={{ padding: "14px 28px", marginTop: "12px", fontSize: "15px" }}
               >
-                {syncing ? "Merging Database Records..." : "🔄 Execute Web ERP Sync"}
+                {syncing
+                  ? "Synchronizing..."
+                  : "🔄 Execute ERP Sync"}
               </button>
             </div>
           </div>
         )}
 
-        {/* TAB 6: USERS MANAGEMENT (Only Super Admin) */}
-        {activeTab === "users" && userRole === "Super Admin" && (
+        {/* =================================================
+            USERS
+        ================================================= */}
+
+        {activeTab ===
+          "users" && (
           <div>
-            <div className={styles.contentHeader}>
+            <div
+              className={
+                styles.contentHeader
+              }
+            >
               <div>
-                <h2>Portal User Accounts</h2>
-                <p>Manage administrative profiles, access groups, and security verification types.</p>
+                <h2>
+                  Portal User
+                  Accounts
+                </h2>
+
+                <p>
+                  Administrative
+                  user management.
+                </p>
               </div>
             </div>
 
-            {/* Add User Form */}
-            <div className={styles.form} style={{ marginBottom: "32px" }}>
-              <h3 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "16px", color: "#0b1a30" }}>
-                Add New Staff Account
-              </h3>
-              <form onSubmit={handleCreateUserSubmit}>
-                <div className={styles.formRow}>
-                  <div className={styles.formGroup}>
-                    <label className={styles.label}>Username *</label>
-                    <input
-                      type="text"
-                      value={userForm.username}
-                      onChange={(e) => setUserForm({...userForm, username: e.target.value})}
-                      placeholder="e.g. jsmith"
-                      required
-                      className={styles.input}
-                    />
-                  </div>
-
-                  <div className={styles.formGroup}>
-                    <label className={styles.label}>Password *</label>
-                    <input
-                      type="password"
-                      value={userForm.password}
-                      onChange={(e) => setUserForm({...userForm, password: e.target.value})}
-                      placeholder="••••••••••••"
-                      required
-                      className={styles.input}
-                    />
-                  </div>
-                </div>
-
-                <div className={styles.formRow}>
-                  <div className={styles.formGroup}>
-                    <label className={styles.label}>Email Address *</label>
-                    <input
-                      type="email"
-                      value={userForm.email}
-                      onChange={(e) => setUserForm({...userForm, email: e.target.value})}
-                      placeholder="e.g. user@abdulwahedbinshaibproperty.com"
-                      required
-                      className={styles.input}
-                    />
-                  </div>
-
-                  <div className={styles.formGroup}>
-                    <label className={styles.label}>Access Permission *</label>
-                    <select
-                      value={userForm.role}
-                      onChange={(e) => setUserForm({...userForm, role: e.target.value})}
-                      className={styles.select}
-                    >
-                      <option value="Super Admin">Super Admin (Full Access)</option>
-                      <option value="Manager">Manager (Edit properties & projects)</option>
-                      <option value="Editor">Editor (Edit properties only)</option>
-                      <option value="Viewer">Viewer (View-only dashboard)</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className={styles.formRow}>
-                  <div className={styles.formGroup}>
-                    <label className={styles.label}>Security Verification Type (MFA) *</label>
-                    <select
-                      value={userForm.mfaType}
-                      onChange={(e) => setUserForm({...userForm, mfaType: e.target.value})}
-                      className={styles.select}
-                    >
-                      <option value="Email OTP">Email OTP Code (6-Digit)</option>
-                      <option value="Google Authenticator">Google Authenticator App (TOTP)</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className={styles.submitRow}>
-                  <button type="submit" disabled={savingUser} className={`${styles.btn} ${styles.btnPrimary}`}>
-                    {savingUser ? "Adding Account..." : "Create User Account"}
-                  </button>
-                </div>
-              </form>
-            </div>
-
-            {/* Users list table */}
             {loadingUsers ? (
-              <div className={styles.loading}>Loading system accounts...</div>
+              <div
+                className={
+                  styles.loading
+                }
+              >
+                Loading users...
+              </div>
             ) : (
-              <div className={styles.tableCard}>
-                <div className={styles.tableHeader}>Active System Staff Profiles</div>
+              <div
+                className={
+                  styles.tableCard
+                }
+              >
+                <div
+                  className={
+                    styles.tableHeader
+                  }
+                >
+                  Portal Users
+                </div>
 
-                {portalUsers.length === 0 ? (
-                  <div className={styles.loading}>No users found.</div>
+                {portalUsers.length ===
+                0 ? (
+                  <div
+                    className={
+                      styles.loading
+                    }
+                  >
+                    No users found.
+                  </div>
                 ) : (
-                  portalUsers.map((user) => (
-                    <div key={user.id} className={styles.row} style={{ gridTemplateColumns: "1.5fr 2fr 1.2fr 1.8fr 1fr" }}>
-                      <div>
-                        <div className={styles.propTitle}>👤 {user.username}</div>
-                        <div className={styles.propLoc}>Registered: {new Date(user.createdAt).toLocaleDateString()}</div>
-                      </div>
+                 filteredPortalUsers.map(
+                    (
+                      user
+                    ) => (
+                      <div
+                        key={
+                          user.id
+                        }
+                       className={
+  styles.listingRow
+}
+                      >
+                        <div>
+                          <strong>
+                            {
+                              user.username
+                            }
+                          </strong>
 
-                      <div style={{ fontSize: "14px", color: "#475569" }}>
-                        📧 {user.email}
-                      </div>
-
-                      <div>
-                        <span
-                          className={styles.badge}
-                          style={{
-                            backgroundColor:
-                              user.role === "Super Admin"
-                                ? "#fee2e2"
-                                : user.role === "Manager"
-                                ? "#fef3c7"
-                                : user.role === "Editor"
-                                ? "#e0f2fe"
-                                : "#f1f5f9",
-                            color:
-                              user.role === "Super Admin"
-                                ? "#991b1b"
-                                : user.role === "Manager"
-                                ? "#92400e"
-                                : user.role === "Editor"
-                                ? "#075985"
-                                : "#475569",
-                          }}
-                        >
-                          {user.role}
-                        </span>
-                      </div>
-
-                      <div>
-                        <span className={`${styles.badge} ${styles.badgeErp}`}>
-                          🔒 {user.mfaType}
-                        </span>
-                        
-                        {user.mfaType === "Google Authenticator" && user.otpSecret && (
-                          <button
-                            type="button"
-                            onClick={() => openQrModal(user.username, user.otpSecret || "")}
-                            className={styles.uploadLabel}
-                            style={{ marginLeft: "10px", padding: "2px 6px", fontSize: "10px" }}
+                          <div
+                            className={
+                              styles.propLoc
+                            }
                           >
-                            Scan QR Code
-                          </button>
-                        )}
-                      </div>
+                            {
+                              user.email
+                            }
+                          </div>
+                        </div>
 
-                      <div className={styles.actionCell} style={{ alignItems: "flex-end" }}>
-                        {user.username !== userUsername ? (
-                          <button onClick={() => handleDeleteUser(user.id, user.username)} className={`${styles.btn} ${styles.btnDanger}`}>
-                            Delete
-                          </button>
-                        ) : (
-                          <span style={{ fontSize: "12px", color: "#64748b", fontStyle: "italic" }}>You</span>
-                        )}
+                        <div>
+                          {
+                            user.role
+                          }
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    )
+                  )
                 )}
               </div>
             )}
           </div>
         )}
 
-        {activeTab === "nationality-rules" && userRole === "Super Admin" && <div>
-          <div className={styles.contentHeader}><div><h2>Nationality Auto-Rejection Configuration</h2><p>Active rules automatically decline matching booking and enquiry submissions. Deactivated rules are kept for reference and do not block submissions.</p></div></div>
-          <div className={styles.welcomeBanner}>
-            <h3>Manage eligibility rules</h3>
-            <form onSubmit={saveNationalityRule} style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginTop: "16px" }}>
-              <select className={styles.input} style={{ maxWidth: "360px" }} value={nationalityInput} onChange={(event) => setNationalityInput(event.target.value)} aria-label="Nationality">
-                <option value="">Select a country / nationality</option>
-                {nationalityCodes.map((code) => { const name = countryNames.of(code) || code; return <option key={code} value={name}>{name}</option>; })}
-              </select>
-              <button type="submit" disabled={savingNationalityRule} className={`${styles.btn} ${styles.btnPrimary}`}>{savingNationalityRule ? "Saving..." : editingRuleId ? "Update nationality" : "Add nationality"}</button>
-              {editingRuleId && <button type="button" className={`${styles.btn} ${styles.btnSecondary}`} onClick={() => { setEditingRuleId(null); setNationalityInput(""); }}>Cancel</button>}
-            </form>
-          </div>
-          <div className={styles.tableCard} style={{ marginTop: "20px" }}>
-            <div className={styles.tableHeader}>Configured nationalities ({nationalityRules.length})</div>
-            {nationalityRules.length === 0 ? <div className={styles.loading}>No auto-rejection rules are configured. All nationalities are currently allowed.</div> : nationalityRules.map((rule) => <div key={rule.id} className={styles.row} style={{ gridTemplateColumns: "1.8fr 1fr 1.5fr" }}>
-              <div><div className={styles.propTitle}>{rule.nationality}</div><div className={styles.propLoc}>Applied automatically to new bookings and enquiries</div></div>
-              <div><span className={`${styles.badge} ${rule.isActive ? styles.badgeErp : styles.badgeManual}`}>{rule.isActive ? "Active" : "Inactive"}</span></div>
-              <div className={styles.actionCell} style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                <button className={`${styles.btn} ${styles.btnSecondary}`} onClick={() => { setEditingRuleId(rule.id); setNationalityInput(rule.nationality); }}>Edit</button>
-                <button className={`${styles.btn} ${rule.isActive ? styles.btnDanger : styles.btnPrimary}`} onClick={() => updateNationalityRule(rule.id, { isActive: !rule.isActive })}>{rule.isActive ? "Deactivate" : "Activate"}</button>
-                <button className={`${styles.btn} ${styles.btnDanger}`} onClick={() => removeNationalityRule(rule.id)}>Remove</button>
-              </div>
-            </div>)}
-          </div>
-        </div>}
+        {/* =================================================
+            BOOKINGS
+        ================================================= */}
+{activeTab === "bookings" && (
+  <div>
+    <div className={styles.contentHeader}>
+      <div>
+        <h2>
+          Booking Requests ({bookings.length})
+        </h2>
 
-        {activeTab === "bookings" && <div>
-          <div className={styles.contentHeader}><div><h2>Booking Requests ({bookings.length})</h2><p>Review customer details, passport documents, and availability status.</p></div></div>
-          <div className={styles.bookingGrid}>{bookings.length === 0 ? <p className={styles.loading}>No booking requests yet.</p> : bookings.map((booking) => <article key={booking.id} className={styles.bookingCard}>
-            <div className={styles.bookingCardTop}><span className={styles.bookingRef}>Booking #{booking.id}</span><span className={`${styles.bookingStatus} ${booking.status === "Confirmed" ? styles.bookingConfirmed : booking.status === "Declined" ? styles.bookingDeclined : ""}`}>{booking.status}</span></div>
-            <h3>{booking.propertyName}</h3><div className={styles.bookingCustomer}><div className={styles.customerAvatar}>{booking.name.slice(0, 1).toUpperCase()}</div><div><strong>{booking.name}</strong><span>{booking.nationality}</span></div></div>
-            <div className={styles.bookingMeta}><span>✉ {booking.email}</span><span>☎ {booking.phone}</span></div>
-            <div className={styles.bookingActions}><button className={`${styles.btn} ${styles.btnSecondary}`} onClick={() => setSelectedBooking(booking)}>View full details</button>{booking.status === "Pending" && <><button className={`${styles.btn} ${styles.btnPrimary}`} onClick={() => updateBookingStatus(booking.id, "Confirmed")}>Confirm</button><button className={`${styles.btn} ${styles.btnDanger}`} onClick={() => updateBookingStatus(booking.id, "Declined")}>Decline</button></>}</div>
-          </article>)}</div>
-        </div>}
-      </main>
+        <p>
+          Review customer details, passport documents,
+          and booking status.
+        </p>
+      </div>
+    </div>
 
-      {selectedBooking && <div className={styles.bookingModalBackdrop}><div className={styles.bookingDetailModal}>
-        <button className={styles.closeBookingModal} onClick={() => setSelectedBooking(null)} aria-label="Close booking details">×</button>
-        <div className={styles.bookingDetailHeader}><span>Booking #{selectedBooking.id}</span><h2>{selectedBooking.propertyName}</h2><p>Submitted {new Date(selectedBooking.createdAt).toLocaleString()}</p></div>
-        <div className={styles.detailGrid}><div><small>Customer</small><strong>{selectedBooking.name}</strong></div><div><small>Nationality</small><strong>{selectedBooking.nationality}</strong></div><div><small>Email</small><strong>{selectedBooking.email}</strong></div><div><small>Phone</small><strong>{selectedBooking.phone}</strong></div></div>
-        <div className={styles.passportPanel}><div><small>Passport document</small><strong>{selectedBooking.passportPath ? "Uploaded securely" : "Not available"}</strong></div>{selectedBooking.passportPath && <a href={`/api/admin/bookings/${selectedBooking.id}/passport`} target="_blank" rel="noreferrer" className={`${styles.btn} ${styles.btnPrimary}`}>View passport</a>}</div>
-        {selectedBooking.passportPath && <iframe title="Customer passport document" src={`/api/admin/bookings/${selectedBooking.id}/passport`} className={styles.passportPreview} />}
-        {selectedBooking.status === "Pending" && <div className={styles.modalBookingActions}><button className={`${styles.btn} ${styles.btnPrimary}`} onClick={() => updateBookingStatus(selectedBooking.id, "Confirmed")}>Confirm booking</button><button className={`${styles.btn} ${styles.btnDanger}`} onClick={() => updateBookingStatus(selectedBooking.id, "Declined")}>Decline booking</button></div>}
-      </div></div>}
+    <div className={styles.tableCard}>
+      <div className={styles.tableHeader}>
+        Web Booking Requests
+      </div>
 
-      {/* GOOGLE AUTHENTICATOR QR CONFIG MODAL */}
-      {showQrModal && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(11,26,48,0.7)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
-          <div className={styles.loginCard} style={{ background: "white", padding: "30px", maxWidth: "460px" }}>
-            <h3 style={{ fontSize: "18px", fontWeight: "800", color: "#0b1a30", marginBottom: "8px" }}>
-              2FA Authenticator Setup
-            </h3>
-            <p style={{ fontSize: "13px", color: "#64748b", marginBottom: "20px" }}>
-              Scan the QR code below using your Google Authenticator or 2FA app to register <strong>{qrModalUsername}</strong>.
-            </p>
+      {filteredBookings.length === 0 ? (
+        <div className={styles.loading}>
+          No booking requests found.
+        </div>
+      ) : (
+      <div className={styles.bookingTableScroll}>
+  <table className={styles.bookingTable}>
+    <thead>
+      <tr>
+        <th>Booking ID</th>
+        <th>Property</th>
+        <th>Unit</th>
+        <th>Customer</th>
+        <th>Nationality</th>
+        <th>Contact</th>
+        <th>Passport</th>
+        <th>Submitted</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
 
-            <div style={{ background: "#f8fafc", padding: "16px", borderRadius: "12px", display: "inline-block", border: "1px solid #e2e8f0", marginBottom: "20px" }}>
-              {/* Dynamic Google API QR generator string */}
-              <img
-                src={`https://chart.googleapis.com/chart?chs=200x200&chld=M|0&cht=qr&chl=${encodeURIComponent(`otpauth://totp/BinShabib:${qrModalUsername}?secret=${qrModalSecret}&issuer=BinShabib`)}`}
-                alt="Authenticator QR Code"
-                style={{ width: "200px", height: "200px", display: "block" }}
-              />
-            </div>
+            <tbody>
+              {filteredBookings.map((booking) => (
+                <tr key={booking.id}>
+                  <td>
+                    <strong>
+                      #{booking.id}
+                    </strong>
+                  </td>
 
-            <div style={{ textAlign: "left", marginBottom: "24px" }}>
-              <div style={{ fontSize: "11px", fontWeight: "700", color: "#64748b", textTransform: "uppercase" }}>Manual Key Entry</div>
-              <div style={{ background: "#f1f5f9", padding: "8px 12px", borderRadius: "6px", fontSize: "14px", fontWeight: "700", color: "#0f4c81", fontFamily: "monospace", marginTop: "4px", textAlign: "center" }}>
-                {qrModalSecret}
-              </div>
-            </div>
+                  <td>
+                    <div className={styles.tablePrimaryText}>
+                      {booking.propertyName}
+                    </div>
 
-            <button
-              onClick={() => { setShowQrModal(false); setQrModalSecret(""); setQrModalUsername(""); }}
-              className={`${styles.btn} ${styles.btnPrimary}`}
-              style={{ width: "100%", padding: "12px" }}
-            >
-              Done & Save
-            </button>
-          </div>
+                    {booking.propertyId && (
+                      <div className={styles.tableSecondaryText}>
+                        {booking.propertyId}
+                      </div>
+                    )}
+                  </td>
+
+                  <td>
+                    {booking.unitReference || booking.unitType ? (
+                      <>
+                        {booking.unitReference && (
+                          <div className={styles.tablePrimaryText}>
+                            {booking.unitReference}
+                          </div>
+                        )}
+
+                        {booking.unitType && (
+                          <div className={styles.tableSecondaryText}>
+                            {booking.unitType}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      "-"
+                    )}
+                  </td>
+
+                  <td>
+                    <div className={styles.tablePrimaryText}>
+                      {booking.name}
+                    </div>
+                  </td>
+
+                  <td>
+                    {booking.nationality || "-"}
+                  </td>
+
+                  <td>
+                    <div className={styles.tablePrimaryText}>
+                      {booking.email}
+                    </div>
+
+                    <div className={styles.tableSecondaryText}>
+                      {booking.phone}
+                    </div>
+                  </td>
+
+                  <td>
+                    {booking.hasPassport ? (
+                      <a
+                        href={`${API_URL}/api/admin/bookings/${booking.id}/passport`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={styles.passportLink}
+                      >
+                        View Passport
+                      </a>
+                    ) : (
+                      <span className={styles.noPassport}>
+                        Not Uploaded
+                      </span>
+                    )}
+                  </td>
+
+                  <td>
+                    {new Date(
+                      booking.createdAt
+                    ).toLocaleDateString("en-AE")}
+                  </td>
+
+                  <td>
+                    <span
+                      className={`${styles.bookingStatus} ${
+                        booking.status === "Confirmed"
+                          ? styles.bookingConfirmed
+                          : booking.status === "Declined"
+                          ? styles.bookingDeclined
+                          : styles.bookingPending
+                      }`}
+                    >
+                      {booking.status}
+                    </span>
+                  </td>
+
+                  <td>
+                    <div className={styles.bookingTableActions}>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSelectedBooking(booking)
+                        }
+                        className={`${styles.btn} ${styles.btnSecondary}`}
+                      >
+                        View
+                      </button>
+
+                      {booking.status === "Pending" && (
+                        <>
+                          <button
+                            type="button"
+                           onClick={() =>
+  requestBookingConfirmation(
+    booking.id
+  )
+}
+                            className={`${styles.btn} ${styles.btnPrimary}`}
+                          >
+                            Confirm
+                          </button>
+
+                          <button
+                            type="button"
+                          onClick={() =>
+  requestBookingDecline(
+    booking.id
+  )
+}
+                            className={`${styles.btn} ${styles.btnDanger}`}
+                          >
+                            Decline
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
+    </div>
+  </div>
+)}
 
+        {/* =================================================
+            NATIONALITY
+        ================================================= */}
+
+{activeTab === "nationality-rules" && (
+  <div>
+    {/* =============================================
+        HEADER
+    ============================================= */}
+
+    <div className={styles.contentHeader}>
+      <div>
+        <h2>
+          Nationality Auto-Rejection
+        </h2>
+
+        <p>
+          Configure nationalities that should
+          automatically decline new web bookings.
+        </p>
+      </div>
+    </div>
+
+    {/* =============================================
+        ADD AUTO-REJECT NATIONALITY
+    ============================================= */}
+
+    <div
+      className={styles.form}
+      style={{
+        marginBottom: "24px",
+      }}
+    >
+      <h3
+        style={{
+          margin: "0 0 16px",
+          color: "#0b1a30",
+          fontSize: "16px",
+          fontWeight: 700,
+        }}
+      >
+        Add Auto-Rejection Nationality
+      </h3>
+
+      <form
+        onSubmit={
+          handleAddNationalityRule
+        }
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-end",
+            gap: "12px",
+            flexWrap: "wrap",
+          }}
+        >
+          <div
+            className={
+              styles.formGroup
+            }
+            style={{
+              flex: "1 1 420px",
+            }}
+          >
+            <label
+              className={
+                styles.label
+              }
+            >
+              Nationality *
+            </label>
+
+            <select
+              className={
+                styles.select
+              }
+              value={
+                selectedNationalityId
+              }
+              onChange={(event) =>
+                setSelectedNationalityId(
+                  event.target.value
+                )
+              }
+              required
+            >
+              <option value="">
+                Select nationality
+              </option>
+
+              {availableNationalities.map(
+                (item) => (
+                  <option
+                    key={item.id}
+                    value={item.id}
+                  >
+                    {item.nationality}
+                    {item.country
+                      ? ` - ${item.country}`
+                      : ""}
+                  </option>
+                )
+              )}
+            </select>
+          </div>
+
+          <button
+            type="submit"
+            disabled={
+              savingNationalityRule ||
+              !selectedNationalityId
+            }
+            className={`${styles.btn} ${styles.btnPrimary}`}
+            style={{
+              minHeight: "39px",
+            }}
+          >
+            {savingNationalityRule
+              ? "Adding..."
+              : "Add Auto Reject"}
+          </button>
+        </div>
+
+        {availableNationalities.length ===
+          0 && (
+          <div
+            style={{
+              marginTop: "10px",
+              color: "#64748b",
+              fontSize: "12px",
+            }}
+          >
+            No additional nationalities are
+            available for auto rejection.
+          </div>
+        )}
+      </form>
+    </div>
+
+    {/* =============================================
+        CURRENT AUTO-REJECT RULES
+    ============================================= */}
+
+    <div className={styles.tableCard}>
+      <div className={styles.tableHeader}>
+        Auto-Rejection Nationalities (
+        {filteredNationalityRules.length})
+      </div>
+
+      {filteredNationalityRules.length ===
+      0 ? (
+        <div className={styles.loading}>
+          No auto-rejection nationalities
+          configured.
+        </div>
+      ) : (
+        <div
+          className={
+            styles.nationalityTableScroll
+          }
+        >
+          <table
+            className={
+              styles.nationalityTable
+            }
+          >
+            <thead>
+              <tr>
+                <th>Nationality ID</th>
+                <th>Nationality</th>
+                <th>Country</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {filteredNationalityRules.map(
+                (rule) => (
+                  <tr key={rule.id}>
+                    <td>
+                      <strong>
+                        {rule.id}
+                      </strong>
+                    </td>
+
+                    <td>
+                      {rule.nationality}
+                    </td>
+
+                    <td>
+                      {rule.country ||
+                        "-"}
+                    </td>
+
+                    <td>
+                      <span
+                        className={`${styles.nationalityRuleStatus} ${styles.nationalityRejected}`}
+                      >
+                        Auto Reject
+                      </span>
+                    </td>
+
+                    <td>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleRemoveNationalityRule(
+                            rule
+                          )
+                        }
+                        className={`${styles.btn} ${styles.btnDanger}`}
+                      >
+                        Remove
+                      </button>
+                    </td>
+                  </tr>
+                )
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  </div>
+)}
+      </main>
+
+      {/* ===================================================
+          BOOKING DETAILS
+      =================================================== */}
+
+ {selectedBooking && (
+  <div
+    className={
+      styles.bookingModalBackdrop
+    }
+  >
+    <div
+      className={
+        styles.bookingDetailModal
+      }
+    >
+      <button
+        type="button"
+        className={
+          styles.closeBookingModal
+        }
+        onClick={() =>
+          setSelectedBooking(
+            null
+          )
+        }
+        aria-label="Close"
+      >
+        ×
+      </button>
+
+      <div
+        className={
+          styles.bookingDetailHeader
+        }
+      >
+        <span>
+          Booking #
+          {
+            selectedBooking.id
+          }
+        </span>
+
+        <h2>
+          {
+            selectedBooking.propertyName
+          }
+        </h2>
+
+        <p>
+          Submitted{" "}
+          {new Date(
+            selectedBooking.createdAt
+          ).toLocaleString(
+            "en-AE"
+          )}
+        </p>
+      </div>
+
+      {/* STATUS */}
+
+      <div
+        style={{
+          marginTop:
+            "10px",
+        }}
+      >
+        <span
+          className={`${styles.bookingStatus} ${
+            selectedBooking.status ===
+            "Confirmed"
+              ? styles.bookingConfirmed
+              : selectedBooking.status ===
+                "Declined"
+              ? styles.bookingDeclined
+              : styles.bookingPending
+          }`}
+        >
+          {
+            selectedBooking.status
+          }
+        </span>
+      </div>
+
+      {/* CUSTOMER DETAILS */}
+
+      <div
+        className={
+          styles.detailGrid
+        }
+      >
+        <div>
+          <small>
+            Customer Name
+          </small>
+
+          <strong>
+            {
+              selectedBooking.name
+            }
+          </strong>
+        </div>
+
+        <div>
+          <small>
+            Nationality
+          </small>
+
+          <strong>
+            {
+              selectedBooking.nationality
+            }
+          </strong>
+        </div>
+
+        <div>
+          <small>
+            Email
+          </small>
+
+          <strong>
+            {
+              selectedBooking.email
+            }
+          </strong>
+        </div>
+
+        <div>
+          <small>
+            Phone
+          </small>
+
+          <strong>
+            {
+              selectedBooking.phone
+            }
+          </strong>
+        </div>
+
+        <div>
+          <small>
+            Property ID
+          </small>
+
+          <strong>
+            {
+              selectedBooking.propertyId
+            }
+          </strong>
+        </div>
+
+        {selectedBooking.unitReference && (
+          <div>
+            <small>
+              Unit Reference
+            </small>
+
+            <strong>
+              {
+                selectedBooking.unitReference
+              }
+            </strong>
+          </div>
+        )}
+
+        {selectedBooking.unitType && (
+          <div>
+            <small>
+              Unit Type
+            </small>
+
+            <strong>
+              {
+                selectedBooking.unitType
+              }
+            </strong>
+          </div>
+        )}
+      </div>
+
+      {/* PASSPORT */}
+
+      <div
+        className={
+          styles.passportPanel
+        }
+      >
+        <div>
+          <small>
+            Passport Document
+          </small>
+
+          <strong>
+            {selectedBooking.hasPassport
+              ? selectedBooking.passportFileName ||
+                "Uploaded securely"
+              : "Not available"}
+          </strong>
+        </div>
+
+        {selectedBooking.hasPassport && (
+          <a
+            href={`${API_URL}/api/admin/bookings/${selectedBooking.id}/passport`}
+            target="_blank"
+            rel="noreferrer"
+            className={`${styles.btn} ${styles.btnPrimary}`}
+          >
+            View Passport
+          </a>
+        )}
+      </div>
+
+      {/* PASSPORT PREVIEW */}
+
+      {selectedBooking.hasPassport &&
+        selectedBooking.passportMimeType?.startsWith(
+          "image/"
+        ) && (
+          <img
+            src={`${API_URL}/api/admin/bookings/${selectedBooking.id}/passport`}
+            alt="Customer passport"
+            className={
+              styles.passportImagePreview
+            }
+          />
+        )}
+
+      {selectedBooking.hasPassport &&
+        selectedBooking.passportMimeType ===
+          "application/pdf" && (
+          <iframe
+            title="Passport document"
+            src={`${API_URL}/api/admin/bookings/${selectedBooking.id}/passport`}
+            className={
+              styles.passportPreview
+            }
+          />
+        )}
+
+      {/* DECLINE REASON */}
+
+      {selectedBooking.status ===
+        "Declined" &&
+        selectedBooking.declineReason && (
+          <div
+            className={
+              styles.declineReasonBox
+            }
+          >
+            <small>
+              Decline Reason
+            </small>
+
+            <p>
+              {
+                selectedBooking.declineReason
+              }
+            </p>
+          </div>
+        )}
+
+      {/* PENDING ACTIONS */}
+
+      {selectedBooking.status ===
+        "Pending" && (
+        <div
+          className={
+            styles.modalBookingActions
+          }
+        >
+          <button
+            type="button"
+            onClick={() =>
+  requestBookingConfirmation(
+    selectedBooking.id
+  )
+}
+            className={`${styles.btn} ${styles.btnPrimary}`}
+          >
+            ✓ Confirm Booking
+          </button>
+
+          <button
+            type="button"
+          onClick={() =>
+  requestBookingDecline(
+    selectedBooking.id
+  )
+}
+            className={`${styles.btn} ${styles.btnDanger}`}
+          >
+            Decline Booking
+          </button>
+        </div>
+      )}
+    </div>
+  </div>
+)}
+
+<CommonAlert
+  open={
+    alertConfig.open
+  }
+  type={
+    alertConfig.type
+  }
+  title={
+    alertConfig.title
+  }
+  message={
+    alertConfig.message
+  }
+  confirmText={
+    alertConfig.confirmText
+  }
+  showCancel={
+    alertConfig.showCancel
+  }
+  inputRequired={
+    alertConfig.inputRequired
+  }
+  inputLabel={
+    alertConfig.inputLabel
+  }
+  inputPlaceholder={
+    alertConfig.inputPlaceholder
+  }
+  inputValue={
+    alertConfig.inputValue
+  }
+  loading={
+    alertConfig.loading
+  }
+onInputChange={(value) => {
+  setDeclineReason(value);
+
+  setAlertConfig(
+    (current) => ({
+      ...current,
+      inputValue: value,
+    })
+  );
+}}
+onConfirm={() => {
+  if (
+    decliningBookingId !==
+      null &&
+    alertConfig.inputRequired
+  ) {
+    submitBookingDecline();
+
+    return;
+  }
+
+  alertConfig.onConfirm?.();
+}}
+  onCancel={
+    closeAlert
+  }
+/>
     </div>
   );
 }
