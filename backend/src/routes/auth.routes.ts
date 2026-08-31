@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { checkAuth, login, logout, verifyOtp } from "../controllers/auth.controller";
-import { requireAdmin } from "../middleware/auth";
+
 
 const router = Router();
 router.post("/login", login);

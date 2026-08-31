@@ -299,7 +299,27 @@ export async function findAllProperties(
 
         BPT.availableTypes,
 
+(
+    SELECT TOP 1
+        BI.imagePath
 
+    FROM dbo.build_images BI
+
+    WHERE
+        LTRIM(RTRIM(BI.buildingId))
+        =
+        LTRIM(RTRIM(B.build_id))
+
+        AND ISNULL(
+            BI.isActive,
+            1
+        ) = 1
+
+    ORDER BY
+        BI.isPrimary DESC,
+        BI.displayOrder ASC,
+        BI.imageId ASC
+) AS primaryImagePath,
         CASE
 
             WHEN COUNT(

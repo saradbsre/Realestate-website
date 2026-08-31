@@ -35,6 +35,12 @@ export interface Property {
 
   webDisplayOrder:
   number | null;
+
+  primaryImagePath?:
+  string | null;
+
+primaryImageUrl?:
+  string | null;
 }
 
 
@@ -183,6 +189,12 @@ interface BackendProperty {
   vacantUnits?: number;
 
   referenceNo?: string;
+
+  primaryImagePath?:
+  string | null;
+
+primaryImageUrl?:
+  string | null;
 }
 
 /* =========================================================
@@ -443,14 +455,16 @@ function normalizeProperty(
       ),
 
     title:
-      property.title || "",
+      property.title ||
+      "",
 
     description:
       "",
 
     price:
       Number(
-        property.price || 0
+        property.price ||
+          0
       ),
 
     maxPrice:
@@ -461,7 +475,8 @@ function normalizeProperty(
       ),
 
     location:
-      property.location || "",
+      property.location ||
+      "",
 
     type:
       formatPropertyType(
@@ -490,7 +505,8 @@ function normalizeProperty(
 
     area:
       Number(
-        property.area || 0
+        property.area ||
+          0
       ),
 
     maxArea:
@@ -514,6 +530,18 @@ function normalizeProperty(
       ),
 
     webDisplayOrder:
+      null,
+
+    /* ========================================
+       CLOUDFLARE BUILDING IMAGE
+    ======================================== */
+
+    primaryImagePath:
+      property.primaryImagePath ??
+      null,
+
+    primaryImageUrl:
+      property.primaryImageUrl ??
       null,
   };
 }

@@ -1,10 +1,11 @@
 import type {
   Request,
+  NextFunction,
   Response,
 } from "express";
 
 import {
-  findAllWebBookings,
+  findAllWebRequests,
   findBookingPassport,
   findWebBookingById,
   updateWebBookingStatus,
@@ -14,32 +15,46 @@ import {
    GET BOOKINGS
 ========================================================= */
 
-export async function getAdminBookings(
-  _req: Request,
-  res: Response
+export async function getWebRequests(
+  req: Request,
+  res: Response,
+  next: NextFunction
 ) {
   try {
-    const bookings =
-      await findAllWebBookings();
+    const rawType =
+      String(
+        req.query.requestType ||
+          "BOOKING"
+      )
+        .trim()
+        .toUpperCase();
+
+    if (
+      rawType !== "BOOKING" &&
+      rawType !== "ENQUIRY"
+    ) {
+      return res
+        .status(400)
+        .json({
+          success: false,
+
+          error:
+            "Invalid request type.",
+        });
+    }
+
+    const data =
+      await findAllWebRequests(
+        rawType
+      );
 
     return res.json({
       success: true,
-      data: bookings,
-    });
-  } catch (error: any) {
-    console.error(
-      "Get admin bookings failed:",
-      error
-    );
 
-    return res
-      .status(500)
-      .json({
-        success: false,
-        error:
-          error?.message ||
-          "Unable to load bookings.",
-      });
+      data,
+    });
+  } catch (error) {
+    return next(error);
   }
 }
 

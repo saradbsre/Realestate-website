@@ -40,7 +40,10 @@ export default function FeaturedListings({ properties }: FeaturedListingsProps) 
   //          if (response.ok) setBookingSent(true); 
   //          else setBookingError((await response.json()).error || "Unable to send booking form."); };
 
-
+console.log(
+  "FEATURED PROPERTY:",
+  properties[0]
+);
 
            function compactAvailableTypes(value: string) {
   const list = value
@@ -69,26 +72,10 @@ export default function FeaturedListings({ properties }: FeaturedListingsProps) 
           </div>
         ) : (
           properties.map((prop) => {
-  let imagesList: string[] = [];
-
-  try {
-    imagesList = JSON.parse(prop.images || "[]");
-  } catch {}
-
-  const isTwinTower =
-    prop.title
-      ?.toUpperCase()
-      .includes(
-        "A.W. BIN SHABIB TWIN TOWERS"
-      );
-
+  
   const propertyImage =
-    isTwinTower
-      ? "/Twin-Tower.jpg"
-      : imagesList.length > 0
-        ? imagesList[0]
-        : null;
-
+        prop.primaryImageUrl ||
+        null;
   return (
               <Link href={`/property?id=${encodeURIComponent(
   prop.id

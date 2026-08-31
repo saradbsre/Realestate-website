@@ -8,13 +8,24 @@ import {
    GET ALL WEB BOOKINGS
 ========================================================= */
 
-export async function findAllWebBookings() {
+export async function findAllWebRequests(
+  requestType:
+    | "BOOKING"
+    | "ENQUIRY"
+) {
   const pool =
     await getBinShabibEstateNet();
 
   const result =
     await pool
       .request()
+
+      .input(
+        "RequestType",
+        sql.NVarChar(20),
+        requestType
+      )
+
       .query(`
         SELECT
             WB.BookingId AS id,
@@ -47,20 +58,32 @@ export async function findAllWebBookings() {
                 AS passportFileSize,
 
             CASE
-                WHEN WB.PassportFile IS NOT NULL
-                THEN CAST(1 AS BIT)
-                ELSE CAST(0 AS BIT)
-            END AS hasPassport,
+                WHEN WB.PassportFile
+                    IS NOT NULL
+                THEN CAST(
+                    1 AS BIT
+                )
 
-            WB.Status AS status,
+                ELSE CAST(
+                    0 AS BIT
+                )
+            END
+                AS hasPassport,
+
+            WB.Status
+                AS status,
 
             ISNULL(
                 WB.IsAutoRejected,
                 0
-            ) AS isAutoRejected,
+            )
+                AS isAutoRejected,
 
             WB.DeclineReason
                 AS declineReason,
+
+            WB.RequestType
+                AS requestType,
 
             WB.CreatedAt
                 AS createdAt,
@@ -84,8 +107,15 @@ export async function findAllWebBookings() {
             )
 
         WHERE
-            WB.RequestType =
-                'BOOKING'
+            UPPER(
+                LTRIM(
+                    RTRIM(
+                        WB.RequestType
+                    )
+                )
+            )
+            =
+            @RequestType
 
         ORDER BY
             WB.CreatedAt DESC,
@@ -164,11 +194,14 @@ export async function findWebBookingById(
 
             WB.DeclineReason
                 AS declineReason,
+                    WB.RequestType
+    AS requestType,
+
 
             WB.CreatedAt AS createdAt,
 
             WB.UpdatedAt AS updatedAt
-
+        
         FROM dbo.WebBookings WB
 
         LEFT JOIN dbo.nation N
@@ -181,7 +214,9 @@ export async function findWebBookingById(
                 @BookingId
 
             AND WB.RequestType =
-                'BOOKING';
+                  @BookingId;
+
+                  
       `);
 
   return (

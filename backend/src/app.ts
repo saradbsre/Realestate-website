@@ -15,6 +15,8 @@ import upcomingProjectRoutes
   from "./routes/adminBooking.routes";
 import adminNationalityRoutes from "./routes/adminNationality.routes";
 import adminPropertyRoutes from "./routes/adminProperty.routes";
+import unitImageRoutes from "./routes/unitImage.routes";
+import buildImageRoutes from "./routes/buildImage.routes";
 const app = express();
 
 /* =========================================================
@@ -167,6 +169,18 @@ app.use(
 app.use(
   "/api/admin/properties",
   adminPropertyRoutes
+);
+
+
+
+app.use(
+  "/api/admin/unit-images",
+  unitImageRoutes
+);
+
+app.use(
+  "/api/admin/build-images",
+  buildImageRoutes
 );
 /* =========================================================
    404

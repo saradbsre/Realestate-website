@@ -39,25 +39,27 @@ import {
 } from "@/lib/propertyApi";
 
 import styles from "./property.module.css";
-
+const API_URL =
+  process.env.API_URL ||
+  "http://localhost:5000";
 /* =========================================================
    BUILDING IMAGES
 ========================================================= */
+interface PropertyImage {
+  imageId: number;
 
-const BUILDING_IMAGES = [
-  "/Twin-Tower.jpg",
-  "/bin-shabib-twin-tower/1.webp",
-  "/bin-shabib-twin-tower/2.webp",
-  "/bin-shabib-twin-tower/3.webp",
-  "/bin-shabib-twin-tower/4.webp",
-  "/bin-shabib-twin-tower/5.webp",
-  "/bin-shabib-twin-tower/6.webp",
-  "/bin-shabib-twin-tower/7.webp",
-  "/bin-shabib-twin-tower/8.webp",
-  "/bin-shabib-twin-tower/9.webp",
-  "/bin-shabib-twin-tower/10.webp",
-  "/bin-shabib-twin-tower/11.webp",
-];
+  imagePath: string;
+
+  imageUrl:
+    string | null;
+
+  fileName:
+    string | null;
+
+  displayOrder: number;
+
+  isPrimary: boolean;
+}
 
 /* =========================================================
    AMENITIES
@@ -165,6 +167,41 @@ useEffect(() => {
   }
 }, []);
 
+const [
+  buildingImages,
+  setBuildingImages,
+] = useState<
+  PropertyImage[]
+>([]);
+
+const [
+  loadingBuildingImages,
+  setLoadingBuildingImages,
+] = useState(false);
+const [
+  selectedImageUnit,
+  setSelectedImageUnit,
+] = useState<
+  PropertyUnit | null
+>(null);
+
+const [
+  unitImages,
+  setUnitImages,
+] = useState<
+  PropertyImage[]
+>([]);
+
+const [
+  loadingUnitImages,
+  setLoadingUnitImages,
+] = useState(false);
+
+const [
+  selectedUnitImageIndex,
+  setSelectedUnitImageIndex,
+] = useState(0);
+
   /* =======================================================
      PROPERTY TYPE
   ======================================================= */
@@ -188,6 +225,133 @@ useEffect(() => {
   /* =======================================================
      REFS
   ======================================================= */
+const openUnitImages =
+  async (
+    unit:
+      PropertyUnit
+  ) => {
+    /*
+     * Your API maps:
+     *
+     * dbo.unit.unit_desc
+     *      ↓
+     * unit.description
+     */
+
+    const unitDesc =
+      String(
+        unit.description ||
+          ""
+      ).trim();
+
+    if (!unitDesc) {
+      console.error(
+        "unit_desc is missing:",
+        unit
+      );
+
+      return;
+    }
+
+    setSelectedImageUnit(
+      unit
+    );
+
+    setUnitImages([]);
+
+    setSelectedUnitImageIndex(
+      0
+    );
+
+    try {
+      setLoadingUnitImages(
+        true
+      );
+
+      const response =
+        await fetch(
+          `${API_URL}/api/properties/${encodeURIComponent(
+            buildingId
+          )}/units/${encodeURIComponent(
+            unitDesc
+          )}/images`,
+          {
+            cache:
+              "no-store",
+          }
+        );
+
+      const result =
+        await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          result.error ||
+            "Unable to load unit images."
+        );
+      }
+
+  const sortedImages: PropertyImage[] =
+  Array.isArray(result.data)
+    ? [...result.data].sort(
+        (a, b) => {
+          const orderA =
+            Number(
+              a.displayOrder
+            ) || 999999;
+
+          const orderB =
+            Number(
+              b.displayOrder
+            ) || 999999;
+
+          if (
+            orderA !==
+            orderB
+          ) {
+            return (
+              orderA -
+              orderB
+            );
+          }
+
+          return (
+            Number(
+              a.imageId
+            ) -
+            Number(
+              b.imageId
+            )
+          );
+        }
+      )
+    : [];
+
+setUnitImages(
+  sortedImages
+);
+
+setSelectedUnitImageIndex(
+  0
+);
+    } catch (error) {
+      console.error(
+        "Unit image load failed:",
+        error
+      );
+
+      setUnitImages([]);
+    } finally {
+      setLoadingUnitImages(
+        false
+      );
+    }
+  };
+
+  const thumbnailRowRef =
+  useRef<HTMLDivElement | null>(
+    null
+  );
 
   const unitsSectionRef =
     useRef<HTMLElement | null>(
@@ -203,11 +367,91 @@ useEffect(() => {
     useRef<number | null>(
       null
     );
+const handleThumbnailWheel = (
+  event:
+    React.WheelEvent<HTMLDivElement>
+) => {
+  const container =
+    thumbnailRowRef.current;
 
+  if (!container) {
+    return;
+  }
+
+  const canScrollHorizontally =
+    container.scrollWidth >
+    container.clientWidth;
+
+  if (!canScrollHorizontally) {
+    return;
+  }
+
+  event.preventDefault();
+
+  container.scrollBy({
+    left:
+      event.deltaY !== 0
+        ? event.deltaY
+        : event.deltaX,
+
+    behavior:
+      "smooth",
+  });
+};
   /* =======================================================
      IMAGE SWIPE
   ======================================================= */
+async function loadBuildingImages(
+  id: string
+) {
+  try {
+    setLoadingBuildingImages(
+      true
+    );
 
+    const response =
+      await fetch(
+        `${API_URL}/api/properties/${encodeURIComponent(
+          id
+        )}/images`,
+        {
+          cache:
+            "no-store",
+        }
+      );
+
+    const result =
+      await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        result.error ||
+          "Unable to load building images."
+      );
+    }
+
+    setBuildingImages(
+      Array.isArray(
+        result.data
+      )
+        ? result.data
+        : []
+    );
+
+    setSelectedImage(0);
+  } catch (error) {
+    console.error(
+      "Building image load failed:",
+      error
+    );
+
+    setBuildingImages([]);
+  } finally {
+    setLoadingBuildingImages(
+      false
+    );
+  }
+}
   const handleTouchStart = (
     event: TouchEvent<HTMLDivElement>
   ) => {
@@ -227,58 +471,59 @@ useEffect(() => {
         .clientX;
   };
 
-  const handleTouchEnd =
-    () => {
-      if (
-        touchStartX.current ===
-          null ||
-        touchEndX.current ===
-          null
-      ) {
-        return;
-      }
+const handleTouchEnd =
+  () => {
+    if (
+      touchStartX.current ===
+        null ||
+      touchEndX.current ===
+        null ||
+      buildingImages.length ===
+        0
+    ) {
+      return;
+    }
 
-      const distance =
-        touchStartX.current -
-        touchEndX.current;
+    const distance =
+      touchStartX.current -
+      touchEndX.current;
 
-      const minimumSwipeDistance =
-        50;
+    const minimumSwipeDistance =
+      50;
 
-      if (
-        distance >
-        minimumSwipeDistance
-      ) {
-        setSelectedImage(
-          (current) =>
-            current ===
-            BUILDING_IMAGES.length -
+    if (
+      distance >
+      minimumSwipeDistance
+    ) {
+      setSelectedImage(
+        (current) =>
+          current ===
+          buildingImages.length -
+            1
+            ? 0
+            : current + 1
+      );
+    }
+
+    if (
+      distance <
+      -minimumSwipeDistance
+    ) {
+      setSelectedImage(
+        (current) =>
+          current === 0
+            ? buildingImages.length -
               1
-              ? 0
-              : current + 1
-        );
-      }
+            : current - 1
+      );
+    }
 
-      if (
-        distance <
-        -minimumSwipeDistance
-      ) {
-        setSelectedImage(
-          (current) =>
-            current === 0
-              ? BUILDING_IMAGES.length -
-                1
-              : current - 1
-        );
-      }
+    touchStartX.current =
+      null;
 
-      touchStartX.current =
-        null;
-
-      touchEndX.current =
-        null;
-    };
-
+    touchEndX.current =
+      null;
+  };
   /* =======================================================
      PROPERTY TYPE NAVIGATION
   ======================================================= */
@@ -320,19 +565,23 @@ useEffect(() => {
         setLoading(true);
         setError("");
 
-        const [
-          propertyData,
-          unitData,
-        ] =
-          await Promise.all([
-            getProperty(
-              buildingId
-            ),
+      const [
+  propertyData,
+  unitData,
+] =
+  await Promise.all([
+    getProperty(
+      buildingId
+    ),
 
-            getPropertyUnits(
-              buildingId
-            ),
-          ]);
+    getPropertyUnits(
+      buildingId
+    ),
+
+    loadBuildingImages(
+      buildingId
+    ),
+  ]);
 
         setProperty(
           propertyData
@@ -799,19 +1048,19 @@ useEffect(() => {
               </p>
             </div>
 
-            {BUILDING_IMAGES.length >
-              1 && (
-              <span
-                className={
-                  styles.photoCount
-                }
-              >
-                {
-                  BUILDING_IMAGES.length
-                }{" "}
-                Photos
-              </span>
-            )}
+           {buildingImages.length >
+  1 && (
+  <span
+    className={
+      styles.photoCount
+    }
+  >
+    {
+      buildingImages.length
+    }{" "}
+    Photos
+  </span>
+)}
           </div>
 
           <div
@@ -821,118 +1070,160 @@ useEffect(() => {
           >
             {/* IMAGE */}
 
-            <div
-              className={
-                styles.buildingImageArea
-              }
-              onTouchStart={
-                handleTouchStart
-              }
-              onTouchMove={
-                handleTouchMove
-              }
-              onTouchEnd={
-                handleTouchEnd
-              }
-            >
-              <img
-                src={
-                  BUILDING_IMAGES[
-                    selectedImage
-                  ]
-                }
-                alt={
-                  property.title
-                }
-                className={
-                  styles.buildingMainImage
-                }
-                draggable={
-                  false
-                }
-              />
+           <div
+  className={
+    styles.buildingImageArea
+  }
+  onTouchStart={
+    handleTouchStart
+  }
+  onTouchMove={
+    handleTouchMove
+  }
+  onTouchEnd={
+    handleTouchEnd
+  }
+>
+  {loadingBuildingImages ? (
+    <div
+      className={
+        styles.galleryFallback
+      }
+    >
+      Loading images...
+    </div>
+  ) : buildingImages.length >
+    0 &&
+    buildingImages[
+      selectedImage
+    ]?.imageUrl ? (
+    <img
+      src={
+        buildingImages[
+          selectedImage
+        ].imageUrl!
+      }
+      alt={
+        property.title
+      }
+      className={
+        styles.buildingMainImage
+      }
+      draggable={
+        false
+      }
+    />
+  ) : (
+    <div
+      className={
+        styles.galleryFallback
+      }
+    >
+      <Building2
+        size={42}
+      />
 
-              <div
-                className={
-                  styles.imageBadge
-                }
-              >
-                <Building2
-                  size={15}
-                />
+      <span>
+        No building images
+      </span>
+    </div>
+  )}
 
-                Property for
-                Rent
-              </div>
+  <div
+    className={
+      styles.imageBadge
+    }
+  >
+    <Building2
+      size={15}
+    />
 
-              {BUILDING_IMAGES.length >
-                1 && (
-                <div
-                  className={
-                    styles.imageCounter
-                  }
-                >
-                  {selectedImage +
-                    1}{" "}
-                  /{" "}
-                  {
-                    BUILDING_IMAGES.length
-                  }
-                </div>
-              )}
-            </div>
+    Property for Rent
+  </div>
+
+  {buildingImages.length >
+    1 && (
+    <div
+      className={
+        styles.imageCounter
+      }
+    >
+      {selectedImage +
+        1}{" "}
+      /{" "}
+      {
+        buildingImages.length
+      }
+    </div>
+  )}
+</div>
 
             {/* THUMBNAILS */}
 
-            {BUILDING_IMAGES.length >
-              1 && (
-              <div
-                className={
-                  styles.thumbnailRow
-                }
-              >
-                {BUILDING_IMAGES.map(
-                  (
-                    image,
-                    index
-                  ) => (
-                    <button
-                      key={
-                        image
-                      }
-                      type="button"
-                      onClick={() =>
-                        setSelectedImage(
-                          index
-                        )
-                      }
-                      className={`${styles.thumbButton} ${
-                        selectedImage ===
-                        index
-                          ? styles.thumbActive
-                          : ""
-                      }`}
-                    >
-                      <img
-                        src={
-                          image
-                        }
-                        alt={`${property.title} ${
-                          index +
-                          1
-                        }`}
-                        className={
-                          styles.thumbImage
-                        }
-                        draggable={
-                          false
-                        }
-                      />
-                    </button>
-                  )
-                )}
-              </div>
-            )}
+           {buildingImages.length >
+  1 && (
+  <div
+    ref={
+      thumbnailRowRef
+    }
+
+    className={
+      styles.thumbnailRow
+    }
+
+    onWheel={
+      handleThumbnailWheel
+    }
+  >
+    {buildingImages.map(
+      (
+        image,
+        index
+      ) => (
+        <button
+          key={
+            image.imageId
+          }
+
+          type="button"
+
+          onClick={() =>
+            setSelectedImage(
+              index
+            )
+          }
+
+          className={`${styles.thumbButton} ${
+            selectedImage ===
+            index
+              ? styles.thumbActive
+              : ""
+          }`}
+        >
+          {image.imageUrl && (
+            <img
+              src={
+                image.imageUrl
+              }
+
+              alt={`${property.title} ${
+                index + 1
+              }`}
+
+              className={
+                styles.thumbImage
+              }
+
+              draggable={
+                false
+              }
+            />
+          )}
+        </button>
+      )
+    )}
+  </div>
+)}
 
             {/* PROPERTY DETAILS */}
 
@@ -1475,10 +1766,20 @@ useEffect(() => {
                           styles.unitMain
                         }
                       >
-                        <h4>
-                          {unit.unitName ||
-                            unit.propertyType}
-                        </h4>
+                       <button
+  type="button"
+  className={
+    styles.unitImageNameButton
+  }
+  onClick={() =>
+    openUnitImages(
+      unit
+    )
+  }
+>
+  {unit.unitName ||
+    unit.propertyType}
+</button>
 
                         {unit.referenceNo && (
                           <div
@@ -1683,10 +1984,20 @@ useEffect(() => {
                       }
                     >
                       <div>
-                        <h3>
-                          {unit.unitName ||
-                            unit.propertyType}
-                        </h3>
+                       <button
+  type="button"
+  className={
+    styles.unitCardImageNameButton
+  }
+  onClick={() =>
+    openUnitImages(
+      unit
+    )
+  }
+>
+  {unit.unitName ||
+    unit.propertyType}
+</button>
 
                         {unit.referenceNo && (
                           <span
@@ -1876,7 +2187,221 @@ useEffect(() => {
         {/* =================================================
             BOOKING MODAL
         ================================================= */}
+{/* =================================================
+    UNIT IMAGE MODAL
+================================================= */}
 
+{selectedImageUnit && (
+  <div
+    className={
+      styles.unitGalleryBackdrop
+    }
+    onClick={() =>
+      setSelectedImageUnit(
+        null
+      )
+    }
+  >
+    <div
+      className={
+        styles.unitGalleryModal
+      }
+      onClick={(
+        event
+      ) =>
+        event.stopPropagation()
+      }
+    >
+      <button
+        type="button"
+        className={
+          styles.unitGalleryClose
+        }
+        onClick={() =>
+          setSelectedImageUnit(
+            null
+          )
+        }
+        aria-label="Close images"
+      >
+        ×
+      </button>
+
+      <div
+        className={
+          styles.unitGalleryHeader
+        }
+      >
+        <div>
+          <span>
+            Unit Images
+          </span>
+
+          <h3>
+            {selectedImageUnit.unitName ||
+              selectedImageUnit.propertyType}
+          </h3>
+
+        </div>
+      </div>
+
+
+      {loadingUnitImages ? (
+        <div
+          className={
+            styles.unitGalleryEmpty
+          }
+        >
+          Loading images...
+        </div>
+      ) : unitImages.length ===
+        0 ? (
+        <div
+          className={
+            styles.unitGalleryEmpty
+          }
+        >
+          <Building2
+            size={35}
+          />
+
+          <span>
+            No images uploaded
+            for this unit.
+          </span>
+        </div>
+      ) : (
+        <>
+          <div
+            className={
+              styles.unitGalleryMain
+            }
+          >
+            {unitImages[
+              selectedUnitImageIndex
+            ]?.imageUrl && (
+              <img
+                src={
+                  unitImages[
+                    selectedUnitImageIndex
+                  ].imageUrl!
+                }
+                alt={
+                  selectedImageUnit.unitName ||
+                  "Unit"
+                }
+              />
+            )}
+
+            {unitImages.length >
+              1 && (
+              <>
+                <button
+                  type="button"
+                  className={`${styles.unitGalleryArrow} ${styles.unitGalleryArrowLeft}`}
+                  onClick={() =>
+                    setSelectedUnitImageIndex(
+                      (
+                        current
+                      ) =>
+                        current ===
+                        0
+                          ? unitImages.length -
+                            1
+                          : current -
+                            1
+                    )
+                  }
+                  aria-label="Previous image"
+                >
+                  ‹
+                </button>
+
+                <button
+                  type="button"
+                  className={`${styles.unitGalleryArrow} ${styles.unitGalleryArrowRight}`}
+                  onClick={() =>
+                    setSelectedUnitImageIndex(
+                      (
+                        current
+                      ) =>
+                        current ===
+                        unitImages.length -
+                          1
+                          ? 0
+                          : current +
+                            1
+                    )
+                  }
+                  aria-label="Next image"
+                >
+                  ›
+                </button>
+              </>
+            )}
+
+            <span
+              className={
+                styles.unitGalleryCounter
+              }
+            >
+              {selectedUnitImageIndex +
+                1}{" "}
+              /{" "}
+              {
+                unitImages.length
+              }
+            </span>
+          </div>
+
+
+          {unitImages.length >
+            1 && (
+            <div
+              className={
+                styles.unitGalleryThumbs
+              }
+            >
+              {unitImages.map(
+                (
+                  image,
+                  index
+                ) => (
+                  <button
+                    type="button"
+                    key={
+                      image.imageId
+                    }
+                    onClick={() =>
+                      setSelectedUnitImageIndex(
+                        index
+                      )
+                    }
+                    className={`${styles.unitGalleryThumb} ${
+                      selectedUnitImageIndex ===
+                      index
+                        ? styles.unitGalleryThumbActive
+                        : ""
+                    }`}
+                  >
+                    {image.imageUrl && (
+                      <img
+                        src={
+                          image.imageUrl
+                        }
+                        alt=""
+                      />
+                    )}
+                  </button>
+                )
+              )}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  </div>
+)}
         <BookingModal
           open={
             bookingUnit !==
@@ -1909,6 +2434,8 @@ useEffect(() => {
     </main>
   );
 }
+
+
 
 /* =========================================================
    PAGE

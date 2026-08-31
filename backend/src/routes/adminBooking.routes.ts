@@ -3,7 +3,8 @@ import {
 } from "express";
 
 import {
-  getAdminBookings,
+
+  getWebRequests,
   updateAdminBooking,
   viewBookingPassport,
 } from "../controllers/adminBooking.controller";
@@ -13,7 +14,7 @@ const router =
 
 router.get(
   "/",
-  getAdminBookings
+  getWebRequests
 );
 
 router.patch(

@@ -14,6 +14,12 @@ import {
 import CommonAlert, {
   type AlertType,
 } from "../components/CommonAlert";
+
+
+import UnitImageManager
+  from "./ImageManager/UnitImageManager";
+
+
 /* =========================================================
    API
 ========================================================= */
@@ -88,6 +94,9 @@ interface Booking {
 
   propertyId:
     string;
+  requestType:
+    "BOOKING" |
+    "ENQUIRY";
 
   propertyName:
     string;
@@ -155,6 +164,40 @@ interface AdminProperty {
     number | null;
      vacantUnits:
     number;
+}
+
+interface PropertyImageUnit {
+  unitDesc: string;
+
+  unitType:
+    string | null;
+
+  annualRent:
+    number | null;
+
+  isVacant:
+    boolean;
+}
+
+interface BuildImage {
+  imageId: number;
+
+  buildingId: string;
+
+  imagePath: string;
+
+  imageUrl:
+    string | null;
+
+  fileName:
+    string | null;
+
+  fileSize:
+    number | null;
+
+  displayOrder: number;
+
+  isPrimary: boolean;
 }
 /* =========================================================
    COMPONENT
@@ -224,7 +267,13 @@ const [
   /* =======================================================
      ACTIVE TAB
   ======================================================= */
-
+const [
+  requestTab,
+  setRequestTab,
+] = useState<
+  "BOOKING" |
+  "ENQUIRY"
+>("BOOKING");
   const [
   decliningBookingId,
   setDecliningBookingId,
@@ -240,6 +289,7 @@ const [
     | "welcome"
     | "listings"
     | "upcoming"
+      | "images"
     | "sync"
     | "users"
     | "bookings"
@@ -301,7 +351,443 @@ const hiddenListingCount =
 /* =========================================================
    FILTER + SORT LISTINGS
 ========================================================= */
-  const normalizedSearch =
+ 
+
+/* =========================================================
+   PROPERTY IMAGE MANAGEMENT
+========================================================= */
+
+const [
+  selectedImageBuildingId,
+  setSelectedImageBuildingId,
+] = useState("");
+
+const [
+  propertyImageUnits,
+  setPropertyImageUnits,
+] = useState<
+  PropertyImageUnit[]
+>([]);
+const [
+  imageManagementTab,
+  setImageManagementTab,
+] = useState<
+  "building" | "unit"
+>("building");
+const [
+  selectedImageUnit,
+  setSelectedImageUnit,
+] = useState<
+  string | null
+>(null);
+
+const [
+  buildImages,
+  setBuildImages,
+] = useState<
+  BuildImage[]
+>([]);
+
+const [
+  loadingImageUnits,
+  setLoadingImageUnits,
+] = useState(false);
+
+const [
+  loadingBuildImages,
+  setLoadingBuildImages,
+] = useState(false);
+
+const [
+  uploadingBuildImage,
+  setUploadingBuildImage,
+] = useState(false);
+
+const [
+  buildImageFiles,
+  setBuildImageFiles,
+] = useState<File[]>(
+  []
+);
+
+
+const [
+  draggingBuildImageId,
+  setDraggingBuildImageId,
+] = useState<
+  number | null
+>(null);
+
+const [
+  buildOrderChanged,
+  setBuildOrderChanged,
+] = useState(false);
+
+const [
+  savingBuildOrder,
+  setSavingBuildOrder,
+] = useState(false);
+
+const handleBuildImageDragStart =
+  (
+    imageId:
+      number
+  ) => {
+    setDraggingBuildImageId(
+      imageId
+    );
+  };
+
+  const handleBuildImageDragOver =
+  (
+    event:
+      React.DragEvent,
+
+    targetImageId:
+      number
+  ) => {
+    event.preventDefault();
+
+    if (
+      draggingBuildImageId ===
+        null ||
+      draggingBuildImageId ===
+        targetImageId
+    ) {
+      return;
+    }
+
+    setBuildImages(
+      (current) => {
+        const updated =
+          [...current];
+
+        const fromIndex =
+          updated.findIndex(
+            (image) =>
+              image.imageId ===
+              draggingBuildImageId
+          );
+
+        const toIndex =
+          updated.findIndex(
+            (image) =>
+              image.imageId ===
+              targetImageId
+          );
+
+        if (
+          fromIndex === -1 ||
+          toIndex === -1
+        ) {
+          return current;
+        }
+
+        const [
+          movedImage,
+        ] =
+          updated.splice(
+            fromIndex,
+            1
+          );
+
+        updated.splice(
+          toIndex,
+          0,
+          movedImage
+        );
+
+        return updated.map(
+          (
+            image,
+            index
+          ) => ({
+            ...image,
+
+            displayOrder:
+              index + 1,
+          })
+        );
+      }
+    );
+
+    setBuildOrderChanged(
+      true
+    );
+  };
+
+
+  const handleBuildImageDragEnd =
+  () => {
+    setDraggingBuildImageId(
+      null
+    );
+  };
+
+  const handleSaveBuildImageOrder =
+  async () => {
+    if (
+      !selectedImageBuildingId ||
+      buildImages.length ===
+        0
+    ) {
+      return;
+    }
+
+    try {
+      setSavingBuildOrder(
+        true
+      );
+
+      const response =
+        await fetch(
+          `${API_URL}/api/admin/build-images/${encodeURIComponent(
+            selectedImageBuildingId
+          )}/order`,
+          {
+            method:
+              "PATCH",
+
+            credentials:
+              "include",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body:
+              JSON.stringify({
+                imageIds:
+                  buildImages.map(
+                    (image) =>
+                      image.imageId
+                  ),
+              }),
+          }
+        );
+
+      const result =
+        await response.json();
+
+      if (
+        !response.ok ||
+        !result.success
+      ) {
+        throw new Error(
+          result.error ||
+            "Unable to save image order."
+        );
+      }
+
+      setBuildOrderChanged(
+        false
+      );
+
+      showSuccess(
+        "Image order saved successfully."
+      );
+
+      await fetchBuildImages(
+        selectedImageBuildingId
+      );
+    } catch (error) {
+      showError(
+        error instanceof Error
+          ? error.message
+          : "Unable to save image order."
+      );
+    } finally {
+      setSavingBuildOrder(
+        false
+      );
+    }
+  };
+
+  const handleSetBuildPrimary =
+  async (
+    imageId:
+      number
+  ) => {
+    if (
+      !selectedImageBuildingId
+    ) {
+      return;
+    }
+
+    try {
+      const response =
+        await fetch(
+          `${API_URL}/api/admin/build-images/${encodeURIComponent(
+            selectedImageBuildingId
+          )}/${imageId}/primary`,
+          {
+            method:
+              "PATCH",
+
+            credentials:
+              "include",
+          }
+        );
+
+      const result =
+        await response.json();
+
+      if (
+        !response.ok ||
+        !result.success
+      ) {
+        throw new Error(
+          result.error ||
+            "Unable to set primary image."
+        );
+      }
+
+      setBuildImages(
+        (current) =>
+          current.map(
+            (image) => ({
+              ...image,
+
+              isPrimary:
+                image.imageId ===
+                imageId,
+            })
+          )
+      );
+
+      showSuccess(
+        "Primary image updated."
+      );
+    } catch (error) {
+      showError(
+        error instanceof Error
+          ? error.message
+          : "Unable to set primary image."
+      );
+    }
+  };
+
+const handleDeleteBuildImage =
+  (
+    image:
+      BuildImage
+  ) => {
+    setAlertConfig({
+      open: true,
+
+      type:
+        "warning",
+
+      title:
+        "Delete Building Image",
+
+      message:
+        `Are you sure you want to delete ${
+          image.fileName ||
+          "this image"
+        }?`,
+
+      confirmText:
+        "Delete",
+
+      showCancel:
+        true,
+
+      inputRequired:
+        false,
+
+      inputLabel:
+        "",
+
+      inputPlaceholder:
+        "",
+
+      inputValue:
+        "",
+
+      loading:
+        false,
+
+      onConfirm:
+        () =>
+          confirmDeleteBuildImage(
+            image
+          ),
+    });
+  };
+
+
+  const confirmDeleteBuildImage =
+  async (
+    image:
+      BuildImage
+  ) => {
+    if (
+      !selectedImageBuildingId
+    ) {
+      showError(
+        "Building ID is missing."
+      );
+
+      return;
+    }
+
+    try {
+      setAlertConfig(
+        (current) => ({
+          ...current,
+
+          loading:
+            true,
+        })
+      );
+
+      const response =
+        await fetch(
+          `${API_URL}/api/admin/build-images/${encodeURIComponent(
+            selectedImageBuildingId
+          )}/${image.imageId}`,
+          {
+            method:
+              "DELETE",
+
+            credentials:
+              "include",
+          }
+        );
+
+      const result =
+        await response.json();
+
+      if (
+        !response.ok ||
+        !result.success
+      ) {
+        throw new Error(
+          result.error ||
+            "Unable to delete image."
+        );
+      }
+
+      await fetchBuildImages(
+        selectedImageBuildingId
+      );
+
+      showSuccess(
+        "Building image deleted successfully."
+      );
+    } catch (error) {
+      showError(
+        error instanceof Error
+          ? error.message
+          : "Unable to delete image."
+      );
+    }
+  };
+
+
+const normalizedSearch =
   searchText
     .trim()
     .toLowerCase();
@@ -1379,6 +1865,7 @@ const changeTab = (
     | "welcome"
     | "listings"
     | "upcoming"
+      | "images"
     | "sync"
     | "users"
     | "bookings"
@@ -1392,7 +1879,14 @@ const changeTab = (
 
   setStatusMessage("");
   setErrorMessage("");
+   if (tab !== "images") {
+    setSelectedImageUnit(
+      null
+    );
+  }
 };
+
+
   const fetchUpcomingProjects =
     async () => {
       try {
@@ -1914,12 +2408,41 @@ const handleDeleteUpcomingProject =
       }
     };
 
+    
+    const handleRequestTabChange =
+  (
+    type:
+      "BOOKING" |
+      "ENQUIRY"
+  ) => {
+    setRequestTab(
+      type
+    );
+
+    setSearchText(
+      ""
+    );
+
+    setSelectedBooking(
+      null
+    );
+
+    fetchBookings(
+      type
+    );
+  };
+
   /* =======================================================
      BOOKINGS
   ======================================================= */
 
- const fetchBookings =
-  async () => {
+const fetchBookings =
+  async (
+    requestType:
+      "BOOKING" |
+      "ENQUIRY" =
+        requestTab
+  ) => {
     if (
       userRole !==
       "Super Admin"
@@ -1930,7 +2453,9 @@ const handleDeleteUpcomingProject =
     try {
       const response =
         await fetch(
-          `${API_URL}/api/admin/bookings`,
+          `${API_URL}/api/admin/bookings?requestType=${encodeURIComponent(
+            requestType
+          )}`,
           {
             cache:
               "no-store",
@@ -1945,7 +2470,12 @@ const handleDeleteUpcomingProject =
       ) {
         throw new Error(
           result.error ||
-            "Unable to load booking requests."
+            `Unable to load ${
+              requestType ===
+              "BOOKING"
+                ? "booking"
+                : "enquiry"
+            } requests.`
         );
       }
 
@@ -1958,19 +2488,16 @@ const handleDeleteUpcomingProject =
       );
     } catch (error) {
       console.error(
-        "Booking load failed:",
+        "Request load failed:",
         error
       );
 
-      setBookings(
-        []
-      );
+      setBookings([]);
 
       showError(
-        error instanceof
-          Error
+        error instanceof Error
           ? error.message
-          : "Unable to load booking requests."
+          : "Unable to load requests."
       );
     }
   };
@@ -2522,7 +3049,422 @@ const handleRemoveNationalityRule =
         );
       }
     };
+/* =========================================================
+   PROPERTY IMAGES
+========================================================= */
 
+const fetchBuildImages =
+  async (
+    buildingId:
+      string
+  ) => {
+    if (!buildingId) {
+      setBuildImages([]);
+
+      return;
+    }
+
+    try {
+      setLoadingBuildImages(
+        true
+      );
+
+      const response =
+        await fetch(
+          `${API_URL}/api/admin/build-images/${encodeURIComponent(
+            buildingId
+          )}`,
+          {
+            cache:
+              "no-store",
+
+            credentials:
+              "include",
+          }
+        );
+
+      const result =
+        await response.json();
+
+      if (
+        !response.ok ||
+        !result.success
+      ) {
+        throw new Error(
+          result.error ||
+            "Unable to load building images."
+        );
+      }
+
+      setBuildImages(
+        Array.isArray(
+          result.data
+        )
+          ? result.data
+          : []
+      );
+    } catch (error) {
+      console.error(
+        "Building image load failed:",
+        error
+      );
+
+      setBuildImages([]);
+
+      showError(
+        error instanceof Error
+          ? error.message
+          : "Unable to load building images."
+      );
+    } finally {
+      setLoadingBuildImages(
+        false
+      );
+    }
+  };
+
+
+const fetchPropertyImageUnits =
+  async (buildingId: string) => {
+    if (!buildingId) {
+      setPropertyImageUnits([]);
+      return;
+    }
+
+    try {
+      setLoadingImageUnits(true);
+
+      const response =
+        await fetch(
+          `${API_URL}/api/properties/${encodeURIComponent(
+            buildingId
+          )}/units`,
+          {
+            cache: "no-store",
+            credentials: "include",
+          }
+        );
+
+      const result =
+        await response.json();
+
+      console.log(
+        "UNIT API RESPONSE:",
+        result
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          result.error ||
+            "Unable to load units."
+        );
+      }
+
+      const rawUnits: {
+        referenceNo?: string;
+        unitName?: string;
+        propertyType?: string;
+        description?: string;
+        annualRent?: number | null;
+        vacant?: string | null;
+        unitReference?: string | null;
+      }[] =
+        Array.isArray(result.data)
+          ? result.data
+          : [];
+
+      console.log(
+        "RAW UNITS:",
+        rawUnits
+      );
+
+      const mappedUnits:
+        PropertyImageUnit[] =
+        rawUnits
+          .map(
+            (
+              unit
+            ): PropertyImageUnit => ({
+              /*
+               * IMPORTANT:
+               * description = dbo.unit.unit_desc
+               *
+               * This is your unique unit
+               * identifier within building.
+               */
+              unitDesc:
+                String(
+                  unit.description ||
+                    ""
+                ).trim(),
+
+              /*
+               * Prefer actual property type.
+               * Fall back to unitName.
+               */
+              unitType:
+                unit.propertyType
+                  ? String(
+                      unit.propertyType
+                    ).trim()
+                  : unit.unitName
+                  ? String(
+                      unit.unitName
+                    ).trim()
+                  : null,
+
+              annualRent:
+                unit.annualRent !==
+                  null &&
+                unit.annualRent !==
+                  undefined
+                  ? Number(
+                      unit.annualRent
+                    )
+                  : null,
+
+              isVacant:
+                String(
+                  unit.vacant ||
+                    ""
+                )
+                  .trim()
+                  .toUpperCase() ===
+                "Y",
+            })
+          )
+          .filter(
+            (
+              unit
+            ) =>
+              unit.unitDesc !==
+              ""
+          );
+
+      console.log(
+        "MAPPED UNITS:",
+        mappedUnits
+      );
+
+      setPropertyImageUnits(
+        mappedUnits
+      );
+    } catch (error) {
+      console.error(
+        "Unit load failed:",
+        error
+      );
+
+      setPropertyImageUnits([]);
+
+      showError(
+        error instanceof Error
+          ? error.message
+          : "Unable to load units."
+      );
+    } finally {
+      setLoadingImageUnits(false);
+    }
+  };
+
+const handleImageBuildingChange =
+  async (
+    buildingId: string
+  ) => {
+    setSelectedImageBuildingId(
+      buildingId
+    );
+
+    setImageManagementTab(
+      "building"
+    );
+
+    setSelectedImageUnit(
+      null
+    );
+
+    setBuildImageFiles(
+      []
+    );
+
+    setPropertyImageUnits(
+      []
+    );
+
+    setBuildImages(
+      []
+    );
+
+    setBuildOrderChanged(
+      false
+    );
+
+    setDraggingBuildImageId(
+      null
+    );
+
+    if (!buildingId) {
+      return;
+    }
+
+    await Promise.all([
+      fetchBuildImages(
+        buildingId
+      ),
+
+      fetchPropertyImageUnits(
+        buildingId
+      ),
+    ]);
+  };
+
+
+const handleBuildImageUpload =
+  async () => {
+    if (
+      !selectedImageBuildingId
+    ) {
+      showError(
+        "Please select a building."
+      );
+
+      return;
+    }
+
+    if (
+      buildImageFiles.length ===
+      0
+    ) {
+      showError(
+        "Please select at least one image."
+      );
+
+      return;
+    }
+
+    const invalidFile =
+      buildImageFiles.find(
+        (file) =>
+          file.size >
+          5 *
+            1024 *
+            1024
+      );
+
+    if (invalidFile) {
+      showError(
+        `${invalidFile.name} exceeds the 5 MB limit.`
+      );
+
+      return;
+    }
+
+    try {
+      setUploadingBuildImage(
+        true
+      );
+
+      const formData =
+        new FormData();
+
+      buildImageFiles.forEach(
+        (file) => {
+          formData.append(
+            "images",
+            file
+          );
+        }
+      );
+
+      const response =
+        await fetch(
+          `${API_URL}/api/admin/build-images/${encodeURIComponent(
+            selectedImageBuildingId
+          )}/upload`,
+          {
+            method: "POST",
+
+            credentials:
+              "include",
+
+            body: formData,
+          }
+        );
+
+      const result =
+        await response.json();
+
+      if (
+        !response.ok ||
+        !result.success
+      ) {
+        throw new Error(
+          result.error ||
+            "Unable to upload building images."
+        );
+      }
+
+      setBuildImageFiles(
+        []
+      );
+
+      await fetchBuildImages(
+        selectedImageBuildingId
+      );
+
+      showSuccess(
+        `${
+          result.data?.length ??
+          buildImageFiles.length
+        } building image(s) uploaded successfully.`
+      );
+    } catch (error) {
+      console.error(
+        "Building upload failed:",
+        error
+      );
+
+      showError(
+        error instanceof Error
+          ? error.message
+          : "Unable to upload building images."
+      );
+    } finally {
+      setUploadingBuildImage(
+        false
+      );
+    }
+  };
+
+
+const formatImageFileSize =
+  (
+    bytes:
+      number | null
+  ) => {
+    if (!bytes) {
+      return "";
+    }
+
+    if (
+      bytes >=
+      1024 * 1024
+    ) {
+      return `${(
+        bytes /
+        1024 /
+        1024
+      ).toFixed(
+        2
+      )} MB`;
+    }
+
+    return `${(
+      bytes / 1024
+    ).toFixed(
+      0
+    )} KB`;
+  };
   /* =======================================================
      FORMAT AREA
   ======================================================= */
@@ -2818,13 +3760,36 @@ const handleRemoveNationalityRule =
                 : ""
             }`}
           >
-            🏗️ Upcoming
-            Projects (
+            🏗️ Upcoming Projects (
             {
               upcomingProjects.length
             }
             )
           </button>
+
+          <button
+  type="button"
+  onClick={() => {
+    changeTab(
+      "images"
+    );
+
+    if (
+      properties.length ===
+      0
+    ) {
+      fetchProperties();
+    }
+  }}
+  className={`${styles.menuItem} ${
+    activeTab ===
+    "images"
+      ? styles.menuItemActive
+      : ""
+  }`}
+>
+   Property Images
+</button>
 
           {/* <button
             type="button"
@@ -2870,10 +3835,18 @@ const handleRemoveNationalityRule =
               <button
                 type="button"
                 onClick={() => {
-                 changeTab("bookings");
+  changeTab(
+    "bookings"
+  );
 
-                  fetchBookings();
-                }}
+  setRequestTab(
+    "BOOKING"
+  );
+
+  fetchBookings(
+    "BOOKING"
+  );
+}}
                 className={`${styles.menuItem} ${
                   activeTab ===
                   "bookings"
@@ -4215,6 +5188,816 @@ const handleRemoveNationalityRule =
           </div>
         )}
 
+
+{/* =================================================
+    PROPERTY IMAGES
+================================================= */}
+
+{activeTab ===
+  "images" && (
+  <div>
+    {/* =============================================
+        HEADER
+    ============================================= */}
+
+    <div
+      className={
+        styles.contentHeader
+      }
+    >
+      <div>
+        <h2>
+          Property Images
+        </h2>
+
+       
+      </div>
+    </div>
+
+
+    {/* =============================================
+        BUILDING SELECTOR
+    ============================================= */}
+
+    <div
+      className={
+        styles.imageManagementCard
+      }
+    >
+      <div
+        className={
+          styles.imageSelectorHeader
+        }
+      >
+        <div>
+          <h3>
+            Select Building
+          </h3>
+
+       
+        </div>
+      </div>
+
+      <select
+        value={
+          selectedImageBuildingId
+        }
+        onChange={(
+          event
+        ) =>
+          handleImageBuildingChange(
+            event.target.value
+          )
+        }
+        className={
+          styles.imageBuildingSelect
+        }
+      >
+        <option value="">
+          Select Building
+        </option>
+
+        {properties.map(
+          (property) => (
+            <option
+              key={
+                property.id
+              }
+              value={
+                property.id
+              }
+            >
+              {property.title}
+              {" ("}
+              {property.id}
+              {")"}
+            </option>
+          )
+        )}
+      </select>
+    </div>
+
+
+    {!selectedImageBuildingId ? (
+      <div
+        className={
+          styles.imageEmptyState
+        }
+      >
+       
+
+        <h3>
+          Select a Building
+        </h3>
+
+        <p>
+          Select a building
+          above to upload
+          building images and
+          manage unit images.
+        </p>
+      </div>
+    ) : (
+      <>
+      <div
+  className={
+    styles.imageTabs
+  }
+>
+  <button
+    type="button"
+    onClick={() => {
+      setImageManagementTab(
+        "building"
+      );
+
+      setSelectedImageUnit(
+        null
+      );
+    }}
+    className={`${styles.imageTabButton} ${
+      imageManagementTab ===
+      "building"
+        ? styles.imageTabButtonActive
+        : ""
+    }`}
+  >
+    
+
+    <span>
+      Building Images
+    </span>
+
+
+  </button>
+
+
+  <button
+    type="button"
+    onClick={() =>
+      setImageManagementTab(
+        "unit"
+      )
+    }
+    className={`${styles.imageTabButton} ${
+      imageManagementTab ===
+      "unit"
+        ? styles.imageTabButtonActive
+        : ""
+    }`}
+  >
+   
+
+    <span>
+      Unit Images
+    </span>
+
+    <span
+      className={
+        styles.imageTabCount
+      }
+    >
+      {
+        propertyImageUnits.length
+      }
+    </span>
+  </button>
+</div>
+        {/* =========================================
+            BUILDING IMAGES
+        ========================================= */}
+{imageManagementTab ===
+  "building" && (
+        <div
+          className={
+            styles.imageManagementCard
+          }
+        >
+          <div
+            className={
+              styles.imageSectionHeader
+            }
+          >
+            <div>
+              <h3>
+                Building Images
+              </h3>
+
+              <p>
+                Upload images
+                for the selected
+                building.
+              </p>
+            </div>
+
+            <span
+              className={
+                styles.imageCountBadge
+              }
+            >
+              {
+                buildImages.length
+              }{" "}
+              Images
+            </span>
+          </div>
+
+
+          <div
+            className={
+              styles.buildImageUploadRow
+            }
+          >
+           <input
+  type="file"
+
+  multiple
+
+  accept="image/jpeg,image/png,image/webp"
+
+  onChange={(event) => {
+    const files =
+      Array.from(
+        event.target.files ||
+          []
+      );
+
+    setBuildImageFiles(
+      files
+    );
+  }}
+
+  className={
+    styles.imageFileInput
+  }
+/>
+
+            <button
+  type="button"
+
+  onClick={
+    handleBuildImageUpload
+  }
+
+  disabled={
+    uploadingBuildImage ||
+    buildImageFiles.length ===
+      0
+  }
+
+  className={`${styles.btn} ${styles.btnPrimary}`}
+>
+  {uploadingBuildImage
+    ? "Uploading..."
+    : buildImageFiles.length >
+      0
+    ? `Upload ${buildImageFiles.length} Image${
+        buildImageFiles.length >
+        1
+          ? "s"
+          : ""
+      }`
+    : "Upload Building Images"}
+</button>
+          </div>
+
+          <div
+            className={
+              styles.imageUploadHint
+            }
+          >
+            JPG, PNG or WebP.
+            Maximum file size:
+            5 MB.
+          </div>
+{buildImages.length >
+  1 && (
+  <div
+    className={
+      styles.imageOrderToolbar
+    }
+  >
+    <span>
+      Drag images to change
+      display order.
+    </span>
+
+    <button
+      type="button"
+
+      onClick={
+        handleSaveBuildImageOrder
+      }
+
+      disabled={
+        !buildOrderChanged ||
+        savingBuildOrder
+      }
+
+      className={`${styles.btn} ${styles.btnPrimary}`}
+    >
+      {savingBuildOrder
+        ? "Saving..."
+        : "Save Order"}
+    </button>
+  </div>
+)}
+
+          {/* BUILDING IMAGE PREVIEW */}
+
+          {loadingBuildImages ? (
+            <div
+              className={
+                styles.imageLoading
+              }
+            >
+              Loading building
+              images...
+            </div>
+          ) : buildImages.length ===
+            0 ? (
+            <div
+              className={
+                styles.imageSmallEmpty
+              }
+            >
+              No building images
+              uploaded.
+            </div>
+          ) : (
+            <div
+              className={
+                styles.buildImageGrid
+              }
+            >
+            {buildImages.map(
+  (
+    image,
+    index
+  ) => (
+    <div
+      key={
+        image.imageId
+      }
+
+      draggable
+
+      onDragStart={() =>
+        handleBuildImageDragStart(
+          image.imageId
+        )
+      }
+
+      onDragOver={(
+        event
+      ) =>
+        handleBuildImageDragOver(
+          event,
+          image.imageId
+        )
+      }
+
+      onDragEnd={
+        handleBuildImageDragEnd
+      }
+
+      className={`${styles.buildImageCard} ${
+        draggingBuildImageId ===
+        image.imageId
+          ? styles.buildImageDragging
+          : ""
+      }`}
+    >
+      {/* DRAG HANDLE */}
+
+      <div
+       
+      >
+        
+      </div>
+
+      {/* IMAGE */}
+
+      <div
+        className={
+          styles.buildImagePreview
+        }
+      >
+        {image.imageUrl ? (
+          <img
+            src={
+              image.imageUrl
+            }
+
+            alt={
+              image.fileName ||
+              "Building image"
+            }
+
+            draggable={
+              false
+            }
+          />
+        ) : (
+          <div>
+            Image unavailable
+          </div>
+        )}
+
+        {/* ORDER */}
+
+        <span
+          className={
+            styles.imageOrderBadge
+          }
+        >
+          #{index + 1}
+        </span>
+
+        {/* PRIMARY BADGE */}
+
+        {image.isPrimary && (
+          <span
+            className={
+              styles.imagePrimaryBadge
+            }
+          >
+            Primary
+          </span>
+        )}
+      </div>
+
+
+      {/* IMAGE DETAILS */}
+
+      <div
+        className={
+          styles.buildImageInfo
+        }
+      >
+        <strong>
+          {image.fileName ||
+            "Building Image"}
+        </strong>
+
+        <span>
+          {formatImageFileSize(
+            image.fileSize
+          )}
+        </span>
+      </div>
+
+
+      {/* ACTIONS */}
+
+      <div
+        className={
+          styles.buildImageActions
+        }
+      >
+        <button
+          type="button"
+
+          disabled={
+            image.isPrimary
+          }
+
+          onClick={(
+            event
+          ) => {
+            event.stopPropagation();
+
+            handleSetBuildPrimary(
+              image.imageId
+            );
+          }}
+
+          className={
+            styles.imagePrimaryButton
+          }
+        >
+          {image.isPrimary
+            ? "Primary Image"
+            : "Set Primary"}
+        </button>
+
+
+        <button
+          type="button"
+
+          onClick={(
+            event
+          ) => {
+            event.stopPropagation();
+
+            handleDeleteBuildImage(
+              image
+            );
+          }}
+
+          className={
+            styles.imageDeleteButton
+          }
+        >
+          Delete
+        </button>
+      </div>
+    </div>
+  )
+)}
+            </div>
+          )}
+        </div>
+)}
+
+        {/* =========================================
+            UNIT IMAGES
+        ========================================= */}
+
+      {imageManagementTab ===
+  "unit" && (
+  <div
+    className={
+      styles.imageManagementCard
+    }
+  >
+    {/* HEADER */}
+
+    <div
+      className={
+        styles.imageSectionHeader
+      }
+    >
+      <div>
+        <h3>
+          Unit Images
+        </h3>
+
+        <p>
+          Select a unit and manage
+          its images.
+        </p>
+      </div>
+
+      <span
+        className={
+          styles.imageCountBadge
+        }
+      >
+        {
+          propertyImageUnits.length
+        }{" "}
+        Units
+      </span>
+    </div>
+
+
+    {/* UNIT SELECTOR */}
+
+    {loadingImageUnits ? (
+      <div
+        className={
+          styles.imageLoading
+        }
+      >
+        Loading units...
+      </div>
+    ) : propertyImageUnits.length ===
+      0 ? (
+      <div
+        className={
+          styles.imageSmallEmpty
+        }
+      >
+        No units found for
+        this building.
+      </div>
+    ) : (
+      <>
+        <div
+          className={
+            styles.unitSelectorPanel
+          }
+        >
+          <div
+            className={
+              styles.unitSelectorHeading
+            }
+          >
+            <div>
+              <strong>
+                Select Unit
+              </strong>
+
+              <span>
+                Choose a unit to
+                upload or manage
+                images.
+              </span>
+            </div>
+          </div>
+
+          <select
+            value={
+              selectedImageUnit ||
+              ""
+            }
+            onChange={(
+              event
+            ) =>
+              setSelectedImageUnit(
+                event.target
+                  .value ||
+                  null
+              )
+            }
+            className={
+              styles.unitImageSelect
+            }
+          >
+            <option value="">
+              Select Unit
+            </option>
+
+            {propertyImageUnits.map(
+              (
+                unit
+              ) => (
+                <option
+                  key={
+                    unit.unitDesc
+                  }
+                  value={
+                    unit.unitDesc
+                  }
+                >
+                  Unit{" "}
+                  {unit.unitDesc}
+
+                  {unit.unitType
+                    ? ` - ${unit.unitType}`
+                    : ""}
+
+                  {unit.annualRent !==
+                    null
+                    ? ` - AED ${Number(
+                        unit.annualRent
+                      ).toLocaleString(
+                        "en-AE"
+                      )}`
+                    : ""}
+                </option>
+              )
+            )}
+          </select>
+        </div>
+
+
+        {/* NOTHING SELECTED */}
+
+        {!selectedImageUnit && (
+          <div
+            className={
+              styles.unitSelectEmpty
+            }
+          >
+        
+
+            <strong>
+              Select a Unit
+            </strong>
+
+            <p>
+              Choose a unit above
+              to manage its images.
+            </p>
+          </div>
+        )}
+
+
+        {/* SELECTED UNIT */}
+
+        {selectedImageUnit &&
+          (() => {
+            const unit =
+              propertyImageUnits.find(
+                (
+                  item
+                ) =>
+                  item.unitDesc ===
+                  selectedImageUnit
+              );
+
+            if (!unit) {
+              return null;
+            }
+
+            return (
+              <>
+                <div
+                  className={
+                    styles.selectedUnitSummary
+                  }
+                >
+                 
+
+                  <div
+                    className={
+                      styles.selectedUnitContent
+                    }
+                  >
+                    <div
+                      className={
+                        styles.selectedUnitTitle
+                      }
+                    >
+                      Unit{" "}
+                      {
+                        unit.unitDesc
+                      }
+                    </div>
+
+                    <div
+                      className={
+                        styles.selectedUnitMeta
+                      }
+                    >
+                      {unit.unitType && (
+                        <span>
+                          {
+                            unit.unitType
+                          }
+                        </span>
+                      )}
+
+                      {unit.annualRent !==
+                        null && (
+                        <span>
+                          AED{" "}
+                          {Number(
+                            unit.annualRent
+                          ).toLocaleString(
+                            "en-AE"
+                          )}{" "}
+                          / Year
+                        </span>
+                      )}
+
+                      <span
+                        className={
+                          unit.isVacant
+                            ? styles.imageVacantBadge
+                            : styles.imageOccupiedBadge
+                        }
+                      >
+                        {unit.isVacant
+                          ? "Vacant"
+                          : "Occupied"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setSelectedImageUnit(
+                        null
+                      )
+                    }
+                    className={
+                      styles.changeUnitButton
+                    }
+                  >
+                    Change Unit
+                  </button>
+                </div>
+
+
+                <div
+                  className={
+                    styles.unitImageManagerWrapper
+                  }
+                >
+                  <UnitImageManager
+                    buildingId={
+                      selectedImageBuildingId
+                    }
+                    unitDesc={
+                      unit.unitDesc
+                    }
+                  />
+                </div>
+              </>
+            );
+          })()}
+      </>
+    )}
+  </div>
+)}
+      </>
+    )}
+  </div>
+)}
         {/* =================================================
             SYNC
         ================================================= */}
@@ -4379,26 +6162,100 @@ const handleRemoveNationalityRule =
     <div className={styles.contentHeader}>
       <div>
         <h2>
-          Booking Requests ({bookings.length})
+          Customer Requests
         </h2>
 
         <p>
-          Review customer details, passport documents,
-          and booking status.
+             Review booking and
+      enquiry requests
+      received from the
+      website.
         </p>
       </div>
     </div>
+<div
+  className={
+    styles.requestTabs
+  }
+>
+  <button
+    type="button"
 
+    onClick={() =>
+      handleRequestTabChange(
+        "BOOKING"
+      )
+    }
+
+    className={`${styles.requestTabButton} ${
+      requestTab ===
+      "BOOKING"
+        ? styles.requestTabActive
+        : ""
+    }`}
+  >
+    Booking Requests
+
+    {requestTab ===
+      "BOOKING" && (
+      <span>
+        {
+          bookings.length
+        }
+      </span>
+    )}
+  </button>
+
+
+  <button
+    type="button"
+
+    onClick={() =>
+      handleRequestTabChange(
+        "ENQUIRY"
+      )
+    }
+
+    className={`${styles.requestTabButton} ${
+      requestTab ===
+      "ENQUIRY"
+        ? styles.requestTabActive
+        : ""
+    }`}
+  >
+    Enquiries
+
+    {requestTab ===
+      "ENQUIRY" && (
+      <span>
+        {
+          bookings.length
+        }
+      </span>
+    )}
+  </button>
+</div>
     <div className={styles.tableCard}>
       <div className={styles.tableHeader}>
-        Web Booking Requests
+         {requestTab ===
+  "BOOKING"
+    ? "Web Booking Requests"
+    : "Web Enquiries"}
       </div>
 
-      {filteredBookings.length === 0 ? (
-        <div className={styles.loading}>
-          No booking requests found.
-        </div>
-      ) : (
+    {filteredBookings.length ===
+0 ? (
+  <div
+    className={
+      styles.loading
+    }
+  >
+    {requestTab ===
+    "BOOKING"
+      ? "No booking requests found."
+      : "No enquiries found."}
+  </div>
+) : (
       <div className={styles.bookingTableScroll}>
   <table className={styles.bookingTable}>
     <thead>
@@ -4526,7 +6383,10 @@ const handleRemoveNationalityRule =
                         View
                       </button>
 
-                      {booking.status === "Pending" && (
+                       {requestTab ===
+  "BOOKING" &&
+  booking.status ===
+    "Pending" && (
                         <>
                           <button
                             type="button"
@@ -4829,12 +6689,13 @@ const handleRemoveNationalityRule =
           styles.bookingDetailHeader
         }
       >
-        <span>
-          Booking #
-          {
-            selectedBooking.id
-          }
-        </span>
+       <span>
+  {selectedBooking.requestType ===
+  "ENQUIRY"
+    ? "Enquiry"
+    : "Booking"}{" "}
+  #{selectedBooking.id}
+</span>
 
         <h2>
           {
@@ -5056,8 +6917,10 @@ const handleRemoveNationalityRule =
 
       {/* PENDING ACTIONS */}
 
-      {selectedBooking.status ===
-        "Pending" && (
+   {selectedBooking.requestType ===
+  "BOOKING" &&
+  selectedBooking.status ===
+    "Pending" && (
         <div
           className={
             styles.modalBookingActions

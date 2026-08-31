@@ -1258,21 +1258,8 @@ const selectedBedName =
                     (
                       property
                     ) => {
-                      let images:
-                        string[] =
-                        [];
-
-                      try {
-                        images =
-                          JSON.parse(
-                            property.images ||
-                              "[]"
-                          );
-                      } catch {}
-
                       const image =
-                        images[0];
-
+  property.primaryImageUrl;
                       return (
                         
                         <article
@@ -1287,31 +1274,29 @@ const selectedBedName =
   href={`/property?id=${encodeURIComponent(
     property.id
   )}`}
-  className={styles.imageArea}
+  className={
+    styles.imageArea
+  }
 >
-                            {image ? (
-                              <img
-                                src={
-                                  image
-                                }
-                                alt={
-                                  property.title
-                                }
-                              />
-                            ) : (
-                              <div
-                                className={
-                                  styles.fallbackImage
-                                }
-                              >
-                                <Building2
-                                  size={
-                                    42
-                                  }
-                                />
-                              </div>
-                            )}
-                          </Link>
+  {image ? (
+    <img
+      src={image}
+      alt={
+        property.title
+      }
+    />
+  ) : (
+    <div
+      className={
+        styles.fallbackImage
+      }
+    >
+      <Building2
+        size={42}
+      />
+    </div>
+  )}
+</Link>
 
                           {/* INFORMATION */}
 

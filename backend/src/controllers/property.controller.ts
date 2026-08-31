@@ -31,102 +31,76 @@ export async function getProperties(
         ? Number(req.query.pageSize)
         : 20;
 
-
-    /*
-    ========================================
-    UNIT TYPE
-    ========================================
-    */
+    /* ========================================
+       UNIT TYPE
+    ======================================== */
 
     const unitTypeId =
       req.query.unitTypeId !== undefined &&
       req.query.unitTypeId !== ""
-        ? Number(
-            req.query.unitTypeId
-          )
+        ? Number(req.query.unitTypeId)
         : undefined;
 
     if (
       unitTypeId !== undefined &&
       (
-        !Number.isInteger(
-          unitTypeId
-        ) ||
+        !Number.isInteger(unitTypeId) ||
         unitTypeId <= 0
       )
     ) {
       return res.status(400).json({
-        error:
-          "Invalid property type",
+        error: "Invalid property type",
       });
     }
 
-
-    /*
-    ========================================
-    PRICE
-    ========================================
-    */
+    /* ========================================
+       PRICE
+    ======================================== */
 
     const minPrice =
       req.query.minPrice !== undefined &&
       req.query.minPrice !== ""
-        ? Number(
-            req.query.minPrice
-          )
+        ? Number(req.query.minPrice)
         : undefined;
 
     const maxPrice =
       req.query.maxPrice !== undefined &&
       req.query.maxPrice !== ""
-        ? Number(
-            req.query.maxPrice
-          )
+        ? Number(req.query.maxPrice)
         : undefined;
-
 
     if (
       minPrice !== undefined &&
       Number.isNaN(minPrice)
     ) {
       return res.status(400).json({
-        error:
-          "Invalid minimum price",
+        error: "Invalid minimum price",
       });
     }
-
 
     if (
       maxPrice !== undefined &&
       Number.isNaN(maxPrice)
     ) {
       return res.status(400).json({
-        error:
-          "Invalid maximum price",
+        error: "Invalid maximum price",
       });
     }
 
-
     const filters: PropertySearchParams = {
-
       search:
-        typeof req.query.search ===
-        "string"
+        typeof req.query.search === "string"
           ? req.query.search.trim() ||
             undefined
           : undefined,
 
-
       unitTypeId,
 
-
       beds:
-        typeof req.query.beds ===
-        "string"
+        typeof req.query.beds === "string"
           ? req.query.beds.trim() ||
             undefined
           : undefined,
-
 
       minPrice,
 
@@ -137,53 +111,78 @@ export async function getProperties(
       pageSize,
     };
 
+    const [rows, total] =
+  await Promise.all([
+    findAllProperties(filters),
+    countProperties(filters),
+  ]);
 
-    const [data, total] =
-      await Promise.all([
-        findAllProperties(
-          filters
-        ),
+const r2PublicUrl =
+  (
+    process.env.R2_PUBLIC_URL ||
+    ""
+  ).replace(/\/$/, "");
 
-        countProperties(
-          filters
-        ),
-      ]);
+const data =
+  rows.map((property) => ({
+    ...property,
 
+    primaryImageUrl:
+      property.primaryImagePath &&
+      r2PublicUrl
+        ? `${r2PublicUrl}/${property.primaryImagePath}`
+        : null,
+  }));
 
-    const actualPageSize =
-      Math.min(
-        pageSize,
-        100
-      );
+const actualPageSize =
+  Math.min(
+    pageSize,
+    100
+  );
+console.log(
+  "R2_PUBLIC_URL:",
+  r2PublicUrl
+);
 
+console.log(
+  "FIRST PROPERTY BEFORE MAP:",
+  rows[0]
+);
 
-    return res.json({
-      success: true,
+console.log(
+  "FIRST PROPERTY AFTER MAP:",
+  data[0]
+);
+return res.json({
+  success: true,
 
-      data,
+  data,
 
-      pagination: {
-        page,
+  pagination: {
+    page,
 
-        pageSize:
-          actualPageSize,
+    pageSize:
+      actualPageSize,
 
-        totalRecords:
-          total,
+    totalRecords:
+      total,
 
-        totalPages:
-          Math.ceil(
-            total /
-            actualPageSize
-          ),
-      },
-    });
-
+    totalPages:
+      Math.ceil(
+        total /
+          actualPageSize
+      ),
+  },
+});
   } catch (error) {
+    console.error(
+      "Get properties failed:",
+      error
+    );
+
     return next(error);
   }
 }
-
 export async function getProperty(
   req: Request,
   res: Response,
