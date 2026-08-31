@@ -44,10 +44,12 @@ export async function getPublicBuildingImages(
             "Building ID is required.",
         });
     }
-
+const TEST_BUILDING_ID =
+  "P:363";
     const rows =
       await findPublicBuildingImages(
-        buildingId
+        // buildingId
+        TEST_BUILDING_ID
       );
 
     const data =

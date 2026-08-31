@@ -308,7 +308,8 @@ export async function findAllProperties(
     WHERE
         LTRIM(RTRIM(BI.buildingId))
         =
-        LTRIM(RTRIM(B.build_id))
+        -- LTRIM(RTRIM(B.build_id))
+         'P:363'
 
         AND ISNULL(
             BI.isActive,
