@@ -629,183 +629,320 @@ export async function getPropertyFilterOptionsRepo() {
 export async function countProperties(
   filters: PropertySearchParams
 ) {
-  const db = await getBinShabibEstateNet();
+  const db =
+    await getBinShabibEstateNet();
 
-  const result = await db
-    .request()
+  /*
+   * IMPORTANT:
+   * Use exactly the same search normalization
+   * as findAllProperties().
+   */
+  const normalizedSearch =
+    filters.search
+      ?.replace(/,/g, " ")
+      .replace(/\s+/g, " ")
+      .trim() || null;
 
-    .input(
-      "Search",
-      sql.NVarChar(300),
-      filters.search || null
-    )
+  const result =
+    await db
+      .request()
 
-    .input(
-      "UnitTypeId",
-      sql.Int,
-      filters.unitTypeId ?? null
-    )
+      .input(
+        "Search",
+        sql.NVarChar(300),
+        normalizedSearch
+      )
 
-    .input(
-      "Beds",
-      sql.NVarChar(10),
-      filters.beds || null
-    )
+      .input(
+        "UnitTypeId",
+        sql.Int,
+        filters.unitTypeId ??
+          null
+      )
 
-    .input(
-      "MinPrice",
-      sql.Decimal(18, 2),
-      filters.minPrice ?? null
-    )
+      .input(
+        "Beds",
+        sql.NVarChar(10),
+        filters.beds ||
+          null
+      )
 
-    .input(
-      "MaxPrice",
-      sql.Decimal(18, 2),
-      filters.maxPrice ?? null
-    )
+      .input(
+        "MinPrice",
+        sql.Decimal(18, 2),
+        filters.minPrice ??
+          null
+      )
 
-    .query(`
-      SELECT
-          COUNT(
-              DISTINCT B.build_id
-          ) AS total
+      .input(
+        "MaxPrice",
+        sql.Decimal(18, 2),
+        filters.maxPrice ??
+          null
+      )
 
-      FROM dbo.unit U
+      .query(`
+        WITH EligibleUnits AS
+        (
+            SELECT
+                U.build_id
 
-      INNER JOIN dbo.building B
-          ON B.build_id =
-             U.build_id
+            FROM dbo.unit U
 
-      LEFT JOIN dbo.area A
-          ON A.area_id =
-             B.area_id
+            WHERE
+                ISNULL(
+                    U.IsActive,
+                    1
+                ) = 1
 
-      LEFT JOIN dbo.place P
-          ON P.place_id =
-             B.place_id
-
-      WHERE
-          ISNULL(
-              U.IsActive,
-              1
-          ) = 1
-
-          AND ISNULL(
-              U.unit_vacant,
-              'N'
-          ) = 'Y'
-
-          AND ISNULL(
-              B.IsActive,
-              1
-          ) = 1
-
-AND
-(
-    B.WebDisplayOrder IS NULL
-    OR B.WebDisplayOrder BETWEEN 1 AND 6
-)
-       
-         AND
-(
-    @UnitTypeId IS NULL
-
-   AND
-(
-    @UnitTypeId IS NULL
-
-    OR EXISTS
-    (
-        SELECT 1
-        FROM dbo.vw_UnitType UT
-
-        WHERE
-            UT.UnitTypeId = @UnitTypeId
-
-            AND LTRIM(RTRIM(UT.PurposeCode))
-                =
-                LTRIM(RTRIM(U.Purpose_type))
-    )
-)
-)
+                AND ISNULL(
+                    U.unit_vacant,
+                    'N'
+                ) = 'Y'
 
 
-          /*
-          BEDS
-          */
+                /* =====================================
+                   PROPERTY TYPE
+                ===================================== */
 
-          AND
-          (
-              @Beds IS NULL
+                AND
+                (
+                    @UnitTypeId IS NULL
 
-              OR U.Purpose_type =
-                 @Beds
-          )
+                    OR EXISTS
+                    (
+                        SELECT 1
 
+                        FROM dbo.vw_UnitType VUT
 
-          /*
-          MIN PRICE
-          */
+                        WHERE
+                            VUT.UnitTypeId =
+                                @UnitTypeId
 
-          AND
-          (
-              @MinPrice IS NULL
-
-              OR U.unit_annual_rent >=
-                 @MinPrice
-          )
-
-
-          /*
-          MAX PRICE
-          */
-
-          AND
-          (
-              @MaxPrice IS NULL
-
-              OR U.unit_annual_rent <=
-                 @MaxPrice
-          )
+                            AND LTRIM(
+                                RTRIM(
+                                    VUT.PurposeCode
+                                )
+                            )
+                            =
+                            LTRIM(
+                                RTRIM(
+                                    U.Purpose_type
+                                )
+                            )
+                    )
+                )
 
 
-          /*
-          LOCATION
-          */
+                /* =====================================
+                   BEDS
+                ===================================== */
 
-        AND
-(
-    @Search IS NULL
+                AND
+                (
+                    @Beds IS NULL
 
-    OR LTRIM(RTRIM(ISNULL(B.build_Add, '')))
-        LIKE '%' + @Search + '%'
+                    OR LTRIM(
+                        RTRIM(
+                            U.Purpose_type
+                        )
+                    )
+                    =
+                    LTRIM(
+                        RTRIM(
+                            @Beds
+                        )
+                    )
+                )
 
-    OR LTRIM(RTRIM(ISNULL(B.build_neigh, '')))
-        LIKE '%' + @Search + '%'
 
-    OR LTRIM(RTRIM(ISNULL(A.area_desc, '')))
-        LIKE '%' + @Search + '%'
+                /* =====================================
+                   MIN PRICE
+                ===================================== */
 
-    OR LTRIM(RTRIM(ISNULL(P.place_desc, '')))
-        LIKE '%' + @Search + '%'
+                AND
+                (
+                    @MinPrice IS NULL
 
-    OR
-    LTRIM(
-        RTRIM(
-            ISNULL(B.build_Add, '') + ' ' +
-            ISNULL(B.build_neigh, '') + ' ' +
-            ISNULL(A.area_desc, '') + ' ' +
-            ISNULL(P.place_desc, '')
+                    OR U.unit_annual_rent >=
+                        @MinPrice
+                )
+
+
+                /* =====================================
+                   MAX PRICE
+                ===================================== */
+
+                AND
+                (
+                    @MaxPrice IS NULL
+
+                    OR U.unit_annual_rent <=
+                        @MaxPrice
+                )
         )
-    )
-    LIKE '%' + @Search + '%'
-);
-    `);
 
-  return Number(
-    result.recordset?.[0]?.total ||
-      0
+        SELECT
+            COUNT(*) AS total
+
+        FROM
+        (
+            SELECT
+                B.build_id
+
+            FROM EligibleUnits U
+
+            INNER JOIN dbo.building B
+                ON B.build_id =
+                   U.build_id
+
+            LEFT JOIN dbo.area A
+                ON A.area_id =
+                   B.area_id
+
+            LEFT JOIN dbo.place P
+                ON P.place_id =
+                   B.place_id
+
+            WHERE
+                ISNULL(
+                    B.IsActive,
+                    1
+                ) = 1
+
+                AND
+                (
+                    B.WebDisplayOrder
+                        IS NULL
+
+                    OR B.WebDisplayOrder
+                        BETWEEN 1 AND 6
+                )
+
+
+                /* =====================================
+                   LOCATION
+                ===================================== */
+
+                AND
+                (
+                    @Search IS NULL
+
+                    OR LTRIM(
+                        RTRIM(
+                            ISNULL(
+                                B.build_Add,
+                                ''
+                            )
+                        )
+                    )
+                    LIKE
+                        '%' +
+                        @Search +
+                        '%'
+
+                    OR LTRIM(
+                        RTRIM(
+                            ISNULL(
+                                B.build_neigh,
+                                ''
+                            )
+                        )
+                    )
+                    LIKE
+                        '%' +
+                        @Search +
+                        '%'
+
+                    OR LTRIM(
+                        RTRIM(
+                            ISNULL(
+                                A.area_desc,
+                                ''
+                            )
+                        )
+                    )
+                    LIKE
+                        '%' +
+                        @Search +
+                        '%'
+
+                    OR LTRIM(
+                        RTRIM(
+                            ISNULL(
+                                P.place_desc,
+                                ''
+                            )
+                        )
+                    )
+                    LIKE
+                        '%' +
+                        @Search +
+                        '%'
+
+                    OR LTRIM(
+                        RTRIM(
+                            ISNULL(
+                                B.build_Add,
+                                ''
+                            )
+                            + ' ' +
+                            ISNULL(
+                                B.build_neigh,
+                                ''
+                            )
+                            + ' ' +
+                            ISNULL(
+                                A.area_desc,
+                                ''
+                            )
+                            + ' ' +
+                            ISNULL(
+                                P.place_desc,
+                                ''
+                            )
+                        )
+                    )
+                    LIKE
+                        '%' +
+                        @Search +
+                        '%'
+                )
+
+            GROUP BY
+                B.build_id
+        ) AS MatchingBuildings;
+      `);
+
+  const total =
+    Number(
+      result.recordset?.[0]
+        ?.total ?? 0
+    );
+
+  console.log(
+    "COUNT PROPERTY FILTERS:",
+    {
+      search:
+        normalizedSearch,
+
+      unitTypeId:
+        filters.unitTypeId,
+
+      beds:
+        filters.beds,
+
+      minPrice:
+        filters.minPrice,
+
+      maxPrice:
+        filters.maxPrice,
+
+      total,
+    }
   );
+
+  return total;
 }
 /**
  * Returns building-level information.
@@ -1088,6 +1225,9 @@ export async function findVacantUnitsByBuildingId(
 
             U.Unit_SecurityDeposit
                 AS securityDeposit,
+
+                U.isWithBalcony
+    AS isWithBalcony,
 
             U.Unit_RefNo
                 AS unitReference,

@@ -1899,18 +1899,27 @@ const handleTouchEnd =
                           </div>
                         )}
 
-                        <div>
-                          <Check
-                            size={
-                              15
-                            }
-                          />
+                       <div
+    className={
+      styles.unitInfoItem
+    }
+  >
+    <span>
+      {Number(
+        unit.isWithBalcony
+      ) === 1
+        ? "✓"
+        : "—"}
+    </span>
 
-                          <span>
-                            Vacant &
-                            available
-                          </span>
-                        </div>
+    <span>
+      {Number(
+        unit.isWithBalcony
+      ) === 1
+        ? "Balcony"
+        : "No Balcony"}
+    </span>
+  </div>
 
                         {unit.airConditioning && (
                           <div>

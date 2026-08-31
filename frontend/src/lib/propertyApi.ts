@@ -130,6 +130,8 @@ export interface PropertyUnit {
 
   lastUpdated:
     string | null;
+     isWithBalcony:
+    number | boolean | null;
 }
 
 /* =========================================================
