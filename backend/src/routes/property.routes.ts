@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getProperties, getProperty,  getPropertyFilterOptions,  getPropertyUnits } from "../controllers/property.controller";
+import { getImageManagementBuildings, getProperties, getProperty,  getPropertyFilterOptions,  getPropertyUnits } from "../controllers/property.controller";
 import {
   getPublicBuildingImages,
   getPublicUnitImages,
@@ -12,7 +12,10 @@ router.get(
   "/filter-options",
   getPropertyFilterOptions
 );
-
+router.get(
+  "/image-buildings",
+  getImageManagementBuildings
+);
 router.get("/:id/units", getPropertyUnits);
 router.get("/:id", getProperty);
 router.get(
@@ -24,4 +27,8 @@ router.get(
   "/:buildingId/units/:unitDesc/images",
   getPublicUnitImages
 );
+
+
+
+
 export default router;

@@ -14,7 +14,9 @@ import {
    deleteUpcomingProject,
   updateUpcomingProject,
 } from "../repositories/upcomingProject.repository";
-
+import {
+  R2_PUBLIC_URL,
+} from "../config/cloudFlareR2";
 function cleanText(
   value: unknown
 ) {
@@ -102,20 +104,37 @@ export async function getUpcomingProjects(
   next: NextFunction
 ) {
   try {
-    const projects =
+    const rows =
       await findUpcomingProjects();
+
+    const r2PublicUrl =
+      (
+        R2_PUBLIC_URL ||
+        ""
+      ).replace(
+        /\/$/,
+        ""
+      );
+
+    const data =
+      rows.map(
+        (project) => ({
+          ...project,
+
+          image:
+            project.primaryImagePath &&
+            r2PublicUrl
+              ? `${r2PublicUrl}/${project.primaryImagePath}`
+              : null,
+        })
+      );
 
     return res.json({
       success: true,
-      data: projects,
+      data,
     });
   } catch (error) {
-    console.error(
-      "Get upcoming projects failed:",
-      error
-    );
-
-    next(error);
+    return next(error);
   }
 }
 

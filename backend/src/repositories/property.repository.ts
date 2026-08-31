@@ -1652,3 +1652,123 @@ export async function updatePropertyWebDisplay(
     0
   );
 }
+
+
+export async function findImageManagementBuildings() {
+  const pool =
+    await getBinShabibEstateNet();
+
+  const result =
+    await pool
+      .request()
+      .query(`
+        SELECT
+            LTRIM(
+                RTRIM(
+                    B.build_id
+                )
+            ) AS id,
+
+            LTRIM(
+                RTRIM(
+                    B.build_desc
+                )
+            ) AS title,
+
+            ISNULL(
+                B.IsUpcomingProject,
+                0
+            ) AS isUpcomingProject,
+
+            ISNULL(
+                B.IsActive,
+                1
+            ) AS isActive
+
+        FROM dbo.building B
+
+        WHERE
+            B.build_id IS NOT NULL
+
+            AND LTRIM(
+                RTRIM(
+                    ISNULL(
+                        B.build_desc,
+                        ''
+                    )
+                )
+            ) <> ''
+
+            AND
+            (
+                /* NORMAL ACTIVE BUILDINGS */
+
+                (
+                    ISNULL(
+                        B.IsUpcomingProject,
+                        0
+                    ) = 0
+
+                    AND ISNULL(
+                        B.IsActive,
+                        1
+                    ) = 1
+
+                    AND EXISTS
+                    (
+                        SELECT 1
+
+                        FROM dbo.unit U
+
+                        WHERE
+                            LTRIM(
+                                RTRIM(
+                                    U.build_id
+                                )
+                            )
+                            =
+                            LTRIM(
+                                RTRIM(
+                                    B.build_id
+                                )
+                            )
+
+                            AND ISNULL(
+                                U.IsActive,
+                                1
+                            ) = 1
+
+                            AND ISNULL(
+                                U.unit_vacant,
+                                'N'
+                            ) = 'Y'
+                    )
+                )
+
+                OR
+
+                /* UPCOMING BUILDINGS */
+
+                (
+                    ISNULL(
+                        B.IsUpcomingProject,
+                        0
+                    ) = 1
+                )
+            )
+
+        ORDER BY
+            CASE
+                WHEN ISNULL(
+                    B.IsUpcomingProject,
+                    0
+                ) = 1
+                THEN 1
+                ELSE 0
+            END,
+
+            B.build_desc ASC;
+      `);
+
+  return result.recordset;
+}

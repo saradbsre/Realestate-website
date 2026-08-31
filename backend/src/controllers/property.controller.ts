@@ -8,6 +8,7 @@ import {
   countProperties,
   findAllAdminProperties,
   findAllProperties,
+  findImageManagementBuildings,
   findPropertyByBuildingId,
   findVacantUnitsByBuildingId,
   getPropertyFilterOptionsRepo,
@@ -471,5 +472,24 @@ export async function getAdminProperties(
         error:
           "Unable to load properties.",
       });
+  }
+}
+
+
+export async function getImageManagementBuildings(
+  _req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const data =
+      await findImageManagementBuildings();
+
+    return res.json({
+      success: true,
+      data,
+    });
+  } catch (error) {
+    return next(error);
   }
 }

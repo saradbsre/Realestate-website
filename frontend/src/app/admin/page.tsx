@@ -410,7 +410,19 @@ const [
   []
 );
 
+interface ImageBuilding {
+  id: string;
+  title: string;
+  isUpcomingProject: boolean;
+  isActive: boolean;
+}
 
+const [
+  imageBuildings,
+  setImageBuildings,
+] = useState<
+  ImageBuilding[]
+>([]);
 const [
   draggingBuildImageId,
   setDraggingBuildImageId,
@@ -427,7 +439,53 @@ const [
   savingBuildOrder,
   setSavingBuildOrder,
 ] = useState(false);
+const fetchImageBuildings =
 
+  async () => {
+    try {
+      const response =
+        await fetch(
+          `${API_URL}/api/properties/image-buildings`,
+          {
+            cache:
+              "no-store",
+
+            credentials:
+              "include",
+          }
+        );
+
+      const result =
+        await response.json();
+        
+
+      if (
+        !response.ok ||
+        !result.success
+      ) {
+        throw new Error(
+          result.error ||
+            "Unable to load buildings."
+        );
+      }
+
+      setImageBuildings(
+        Array.isArray(
+          result.data
+        )
+          ? result.data
+          : []
+      );
+    } catch (error) {
+      setImageBuildings([]);
+
+      showError(
+        error instanceof Error
+          ? error.message
+          : "Unable to load buildings."
+      );
+    }
+  };
 const handleBuildImageDragStart =
   (
     imageId:
@@ -3767,19 +3825,14 @@ const formatImageFileSize =
             )
           </button>
 
-          <button
+  <button
   type="button"
   onClick={() => {
     changeTab(
       "images"
     );
 
-    if (
-      properties.length ===
-      0
-    ) {
-      fetchProperties();
-    }
+    fetchImageBuildings();
   }}
   className={`${styles.menuItem} ${
     activeTab ===
@@ -3788,7 +3841,7 @@ const formatImageFileSize =
       : ""
   }`}
 >
-   Property Images
+  Property Images
 </button>
 
           {/* <button
@@ -5257,23 +5310,29 @@ const formatImageFileSize =
           Select Building
         </option>
 
-        {properties.map(
-          (property) => (
-            <option
-              key={
-                property.id
-              }
-              value={
-                property.id
-              }
-            >
-              {property.title}
-              {" ("}
-              {property.id}
-              {")"}
-            </option>
-          )
-        )}
+      {imageBuildings.map(
+  (
+    building
+  ) => (
+    <option
+      key={
+        building.id
+      }
+      value={
+        building.id
+      }
+    >
+      {building.title}
+      {" ("}
+      {building.id}
+      {")"}
+
+      {building.isUpcomingProject
+        ? " - Upcoming"
+        : ""}
+    </option>
+  )
+)}
       </select>
     </div>
 

@@ -343,29 +343,74 @@ export async function findUpcomingProjects() {
       .request()
       .query(`
         SELECT
-            LTRIM(RTRIM(B.build_id))
-                AS id,
+            LTRIM(
+                RTRIM(
+                    B.build_id
+                )
+            ) AS id,
 
-            LTRIM(RTRIM(B.build_desc))
-                AS title,
+            LTRIM(
+                RTRIM(
+                    B.build_desc
+                )
+            ) AS title,
 
-            LTRIM(RTRIM(B.place_id))
-                AS placeId,
+            LTRIM(
+                RTRIM(
+                    B.place_id
+                )
+            ) AS placeId,
 
-            LTRIM(RTRIM(P.place_desc))
-                AS placeName,
+            LTRIM(
+                RTRIM(
+                    P.place_desc
+                )
+            ) AS placeName,
 
-            LTRIM(RTRIM(B.area_id))
-                AS areaId,
+            LTRIM(
+                RTRIM(
+                    B.area_id
+                )
+            ) AS areaId,
 
-            LTRIM(RTRIM(A.area_desc))
-                AS areaName,
+            LTRIM(
+                RTRIM(
+                    A.area_desc
+                )
+            ) AS areaName,
 
             B.build_area
                 AS buildArea,
 
-            B.ImagePic
-                AS image,
+            (
+                SELECT TOP 1
+                    BI.imagePath
+
+                FROM dbo.build_images BI
+
+                WHERE
+                    LTRIM(
+                        RTRIM(
+                            BI.buildingId
+                        )
+                    )
+                    =
+                    LTRIM(
+                        RTRIM(
+                            B.build_id
+                        )
+                    )
+
+                    AND ISNULL(
+                        BI.isActive,
+                        1
+                    ) = 1
+
+                ORDER BY
+                    BI.isPrimary DESC,
+                    BI.displayOrder ASC,
+                    BI.imageId ASC
+            ) AS primaryImagePath,
 
             B.build_notes
                 AS description,
@@ -373,30 +418,52 @@ export async function findUpcomingProjects() {
             ISNULL(
                 B.IsUpcomingProject,
                 0
-            )
-                AS isUpcomingProject,
+            ) AS isUpcomingProject,
 
             ISNULL(
                 B.IsActive,
                 1
-            )
-                AS isActive
+            ) AS isActive
 
         FROM dbo.building B
 
         INNER JOIN dbo.Place P
-            ON LTRIM(RTRIM(P.place_id))
-             =
-               LTRIM(RTRIM(B.place_id))
+            ON LTRIM(
+                RTRIM(
+                    P.place_id
+                )
+            )
+            =
+            LTRIM(
+                RTRIM(
+                    B.place_id
+                )
+            )
 
         LEFT JOIN dbo.Area A
-            ON LTRIM(RTRIM(A.area_id))
-             =
-               LTRIM(RTRIM(B.area_id))
+            ON LTRIM(
+                RTRIM(
+                    A.area_id
+                )
+            )
+            =
+            LTRIM(
+                RTRIM(
+                    B.area_id
+                )
+            )
 
-            AND LTRIM(RTRIM(A.place_id))
-             =
-               LTRIM(RTRIM(B.place_id))
+            AND LTRIM(
+                RTRIM(
+                    A.place_id
+                )
+            )
+            =
+            LTRIM(
+                RTRIM(
+                    B.place_id
+                )
+            )
 
         WHERE
             ISNULL(
