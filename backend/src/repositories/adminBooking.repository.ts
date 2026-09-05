@@ -4,8 +4,9 @@ import {
   getBinShabibEstateNet,
 } from "../config/BinShabibEstate";
 
+
 /* =========================================================
-   GET ALL WEB BOOKINGS
+   GET ALL WEB BOOKINGS / ENQUIRIES
 ========================================================= */
 
 export async function findAllWebRequests(
@@ -28,19 +29,32 @@ export async function findAllWebRequests(
 
       .query(`
         SELECT
-            WB.BookingId AS id,
+            WB.BookingId
+                AS id,
 
-            WB.buildingId AS propertyId,
-            WB.buildingName AS propertyName,
+            WB.buildingId
+                AS propertyId,
 
-            WB.UnitReference AS unitReference,
-            WB.UnitType AS unitType,
+            WB.buildingName
+                AS propertyName,
 
-            WB.CustomerName AS name,
-            WB.Email AS email,
-            WB.Phone AS phone,
+            WB.UnitReference
+                AS unitReference,
 
-            WB.NationId AS nationId,
+            WB.UnitType
+                AS unitType,
+
+            WB.CustomerName
+                AS name,
+
+            WB.Email
+                AS email,
+
+            WB.Phone
+                AS phone,
+
+            WB.NationId
+                AS nationId,
 
             LTRIM(
                 RTRIM(
@@ -63,7 +77,6 @@ export async function findAllWebRequests(
                 THEN CAST(
                     1 AS BIT
                 )
-
                 ELSE CAST(
                     0 AS BIT
                 )
@@ -85,6 +98,12 @@ export async function findAllWebRequests(
             WB.RequestType
                 AS requestType,
 
+            WB.InquiryDepartment
+                AS inquiryDepartment,
+
+            WB.EnquiryMessage
+                AS enquiryMessage,
+
             WB.CreatedAt
                 AS createdAt,
 
@@ -94,10 +113,9 @@ export async function findAllWebRequests(
         FROM dbo.WebBookings WB
 
         LEFT JOIN dbo.nation N
-            ON LTRIM(
-                RTRIM(
-                    N.nation_id
-                )
+            ON CONVERT(
+                NVARCHAR(50),
+                N.nation_id
             )
             =
             LTRIM(
@@ -124,8 +142,10 @@ export async function findAllWebRequests(
 
   return result.recordset;
 }
+
+
 /* =========================================================
-   GET ONE BOOKING
+   GET ONE BOOKING / ENQUIRY
 ========================================================= */
 
 export async function findWebBookingById(
@@ -146,23 +166,33 @@ export async function findWebBookingById(
 
       .query(`
         SELECT TOP (1)
-            WB.BookingId AS id,
 
-            WB.buildingId AS propertyId,
+            WB.BookingId
+                AS id,
 
-            WB.buildingName AS propertyName,
+            WB.buildingId
+                AS propertyId,
 
-            WB.UnitReference AS unitReference,
+            WB.buildingName
+                AS propertyName,
 
-            WB.UnitType AS unitType,
+            WB.UnitReference
+                AS unitReference,
 
-            WB.CustomerName AS name,
+            WB.UnitType
+                AS unitType,
 
-            WB.Email AS email,
+            WB.CustomerName
+                AS name,
 
-            WB.Phone AS phone,
+            WB.Email
+                AS email,
 
-            WB.NationId AS nationId,
+            WB.Phone
+                AS phone,
+
+            WB.NationId
+                AS nationId,
 
             LTRIM(
                 RTRIM(
@@ -180,43 +210,61 @@ export async function findWebBookingById(
                 AS passportFileSize,
 
             CASE
-                WHEN WB.PassportFile IS NOT NULL
-                THEN CAST(1 AS BIT)
-                ELSE CAST(0 AS BIT)
-            END AS hasPassport,
+                WHEN WB.PassportFile
+                    IS NOT NULL
+                THEN CAST(
+                    1 AS BIT
+                )
+                ELSE CAST(
+                    0 AS BIT
+                )
+            END
+                AS hasPassport,
 
-            WB.Status AS status,
+            WB.Status
+                AS status,
 
             ISNULL(
                 WB.IsAutoRejected,
                 0
-            ) AS isAutoRejected,
+            )
+                AS isAutoRejected,
 
             WB.DeclineReason
                 AS declineReason,
-                    WB.RequestType
-    AS requestType,
 
+            WB.RequestType
+                AS requestType,
 
-            WB.CreatedAt AS createdAt,
+            WB.InquiryDepartment
+                AS inquiryDepartment,
 
-            WB.UpdatedAt AS updatedAt
-        
+            WB.EnquiryMessage
+                AS enquiryMessage,
+
+            WB.CreatedAt
+                AS createdAt,
+
+            WB.UpdatedAt
+                AS updatedAt
+
         FROM dbo.WebBookings WB
 
         LEFT JOIN dbo.nation N
-            ON LTRIM(RTRIM(N.nation_id))
-             =
-               LTRIM(RTRIM(WB.NationId))
+            ON CONVERT(
+                NVARCHAR(50),
+                N.nation_id
+            )
+            =
+            LTRIM(
+                RTRIM(
+                    WB.NationId
+                )
+            )
 
         WHERE
             WB.BookingId =
-                @BookingId
-
-            AND WB.RequestType =
-                  @BookingId;
-
-                  
+                @BookingId;
       `);
 
   return (
@@ -224,6 +272,7 @@ export async function findWebBookingById(
     null
   );
 }
+
 
 /* =========================================================
    GET PASSPORT BINARY
@@ -255,7 +304,7 @@ export async function findBookingPassport(
 
         WHERE
             BookingId =
-            @BookingId;
+                @BookingId;
       `);
 
   return (
@@ -264,15 +313,18 @@ export async function findBookingPassport(
   );
 }
 
+
 /* =========================================================
    UPDATE STATUS
 ========================================================= */
 
 export async function updateWebBookingStatus(
   bookingId: number,
+
   status:
     | "Confirmed"
     | "Declined",
+
   reason:
     string | null
 ) {

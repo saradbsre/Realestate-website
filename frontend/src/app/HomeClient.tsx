@@ -4,6 +4,11 @@ import React, {
   useEffect,
   useState,
 } from "react";
+
+import {
+  useRouter,
+} from "next/navigation";
+
 import styles from "./home.module.css";
 
 import Hero from "./components/Hero";
@@ -12,153 +17,239 @@ import UpcomingProjects from "./components/UpcomingProjects";
 import WhyChooseUs from "./components/WhyChooseUs";
 import FaqSection from "./components/FaqSection";
 
-
 import {
   getProperties,
   type Property,
 } from "@/lib/propertyApi";
 
+
 interface HomeClientProps {
-  initialProperties: Property[];
+  initialProperties:
+    Property[];
 }
+
 
 interface HeroSearchFilters {
   location: string;
 
-  unitTypeId: number | null;
+  unitTypeId:
+    number | null;
 
   beds: string;
 
   minPrice: string;
 
   maxPrice: string;
+
+  minArea?: string;
+
+  maxArea?: string;
 }
+
 
 export default function HomeClient({
   initialProperties,
 }: HomeClientProps) {
-  const [properties, setProperties] =
+  const router =
+    useRouter();
+
+
+  const [
+    properties,
+    setProperties,
+  ] =
     useState<Property[]>(
       initialProperties
     );
 
-  const [searching, setSearching] =
+
+  const [
+    searching,
+    setSearching,
+  ] =
     useState(false);
-useEffect(() => {
-  const loadInitialProperties = async () => {
-    try {
-      console.log("HOME: loading initial properties");
 
-      const { properties: results } =
-        await getProperties({
-          page: 1,
-          pageSize: 10,
-        });
 
-      console.log(
-        "HOME: API properties:",
-        results
-      );
+  /* =========================================================
+     LOAD FEATURED PROPERTIES
+  ========================================================= */
 
-      setProperties(results || []);
-    } catch (error) {
-      console.error(
-        "HOME: initial load error:",
+  useEffect(() => {
+    const loadInitialProperties =
+      async () => {
+        try {
+          const {
+            properties:
+              results,
+          } =
+            await getProperties({
+              page: 1,
+              pageSize: 6,
+               view:
+      "building",
+            });
+
+
+          setProperties(
+            results ||
+              []
+          );
+        } catch (
+          error
+        ) {
+          console.error(
+            "HOME: initial load error:",
+            error
+          );
+        }
+      };
+
+
+    loadInitialProperties();
+  }, []);
+
+
+  /* =========================================================
+     SEARCH
+     Navigate to All Properties page
+  ========================================================= */
+
+  const handleSearch =
+    async (
+      filters:
+        HeroSearchFilters
+    ) => {
+      try {
+        setSearching(
+          true
+        );
+
+
+        const params =
+          new URLSearchParams();
+
+
+        /* LOCATION */
+
+        const location =
+          filters.location.trim();
+
+        if (
+          location
+        ) {
+          params.set(
+            "search",
+            location
+          );
+        }
+
+
+        /* PROPERTY TYPE */
+
+        if (
+          filters.unitTypeId !==
+            null &&
+          filters.unitTypeId !==
+            undefined
+        ) {
+          params.set(
+            "unitTypeId",
+            String(
+              filters.unitTypeId
+            )
+          );
+        }
+
+
+        /* BEDROOM */
+
+        if (
+          filters.beds &&
+          filters.beds !==
+            "All"
+        ) {
+          params.set(
+            "beds",
+            filters.beds
+          );
+        }
+
+
+        /* PRICE */
+
+        if (
+          filters.minPrice
+        ) {
+          params.set(
+            "minPrice",
+            filters.minPrice
+          );
+        }
+
+
+        if (
+          filters.maxPrice
+        ) {
+          params.set(
+            "maxPrice",
+            filters.maxPrice
+          );
+        }
+
+
+        /* UNIT AREA */
+
+        if (
+          filters.minArea
+        ) {
+          params.set(
+            "minArea",
+            filters.minArea
+          );
+        }
+
+
+        if (
+          filters.maxArea
+        ) {
+          params.set(
+            "maxArea",
+            filters.maxArea
+          );
+        }
+
+
+        /* ALWAYS START FROM PAGE 1 */
+
+        params.set(
+          "page",
+          "1"
+        );
+
+
+        const query =
+          params.toString();
+
+
+        router.push(
+          query
+            ? `/properties?${query}`
+            : "/properties"
+        );
+      } catch (
         error
-      );
-    }
-  };
+      ) {
+        console.error(
+          "Search navigation error:",
+          error
+        );
+      } finally {
+        setSearching(
+          false
+        );
+      }
+    };
 
-  loadInitialProperties();
-}, []);
-  const handleSearch = async (
-    filters: HeroSearchFilters
-  ) => {
-    try {
-      setSearching(true);
-
-      const {
-        properties: results,
-      } = await getProperties({
-        /*
-         * Location search
-         */
-        search:
-          filters.location.trim() ||
-          undefined,
-
-        /*
-         * Property Type
-         *
-         * Apartment = UnitTypeId 1
-         * Office = UnitTypeId 3
-         * etc.
-         */
-        unitTypeId:
-          filters.unitTypeId ??
-          undefined,
-
-        /*
-         * Actual ERP Purpose_type code:
-         *
-         * STD
-         * 1BK
-         * 2BK
-         * 3BK
-         * 4BK
-         *
-         * Don't send "All".
-         */
-        beds:
-          filters.beds !== "All"
-            ? filters.beds
-            : undefined,
-
-        /*
-         * Annual rent
-         */
-        minPrice:
-          filters.minPrice ||
-          undefined,
-
-        maxPrice:
-          filters.maxPrice ||
-          undefined,
-
-        /*
-         * Home page only shows
-         * first 10 buildings.
-         */
-        page: 1,
-
-        pageSize: 10,
-      });
-
-      setProperties(
-        results
-      );
-
-      requestAnimationFrame(() => {
-        document
-          .getElementById(
-            "listings"
-          )
-          ?.scrollIntoView({
-            behavior: "smooth",
-            block: "start",
-          });
-      });
-    } catch (error) {
-      console.error(
-        "Search error:",
-        error
-      );
-    } finally {
-      setSearching(false);
-    }
-  };
-
-  
 
   return (
     <div
@@ -170,17 +261,19 @@ useEffect(() => {
           "100vh",
       }}
     >
-
-
       <main>
+
         {/* HERO */}
+
         <Hero
           onSearch={
             handleSearch
           }
         />
 
+
         {/* ABOUT */}
+
         <section
           id="about"
           className={`section-container ${styles.aboutSection}`}
@@ -203,6 +296,7 @@ useEffect(() => {
             />
           </div>
 
+
           <div
             className={
               styles.aboutContent
@@ -217,6 +311,7 @@ useEffect(() => {
                 Legacy of Luxury
                 Real Estate in UAE
               </h3>
+
 
               <p>
                 ABDULWAHED BIN
@@ -253,6 +348,7 @@ useEffect(() => {
                 communities.
               </p>
 
+
               <p>
                 We specialize in
                 premium direct
@@ -281,6 +377,7 @@ useEffect(() => {
               </p>
             </div>
 
+
             <div
               className={
                 styles.aboutImage
@@ -290,8 +387,12 @@ useEffect(() => {
                 src="/luxury_villa_hero.jpg"
                 alt="About us"
                 style={{
-                  width: "100%",
-                  height: "100%",
+                  width:
+                    "100%",
+
+                  height:
+                    "100%",
+
                   objectFit:
                     "cover",
                 }}
@@ -300,12 +401,15 @@ useEffect(() => {
           </div>
         </section>
 
+
         {/* FEATURED */}
+
         <FeaturedListings
           properties={
             properties
           }
         />
+
 
         <UpcomingProjects />
 
@@ -313,8 +417,6 @@ useEffect(() => {
 
         <FaqSection />
       </main>
-
-
     </div>
   );
 }

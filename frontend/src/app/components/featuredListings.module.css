@@ -1,365 +1,348 @@
+/* =========================================================
+   SECTION
+========================================================= */
+
 .section {
-  padding: 40px 20px 80px;
-  background-color: #f8fafc;
+  width: 100%;
+  padding: 30px 24px 30px;
+  background: #f8fafc;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
+/* =========================================================
+   TITLE
+========================================================= */
+
 .titleArea {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto 30px;
   text-align: center;
-  margin-bottom: 40px;
 }
 
 .titleArea h2 {
-  font-size: 32px;
+  margin: 0 0 8px;
   color: #0b1a30;
-  font-weight: 700;
-  margin-bottom: 8px;
-}
-.card {
-  user-select: text;
-  -webkit-user-select: text;
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1.2;
 }
 
-.card img {
-  user-select: none;
-  -webkit-user-drag: none;
-}
 .titleArea p {
+  margin: 0;
   color: #64748b;
-  font-size: 15px;
+  font-size: 14px;
+  line-height: 1.5;
 }
-.metaText {
-  color: #23395b;
-  font-size: 15px;
-  font-weight: 500;
-  line-height: 1.45;
 
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
+/* =========================================================
+   HORIZONTAL PROPERTY LIST
+========================================================= */
+
 .grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 30px;
-  max-width: 1200px;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 20px;
+  width: 100%;
+  max-width: 1280px;
   margin: 0 auto;
+  padding: 4px 16px 16px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  scroll-snap-type: x proximity;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #9aaabd #e8eef5;
+  box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
+          scroll-padding-left: 22px;
+        scroll-padding-right: 22px;
 }
 
-/* .card {
-  background: white;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-  border: 1px solid #e2e8f0;
-  transition: all 0.3s ease;
+/* =========================================================
+   CARD
+========================================================= */
+
+.card {
+  flex: 0 0 calc((100% - 60px) / 3.35);
+  width: calc((100% - 60px) / 3.35);
+  min-width: 0;
+  max-width: none;
   display: flex;
   flex-direction: column;
-  height: 100%;
-} */
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 5px 16px rgba(15, 45, 85, 0.07);
+  text-decoration: none;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+  scroll-snap-align: start;
+  box-sizing: border-box;
+}
 
-/* .card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.1), 0 8px 8px -6px rgba(0, 0, 0, 0.1);
-  border-color: #cbd5e1;
-} */
+.card:hover {
+  transform: translateY(-3px);
+  border-color: #cfdae8;
+  box-shadow: 0 10px 24px rgba(15, 45, 85, 0.11);
+}
+
+/* =========================================================
+   IMAGE
+========================================================= */
 
 .imageWrapper {
   position: relative;
   width: 100%;
-  height: 200px;
-  background-color: #f1f5f9;
+  height: 220px;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  background: #eef3f8;
 }
 
 .image {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.5s ease;
+  user-select: none;
+  -webkit-user-drag: none;
+  transition: transform 0.35s ease;
 }
 
 .card:hover .image {
-  transform: scale(1.05);
+  transform: scale(1.025);
 }
 
 .fallbackImage {
-  font-size: 40px;
-  opacity: 0.25;
-}
-
-.badges {
-  position: absolute;
-  top: 12px;
-  left: 12px;
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  z-index: 2;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: #94a3b8;
+  font-size: 42px;
 }
 
-.badge {
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 700;
-  color: white;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.badgeSale {
-  background-color: #0f4c81;
-}
-
-.badgeRent {
-  background-color: #0b1a30;
-}
-
-.badgeStatus {
-  background-color: #c5a880;
-}
-
-.sourceBadge {
-  position: absolute;
-  bottom: 12px;
-  right: 12px;
-  background: rgba(11, 26, 48, 0.85);
-  backdrop-filter: blur(4px);
-  color: #e2e8f0;
-  font-size: 10px;
-  font-weight: 600;
-  padding: 4px 8px;
-  border-radius: 4px;
-}
+/* =========================================================
+   CONTENT
+========================================================= */
 
 .content {
-  padding: 22px 22px 18px;
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 3px;
+  padding: 13px;
+  box-sizing: border-box;
 }
+
+/* =========================================================
+   PRICE
+========================================================= */
 
 .priceBlock {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
 }
 
 .price {
-  font-size: 16px;
+  color: #0b2957;
+  font-size: 15px;
   font-weight: 800;
-  color: #0b2957;
-  line-height: 1.2;
+  line-height: 1.25;
 }
 
-.pricePeriod {
-  font-size: 14px;
-  color: #475569;
-}
-
-.title {
-  font-size: 16px;
-  font-weight: 700;
-  color: #1e293b;
-  margin-bottom: 8px;
-  line-height: 1.4;
-  height: 44px; /* Fixed height for 2 lines */
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-}
 .fromText {
-  font-size: 16px;
-  font-weight: 700;
-  color: #0b2957;
   margin-right: 4px;
+  color: #0b2957;
+  font-size: 15px;
+  font-weight: 700;
 }
 
 .pricePeriod {
-  font-size: 14px;
+  color: #64748b;
+  font-size: 13px;
   font-weight: 600;
-  color: #5c6f87;
 }
 
 .priceOnRequest {
-  font-size: 16px;
-  font-weight: 700;
   color: #0b2957;
-}
-
-.title {
   font-size: 15px;
   font-weight: 800;
-  color: #162b49;
-  line-height: 1.35;
-  margin: 0;
 }
+
+/* =========================================================
+   TITLE
+========================================================= */
+
+.title {
+  min-height: 38px;
+  margin: 0;
+  color: #162b49;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* =========================================================
+   LOCATION
+========================================================= */
 
 .location {
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  color: #6b7c93;
-  font-size: 14px;
-  line-height: 1.5;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.45;
 }
 
 .locationIcon {
   flex-shrink: 0;
-  margin-top: 2px;
+  margin-top: 1px;
+  color: #6683a2;
 }
 
 .locationText {
+  display: -webkit-box;
   color: #667892;
   font-weight: 500;
-}
-
-.divider {
-  height: 1px;
-  background: #e7edf5;
-  width: 100%;
-}
-
-.metaRow {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-}
-
-.metaItem {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  color: #6b7c93;
-  font-size: 14px;
-  line-height: 1.5;
-}
-
-.metaIcon {
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-.metaText {
-  color: #23395b;
-  font-size: 15px;
-  font-weight: 600;
-  line-height: 1.45;
-
-  display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-.bookingActions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 8px;
+/* =========================================================
+   DIVIDER
+========================================================= */
+
+.divider {
+  width: 100%;
+  height: 1px;
+  margin: 2px 0;
+  background: #e7edf5;
 }
 
-.vacancyBadge {
-  flex: 1;
-  text-align: center;
-  background: #eef5ff;
-  color: #14467d;
-  border: 1px solid #c9dbf2;
-  padding: 12px 14px;
-  border-radius: 12px;
-  font-size: 15px;
-  font-weight: 700;
+/* =========================================================
+   META
+========================================================= */
+
+.metaRow {
+  display: flex;
+  align-items: flex-start;
+  min-height: 28px;
+}
+
+.metaItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  width: 100%;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.metaIcon {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.metaText {
+  display: -webkit-box;
+  color: #23395b;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* =========================================================
+   ACTIONS
+========================================================= */
+
+.bookingActions {
+  display: block;
+  width: 100%;
+  /* margin-top: auto; */
+  padding-top: 2px;
 }
 
 .bookNowButton {
-  flex: 1;
-  background: #0f4b8c;
-  color: #fff;
-  border: none;
-  padding: 13px 16px;
-  border-radius: 12px;
-  font-size: 15px;
+  width: 100%;
+  min-height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px;
+  background: #155b92;
+  border: 0;
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 11px;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease;
 }
 
 .bookNowButton:hover {
-  background: #0b3f77;
+  background: #0b4776;
 }
 
-.card {
-  background: #fff;
-  border: 1px solid #e5ebf3;
-  border-radius: 18px;
-  overflow: hidden;
-  box-shadow: 0 6px 18px rgba(13, 39, 80, 0.08);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  text-decoration: none;
-}
-
-.card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 10px 24px rgba(13, 39, 80, 0.14);
-}
-
-.specs {
-  display: flex;
-  justify-content: space-between;
-  border-top: 1px solid #f1f5f9;
-  padding-top: 14px;
-  font-size: 13px;
-  color: #475569;
-  font-weight: 500;
-  margin-top: auto;
-}
-
-.specItem {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.bookingActions { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:14px; }.vacancyBadge,.bookNowButton { min-height:40px; border-radius:7px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12px; }.vacancyBadge { border:1px solid #bfdbfe; background:#eff6ff; color:#0f4c81; }.bookNowButton { border:0; background:#0f4c81; color:#fff; cursor:pointer; padding:0 12px; }.bookNowButton:hover { background:#0a3a63; }.modalBackdrop { position:fixed; inset:0; z-index:60; background:rgba(11,26,48,.62); display:grid; place-items:center; padding:20px; }.bookingModal { position:relative; width:min(540px,100%); max-height:calc(100vh - 40px); overflow-y:auto; padding:30px; border-radius:16px; background:#fff; box-shadow:0 20px 60px rgba(0,0,0,.3); }.bookingModal h2 { color:#0b1a30; font-size:25px; margin-bottom:8px; }.modalProperty { color:#64748b; line-height:1.55; margin-bottom:20px; }.closeModal { position:absolute; right:15px; top:10px; border:0; background:transparent; font-size:30px; color:#64748b; cursor:pointer; }.bookingForm { display:grid; gap:12px; }.bookingForm input,.bookingForm select { width:100%; padding:12px; border:1px solid #cbd5e1; border-radius:8px; font:inherit; background:#fff; }.bookingForm input[readonly] { background:#f8fafc; color:#475569; }.passportLabel { display:grid; gap:7px; color:#334155; font-size:13px; font-weight:600; }.bookingError { color:#b91c1c; font-size:13px; }.bookingSuccess { text-align:center; }.bookingSuccess p { color:#475569; line-height:1.6; margin:16px 0 22px; }
+/* =========================================================
+   EMPTY
+========================================================= */
 
 .noResults {
-  text-align: center;
-  padding: 60px 20px;
+  flex: 0 0 100%;
+  width: 100%;
+  padding: 50px 20px;
   color: #64748b;
-  grid-column: 1 / -1;
-  font-size: 16px;
+  font-size: 15px;
+  text-align: center;
+  box-sizing: border-box;
 }
+
+/* =========================================================
+   SEE ALL
+========================================================= */
+
 .viewAllWrapper {
   display: flex;
   justify-content: center;
-  margin-top: 34px;
+  width: 100%;
+  max-width: 1280px;
+  margin: 26px auto 0;
 }
 
 .viewAllButton {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-
-  min-width: 190px;
-  padding: 13px 22px;
-
-  border: 1px solid #0b5794;
-  border-radius: 10px;
-
+  gap: 8px;
+  min-width: 176px;
+  padding: 11px 20px;
   background: #ffffff;
+  border: 1px solid #0b5794;
+  border-radius: 8px;
   color: #0b5794;
-
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
-
   text-decoration: none;
-
   transition:
     background 0.2s ease,
     color 0.2s ease,
@@ -373,5 +356,196 @@
 }
 
 .viewAllButton span {
-  font-size: 18px;
+  font-size: 17px;
+}
+
+/* =========================================================
+   SCROLLBAR
+========================================================= */
+
+.grid::-webkit-scrollbar {
+  height: 7px;
+}
+
+.grid::-webkit-scrollbar-track {
+  background: #e8eef5;
+  border-radius: 999px;
+}
+
+.grid::-webkit-scrollbar-thumb {
+  background: #9aaabd;
+  border-radius: 999px;
+}
+
+.grid::-webkit-scrollbar-thumb:hover {
+  background: #718096;
+}
+
+/* =========================================================
+   LARGE LAPTOP
+========================================================= */
+
+@media (max-width: 1400px) {
+  .card {
+    flex: 0 0 calc((100% - 44px) / 3.15);
+    width: calc((100% - 44px) / 3.15);
+  }
+}
+
+/* =========================================================
+   TABLET / LAPTOP
+========================================================= */
+
+@media (max-width: 1024px) {
+  .section {
+    padding: 30px 20px 30px;
+  }
+
+  .grid {
+    gap: 18px;
+  }
+
+  .card {
+    flex: 0 0 calc((100% - 18px) / 2.15);
+    width: calc((100% - 18px) / 2.15);
+  }
+
+  .imageWrapper {
+    height: 210px;
+  }
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 650px) {
+  .section {
+    width: 100%;
+    padding: 30px 0 30px;
+    overflow: hidden;
+  }
+
+  .titleArea {
+    width: auto;
+    margin: 0 18px 22px;
+    padding: 0;
+  }
+
+  .titleArea h2 {
+    font-size: 23px;
+  }
+
+  .titleArea p {
+    font-size: 13px;
+  }
+
+  .grid {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    gap: 14px;
+    padding: 4px 22px 14px;
+    box-sizing: border-box;
+    scroll-padding-left: 22px;
+    scroll-padding-right: 22px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .card {
+    flex: 0 0 86%;
+    width: 86%;
+    min-width: 86%;
+    max-width: 86%;
+    border-radius: 14px;
+    scroll-snap-align: start;
+  }
+
+  .imageWrapper {
+    height: 190px;
+  }
+
+  .content {
+    padding: 16px;
+    gap: 8px;
+  }
+
+  .price {
+    font-size: 14px;
+  }
+
+  .fromText {
+    font-size: 14px;
+  }
+
+  .pricePeriod {
+    font-size: 12px;
+  }
+
+  .title {
+    min-height: 38px;
+    font-size: 14px;
+  }
+
+  .location {
+    font-size: 12px;
+  }
+
+  .metaItem {
+    font-size: 12px;
+  }
+
+  .metaText {
+    font-size: 12px;
+  }
+
+  .bookNowButton {
+    min-height: 30px;
+    font-size: 11px;
+  }
+
+  .viewAllWrapper {
+    width: auto;
+    margin: 22px 18px 0;
+  }
+
+  .viewAllButton {
+    width: 100%;
+    max-width: 300px;
+  }
+}
+
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
+
+@media (max-width: 390px) {
+  .grid {
+    padding-left: 18px;
+    padding-right: 18px;
+    gap: 12px;
+    scroll-padding-left: 18px;
+  }
+
+  .card {
+    flex: 0 0 88%;
+    width: 88%;
+    min-width: 88%;
+    max-width: 88%;
+  }
+
+  .imageWrapper {
+    height: 180px;
+  }
+
+  .content {
+    padding: 14px;
+  }
+
+  .titleArea {
+    margin-left: 14px;
+    margin-right: 14px;
+  }
 }

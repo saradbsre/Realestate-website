@@ -21,6 +21,14 @@ export default function FeaturedListings({ properties }: FeaturedListingsProps) 
   // const [bookingError, setBookingError] = React.useState("");
   // const nationalityCodes = "AF AL DZ AD AO AG AR AM AU AT AZ BS BH BD BB BY BE BZ BJ BT BO BA BW BR BN BG BF BI CV KH CM CA CF TD CL CN CO KM CG CD CR CI HR CU CY CZ DK DJ DM DO EC EG SV GQ ER EE SZ ET FJ FI FR GA GM GE DE GH GR GD GT GN GW GY HT HN HU IS IN ID IR IQ IE IL IT JM JP JO KZ KE KI KP KR KW KG LA LV LB LS LR LY LI LT LU MG MW MY MV ML MT MH MR MU MX FM MD MC MN ME MA MZ MM NA NR NP NL NZ NI NE NG MK NO OM PK PW PA PG PY PE PH PL PT QA RO RU RW KN LC VC WS SM ST SA SN RS SC SL SG SK SI SB SO ZA SS ES LK SD SR SE CH SY TJ TZ TH TL TG TO TT TN TR TM TV UG UA AE GB US UY UZ VU VA VE VN YE ZM ZW".split(" ");
   // const countryNames = new Intl.DisplayNames(["en"], { type: "region" });
+
+const featuredProperties =
+  properties.slice(
+    0,
+    6
+  );
+
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("en-AE", {
       style: "currency",
@@ -65,13 +73,15 @@ console.log(
       </div>
 
       <div className={styles.grid}>
-        {properties.length === 0 ? (
+        {featuredProperties.length ===
+0 ? (
           <div className={styles.noResults}>
             <p style={{ fontSize: "20px", marginBottom: "8px", fontWeight: 600 }}>No Properties Found</p>
             <p>Try modifying your search filter options.</p>
           </div>
         ) : (
-          properties.map((prop) => {
+          featuredProperties.map(
+  (prop) => {
   
   const propertyImage =
         prop.primaryImageUrl ||
@@ -79,7 +89,10 @@ console.log(
   return (
               <Link href={`/property?id=${encodeURIComponent(
   prop.id
-)}`} key={prop.id} className={styles.card}>
+)}`} key={
+  prop.listingId ||
+  prop.id
+}  className={styles.card}>
                 <div className={styles.imageWrapper}>
                   {/* Badges Overlay */}
                   {/* <div className={styles.badges}>
@@ -188,9 +201,9 @@ console.log(
       event.stopPropagation();
     }}
   >
-    <span className={styles.vacancyBadge}>
+    {/* <span className={styles.vacancyBadge}>
       {prop.vacantUnits} Vacant Units
-    </span>
+    </span> */}
 
 <button
   type="button"
@@ -211,7 +224,8 @@ console.log(
           })
         )}
       </div>
-      {properties.length > 0 && (
+  {featuredProperties.length >
+  0 && (
   <div className={styles.viewAllWrapper}>
     <Link
       href="/properties"

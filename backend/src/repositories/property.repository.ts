@@ -3,7 +3,9 @@ import { getBinShabibEstateNet } from "../config/BinShabibEstate";
 
 export interface PropertySearchParams {
   search?: string;
+ buildingId?: string;
 
+  unitDesc?: string;
   unitTypeId?: number;
 
   beds?: string;
@@ -12,552 +14,1826 @@ export interface PropertySearchParams {
 
   maxPrice?: number;
 
+  minArea?: number;
+
+  maxArea?: number;
+
+
   page?: number;
 
   pageSize?: number;
+
+    view?: "building" | "unitType";
 }
 
 export async function findAllProperties(
   filters: PropertySearchParams
 ) {
-  const db = await getBinShabibEstateNet();
+  const db =
+    await getBinShabibEstateNet();
 
   const page =
-    Number.isInteger(filters.page) &&
+    Number.isInteger(
+      filters.page
+    ) &&
+    Number(
+      filters.page
+    ) > 0
+      ? Number(
+          filters.page
+        )
+      : 1;
+
+  const requestedPageSize =
+    Number.isInteger(
+      filters.pageSize
+    ) &&
+    Number(
+      filters.pageSize
+    ) > 0
+      ? Number(
+          filters.pageSize
+        )
+      : 20;
+
+  const pageSize =
+    Math.min(
+      requestedPageSize,
+      100
+    );
+
+  const offset =
+    (
+      page -
+      1
+    ) *
+    pageSize;
+
+  const normalizedSearch =
+    filters.search
+      ?.replace(
+        /,/g,
+        " "
+      )
+      .replace(
+        /\s+/g,
+        " "
+      )
+      .trim() ||
+    null;
+
+  const request =
+    db
+      .request()
+
+      .input(
+        "Search",
+        sql.NVarChar(
+          300
+        ),
+        normalizedSearch
+      )
+
+      .input(
+        "UnitTypeId",
+        sql.Int,
+        filters.unitTypeId ??
+          null
+      )
+
+      .input(
+        "Beds",
+        sql.NVarChar(
+          10
+        ),
+        filters.beds ||
+          null
+      )
+
+      .input(
+        "MinPrice",
+        sql.Decimal(
+          18,
+          2
+        ),
+        filters.minPrice ??
+          null
+      )
+
+      .input(
+        "MaxPrice",
+        sql.Decimal(
+          18,
+          2
+        ),
+        filters.maxPrice ??
+          null
+      )
+
+      .input(
+        "MinArea",
+        sql.Decimal(
+          18,
+          2
+        ),
+        filters.minArea ??
+          null
+      )
+
+      .input(
+        "MaxArea",
+        sql.Decimal(
+          18,
+          2
+        ),
+        filters.maxArea ??
+          null
+      )
+
+      .input(
+        "Offset",
+        sql.Int,
+        offset
+      )
+
+      .input(
+  "BuildingId",
+  sql.NVarChar(7),
+  filters.buildingId
+    ?.trim() ||
+    null
+)
+
+.input(
+  "UnitDesc",
+  sql.NVarChar(255),
+  filters.unitDesc
+    ?.trim() ||
+    null
+)
+
+      .input(
+        "PageSize",
+        sql.Int,
+        pageSize
+      );
+
+  const result =
+    await request.query(`
+      /* =====================================================
+         ELIGIBLE VACANT UNITS
+      ===================================================== */
+
+      WITH EligibleUnits AS
+      (
+          SELECT
+              U.*
+
+          FROM dbo.unit U
+
+          WHERE
+              ISNULL(
+                  U.IsActive,
+                  1
+              ) = 1
+
+              AND ISNULL(
+                  U.unit_vacant,
+                  'N'
+              ) = 'Y'
+
+
+              /* =========================================
+                 PROPERTY TYPE
+              ========================================= */
+
+              AND
+              (
+                  @UnitTypeId IS NULL
+
+                  OR EXISTS
+                  (
+                      SELECT 1
+
+                      FROM dbo.vw_UnitType VUT
+
+                      WHERE
+                          VUT.UnitTypeId =
+                              @UnitTypeId
+
+                          AND LTRIM(
+                              RTRIM(
+                                  VUT.PurposeCode
+                              )
+                          )
+                          =
+                          LTRIM(
+                              RTRIM(
+                                  U.Purpose_type
+                              )
+                          )
+                  )
+              )
+
+
+              /* =========================================
+                 BEDS / PURPOSE CODE
+              ========================================= */
+
+              AND
+              (
+                  @Beds IS NULL
+
+                  OR LTRIM(
+                      RTRIM(
+                          U.Purpose_type
+                      )
+                  )
+                  =
+                  LTRIM(
+                      RTRIM(
+                          @Beds
+                      )
+                  )
+              )
+
+
+              /* =========================================
+                 PRICE
+              ========================================= */
+
+              AND
+              (
+                  @MinPrice IS NULL
+
+                  OR U.unit_annual_rent >=
+                     @MinPrice
+              )
+
+              AND
+              (
+                  @MaxPrice IS NULL
+
+                  OR U.unit_annual_rent <=
+                     @MaxPrice
+              )
+
+
+              /* =========================================
+                 AREA
+              ========================================= */
+
+              AND
+              (
+                  @MinArea IS NULL
+
+                  OR U.unit_areasqft >=
+                     @MinArea
+              )
+
+              AND
+              (
+                  @MaxArea IS NULL
+
+                  OR U.unit_areasqft <=
+                     @MaxArea
+              )
+
+                        AND
+            (
+                @BuildingId IS NULL
+
+                OR LTRIM(
+                    RTRIM(
+                        U.build_id
+                    )
+                )
+                =
+                LTRIM(
+                    RTRIM(
+                        @BuildingId
+                    )
+                )
+            )
+
+            AND
+            (
+                @UnitDesc IS NULL
+
+                OR LTRIM(
+                    RTRIM(
+                        U.unit_desc
+                    )
+                )
+                =
+                LTRIM(
+                    RTRIM(
+                        @UnitDesc
+                    )
+                )
+            )
+      ),
+
+
+      /* =====================================================
+         BUILDING + UNIT TYPE GROUPS
+
+         Example:
+
+         P:363 + STD
+         P:363 + SHP
+      ===================================================== */
+
+      ListingGroups AS
+      (
+          SELECT
+              EU.build_id,
+
+              LTRIM(
+                  RTRIM(
+                      EU.Purpose_type
+                  )
+              ) AS purposeCode
+
+          FROM EligibleUnits EU
+
+          GROUP BY
+              EU.build_id,
+
+              LTRIM(
+                  RTRIM(
+                      EU.Purpose_type
+                  )
+              )
+      )
+
+
+      SELECT
+
+          /* =========================================
+             UNIQUE LISTING ID
+          ========================================= */
+
+          LTRIM(
+              RTRIM(
+                  B.build_id
+              )
+          )
+          +
+          '|'
+          +
+          LG.purposeCode
+              AS listingId,
+
+
+          /* =========================================
+             BUILDING
+          ========================================= */
+
+          LTRIM(
+              RTRIM(
+                  B.build_id
+              )
+          ) AS id,
+
+          LTRIM(
+              RTRIM(
+                  B.build_desc
+              )
+          ) AS title,
+
+          BT.bldg_cat_desc
+              AS buildingType,
+
+          B.build_Add
+              AS address,
+
+          A.area_desc
+              AS areaName,
+
+          P.place_desc
+              AS placeName,
+
+          B.build_neigh
+              AS neighborhood,
+
+
+          /* =========================================
+             LOCATION
+          ========================================= */
+
+          STUFF(
+              CASE
+                  WHEN NULLIF(
+                      LTRIM(
+                          RTRIM(
+                              B.build_Add
+                          )
+                      ),
+                      ''
+                  ) IS NOT NULL
+
+                  THEN
+                      ', ' +
+                      LTRIM(
+                          RTRIM(
+                              B.build_Add
+                          )
+                      )
+
+                  ELSE ''
+              END
+
+              +
+
+              CASE
+                  WHEN NULLIF(
+                      LTRIM(
+                          RTRIM(
+                              A.area_desc
+                          )
+                      ),
+                      ''
+                  ) IS NOT NULL
+
+                  THEN
+                      ', ' +
+                      LTRIM(
+                          RTRIM(
+                              A.area_desc
+                          )
+                      )
+
+                  ELSE ''
+              END
+
+              +
+
+              CASE
+                  WHEN NULLIF(
+                      LTRIM(
+                          RTRIM(
+                              P.place_desc
+                          )
+                      ),
+                      ''
+                  ) IS NOT NULL
+
+                  THEN
+                      ', ' +
+                      LTRIM(
+                          RTRIM(
+                              P.place_desc
+                          )
+                      )
+
+                  ELSE ''
+              END,
+
+              1,
+              2,
+              ''
+          ) AS location,
+
+
+          /* =========================================
+             BUILDING DETAILS
+          ========================================= */
+
+          B.plot_no
+              AS plotNumber,
+
+          B.makaniNo
+              AS makaniNumber,
+
+          B.build_floor
+              AS buildingFloors,
+
+          B.build_lift
+              AS lifts,
+
+          B.build_carparks
+              AS carParks,
+
+          B.build_area
+              AS buildingArea,
+
+          B.BuildingNature
+              AS buildingNature,
+
+          B.IsVilla
+              AS isVilla,
+
+          CAST(
+              B.WebDisplayOrder
+              AS INT
+          ) AS webDisplayOrder,
+
+
+          /* =========================================
+             UNIT TYPE
+          ========================================= */
+
+          LG.purposeCode
+              AS purposeCode,
+
+          MAX(
+              UPT.Descr
+          ) AS propertyType,
+
+          MAX(
+              UPT.Descr
+          ) AS availableTypes,
+
+
+          /* =========================================
+             VACANT COUNT FOR THIS TYPE
+          ========================================= */
+
+          COUNT_BIG(
+              *
+          ) AS vacantUnits,
+
+
+          /* =========================================
+             PRICE FOR THIS TYPE
+          ========================================= */
+
+          MIN(
+              U.unit_annual_rent
+          ) AS price,
+
+          MAX(
+              U.unit_annual_rent
+          ) AS maxPrice,
+
+          'AED'
+              AS currency,
+
+          'Yearly'
+              AS rentalPeriod,
+
+
+          /* =========================================
+             AREA FOR THIS TYPE
+          ========================================= */
+
+          MIN(
+              U.unit_areasqft
+          ) AS area,
+
+          MAX(
+              U.unit_areasqft
+          ) AS maxArea,
+
+          'Sq.Ft.'
+              AS areaUnit,
+
+
+          /* =========================================
+             PURPOSE
+          ========================================= */
+
+          'Rent'
+              AS purpose,
+
+
+          /* =========================================
+             UNIT REFERENCE
+          ========================================= */
+
+          MIN(
+              U.Unit_RefNo
+          ) AS referenceNo,
+
+
+          /* =========================================
+             BUILDING + UNIT IMAGE GALLERY
+
+             JSON is returned as text and parsed
+             in controller.
+          ========================================= */
+
+          (
+              SELECT
+                  IMG.imagePath,
+
+                  IMG.imageType,
+
+                  IMG.displayOrder,
+
+                  IMG.imageId
+
+              FROM
+              (
+                  /* -------------------------------------
+                     BUILDING IMAGES
+                  ------------------------------------- */
+
+                  SELECT
+                      BI.imagePath,
+
+                      'BUILDING'
+                          AS imageType,
+
+                      BI.displayOrder,
+
+                      BI.imageId
+
+                  FROM dbo.build_images BI
+
+                  WHERE
+                      LTRIM(
+                          RTRIM(
+                              BI.buildingId
+                          )
+                      )
+                      =
+                      LTRIM(
+                          RTRIM(
+                              B.build_id
+                          )
+                      )
+
+                      AND ISNULL(
+                          BI.isActive,
+                          1
+                      ) = 1
+
+
+                  UNION ALL
+
+
+                  /* -------------------------------------
+                     UNIT IMAGES
+
+                     Only units belonging to this
+                     Purpose_type.
+                  ------------------------------------- */
+
+                  SELECT
+                      UI.imagePath,
+
+                      'UNIT'
+                          AS imageType,
+
+                      UI.displayOrder,
+
+                      UI.imageId
+
+                  FROM dbo.unit_images UI
+
+                  INNER JOIN dbo.unit UIMG
+                      ON LTRIM(
+                          RTRIM(
+                              UIMG.build_id
+                          )
+                      )
+                      =
+                      LTRIM(
+                          RTRIM(
+                              UI.buildingId
+                          )
+                      )
+
+                      AND LTRIM(
+                          RTRIM(
+                              UIMG.unit_desc
+                          )
+                      )
+                      =
+                      LTRIM(
+                          RTRIM(
+                              UI.unitDesc
+                          )
+                      )
+
+                  WHERE
+                      LTRIM(
+                          RTRIM(
+                              UI.buildingId
+                          )
+                      )
+                      =
+                      LTRIM(
+                          RTRIM(
+                              B.build_id
+                          )
+                      )
+
+                      AND LTRIM(
+                          RTRIM(
+                              UIMG.Purpose_type
+                          )
+                      )
+                      =
+                      LG.purposeCode
+
+                      AND ISNULL(
+                          UI.isActive,
+                          1
+                      ) = 1
+
+                      AND ISNULL(
+                          UIMG.IsActive,
+                          1
+                      ) = 1
+
+                      AND ISNULL(
+                          UIMG.unit_vacant,
+                          'N'
+                      ) = 'Y'
+
+              ) IMG
+
+              ORDER BY
+                  CASE
+                      WHEN IMG.imageType =
+                           'BUILDING'
+                      THEN 0
+                      ELSE 1
+                  END,
+
+                  IMG.displayOrder ASC,
+
+                  IMG.imageId ASC
+
+              FOR JSON PATH
+          ) AS imagePaths,
+
+
+          MAX(
+              U.Unit_NPayment
+          ) AS numberOfPayments,
+
+          MAX(
+              U.sysdate
+          ) AS lastUpdated
+
+
+      FROM ListingGroups LG
+
+
+      INNER JOIN EligibleUnits U
+          ON LTRIM(
+              RTRIM(
+                  U.build_id
+              )
+          )
+          =
+          LTRIM(
+              RTRIM(
+                  LG.build_id
+              )
+          )
+
+          AND LTRIM(
+              RTRIM(
+                  U.Purpose_type
+              )
+          )
+          =
+          LG.purposeCode
+
+
+      INNER JOIN dbo.building B
+          ON LTRIM(
+              RTRIM(
+                  B.build_id
+              )
+          )
+          =
+          LTRIM(
+              RTRIM(
+                  LG.build_id
+              )
+          )
+
+
+      LEFT JOIN dbo.building_type BT
+          ON BT.bldg_cat_id =
+             B.bldg_cat_id
+
+
+      LEFT JOIN dbo.area A
+          ON A.area_id =
+             B.area_id
+
+
+      LEFT JOIN dbo.place P
+          ON P.place_id =
+             B.place_id
+
+
+      LEFT JOIN dbo.Unit_Purpose_Type UPT
+          ON LTRIM(
+              RTRIM(
+                  UPT.Code
+              )
+          )
+          =
+          LG.purposeCode
+
+
+      WHERE
+          ISNULL(
+              B.IsActive,
+              1
+          ) = 1
+
+          AND
+          (
+              B.WebDisplayOrder
+                  IS NULL
+
+              OR B.WebDisplayOrder
+                  BETWEEN 1 AND 6
+          )
+
+
+          /* =========================================
+             LOCATION SEARCH
+          ========================================= */
+
+          AND
+          (
+              @Search IS NULL
+
+              OR LTRIM(
+                  RTRIM(
+                      ISNULL(
+                          B.build_Add,
+                          ''
+                      )
+                  )
+              )
+              LIKE
+                  '%' +
+                  @Search +
+                  '%'
+
+              OR LTRIM(
+                  RTRIM(
+                      ISNULL(
+                          B.build_neigh,
+                          ''
+                      )
+                  )
+              )
+              LIKE
+                  '%' +
+                  @Search +
+                  '%'
+
+              OR LTRIM(
+                  RTRIM(
+                      ISNULL(
+                          A.area_desc,
+                          ''
+                      )
+                  )
+              )
+              LIKE
+                  '%' +
+                  @Search +
+                  '%'
+
+              OR LTRIM(
+                  RTRIM(
+                      ISNULL(
+                          P.place_desc,
+                          ''
+                      )
+                  )
+              )
+              LIKE
+                  '%' +
+                  @Search +
+                  '%'
+
+              OR LTRIM(
+                  RTRIM(
+                      ISNULL(
+                          B.build_Add,
+                          ''
+                      )
+                      + ' ' +
+                      ISNULL(
+                          B.build_neigh,
+                          ''
+                      )
+                      + ' ' +
+                      ISNULL(
+                          A.area_desc,
+                          ''
+                      )
+                      + ' ' +
+                      ISNULL(
+                          P.place_desc,
+                          ''
+                      )
+                  )
+              )
+              LIKE
+                  '%' +
+                  @Search +
+                  '%'
+          )
+
+
+      GROUP BY
+          B.build_id,
+
+          B.build_desc,
+
+          BT.bldg_cat_desc,
+
+          B.build_Add,
+
+          A.area_desc,
+
+          P.place_desc,
+
+          B.build_neigh,
+
+          B.plot_no,
+
+          B.makaniNo,
+
+          B.build_floor,
+
+          B.build_lift,
+
+          B.build_carparks,
+
+          B.build_area,
+
+          B.BuildingNature,
+
+          B.IsVilla,
+
+          B.WebDisplayOrder,
+
+          LG.purposeCode
+
+
+      /* =============================================
+         BUILDING PRIORITY FIRST
+      ============================================= */
+
+      ORDER BY
+
+          CASE
+              WHEN B.WebDisplayOrder
+                   BETWEEN 1 AND 6
+              THEN 0
+
+              ELSE 1
+          END ASC,
+
+          CASE
+              WHEN B.WebDisplayOrder
+                   BETWEEN 1 AND 6
+              THEN B.WebDisplayOrder
+
+              ELSE 99
+          END ASC,
+
+          B.build_desc ASC,
+
+          CASE
+              WHEN LG.purposeCode = 'STD'
+                  THEN 1
+
+              WHEN LG.purposeCode = '1BK'
+                  THEN 2
+
+              WHEN LG.purposeCode = '2BK'
+                  THEN 3
+
+              WHEN LG.purposeCode = '3BK'
+                  THEN 4
+
+              WHEN LG.purposeCode = '4BK'
+                  THEN 5
+
+              WHEN LG.purposeCode = 'VIL'
+                  THEN 6
+
+              WHEN LG.purposeCode = 'OFF'
+                  THEN 7
+
+              WHEN LG.purposeCode = 'SHP'
+                  THEN 8
+
+              WHEN LG.purposeCode = 'SHW'
+                  THEN 9
+
+              WHEN LG.purposeCode = 'LBR'
+                  THEN 10
+
+              WHEN LG.purposeCode = 'WRH'
+                  THEN 11
+
+              ELSE 99
+          END
+
+
+      OFFSET @Offset ROWS
+
+      FETCH NEXT @PageSize
+      ROWS ONLY;
+  `);
+
+  return result.recordset;
+}
+
+
+export async function findFeaturedProperties(
+  filters: PropertySearchParams
+) {
+  const db =
+    await getBinShabibEstateNet();
+
+  const page =
+    Number.isInteger(
+      filters.page
+    ) &&
     Number(filters.page) > 0
       ? Number(filters.page)
       : 1;
 
   const requestedPageSize =
-    Number.isInteger(filters.pageSize) &&
+    Number.isInteger(
+      filters.pageSize
+    ) &&
     Number(filters.pageSize) > 0
       ? Number(filters.pageSize)
-      : 20;
+      : 6;
 
-  const pageSize = Math.min(
-    requestedPageSize,
-    100
-  );
-
-  const offset =
-    (page - 1) * pageSize;
-
-    const normalizedSearch =
-  filters.search
-    ?.replace(/,/g, " ")
-    .replace(/\s+/g, " ")
-    .trim() || null;
-
-  const request = db
-    .request()
-
-    .input(
-      "Search",
-      sql.NVarChar(300),
-     normalizedSearch
-    )
-
-    .input(
-      "UnitTypeId",
-      sql.Int,
-      filters.unitTypeId ?? null
-    )
-
-    .input(
-      "Beds",
-      sql.NVarChar(10),
-      filters.beds || null
-    )
-
-    .input(
-      "MinPrice",
-      sql.Decimal(18, 2),
-      filters.minPrice ?? null
-    )
-
-    .input(
-      "MaxPrice",
-      sql.Decimal(18, 2),
-      filters.maxPrice ?? null
-    )
-
-    .input(
-      "Offset",
-      sql.Int,
-      offset
-    )
-
-    .input(
-      "PageSize",
-      sql.Int,
-      pageSize
+  const pageSize =
+    Math.min(
+      requestedPageSize,
+      20
     );
 
-  const result = await request.query(`
+  const offset =
+    (page - 1) *
+    pageSize;
 
- WITH EligibleUnits AS
-(
-    SELECT
-        U.*
+  const normalizedSearch =
+    filters.search
+      ?.replace(/,/g, " ")
+      .replace(/\s+/g, " ")
+      .trim() ||
+    null;
 
-    FROM dbo.unit U
+  const result =
+    await db
+      .request()
 
-    WHERE
-        ISNULL(U.IsActive, 1) = 1
+      .input(
+        "Search",
+        sql.NVarChar(300),
+        normalizedSearch
+      )
 
-        AND ISNULL(U.unit_vacant, 'N') = 'Y'
+      .input(
+        "UnitTypeId",
+        sql.Int,
+        filters.unitTypeId ??
+          null
+      )
 
+      .input(
+        "Beds",
+        sql.NVarChar(10),
+        filters.beds ||
+          null
+      )
 
-     
+      .input(
+        "MinPrice",
+        sql.Decimal(18, 2),
+        filters.minPrice ??
+          null
+      )
 
-        AND
+      .input(
+        "MaxPrice",
+        sql.Decimal(18, 2),
+        filters.maxPrice ??
+          null
+      )
+
+      .input(
+        "MinArea",
+        sql.Decimal(18, 2),
+        filters.minArea ??
+          null
+      )
+
+      .input(
+        "MaxArea",
+        sql.Decimal(18, 2),
+        filters.maxArea ??
+          null
+      )
+
+      .input(
+        "Offset",
+        sql.Int,
+        offset
+      )
+
+      .input(
+        "PageSize",
+        sql.Int,
+        pageSize
+      )
+
+      .query(`
+        /* ===================================================
+           ELIGIBLE VACANT UNITS
+        =================================================== */
+
+        WITH EligibleUnits AS
         (
-            @UnitTypeId IS NULL
+            SELECT
+                U.*
 
-            OR EXISTS
-            (
-                SELECT 1
+            FROM dbo.unit U
 
-                FROM dbo.vw_UnitType VUT
+            WHERE
+                ISNULL(
+                    U.IsActive,
+                    1
+                ) = 1
 
-                WHERE
-                    VUT.UnitTypeId = @UnitTypeId
+                AND ISNULL(
+                    U.unit_vacant,
+                    'N'
+                ) = 'Y'
 
-                    AND LTRIM(RTRIM(VUT.PurposeCode))
+
+                /* =========================================
+                   PROPERTY TYPE FILTER
+                ========================================= */
+
+                AND
+                (
+                    @UnitTypeId IS NULL
+
+                    OR EXISTS
+                    (
+                        SELECT 1
+
+                        FROM dbo.vw_UnitType VUT
+
+                        WHERE
+                            VUT.UnitTypeId =
+                                @UnitTypeId
+
+                            AND LTRIM(
+                                RTRIM(
+                                    VUT.PurposeCode
+                                )
+                            )
+                            =
+                            LTRIM(
+                                RTRIM(
+                                    U.Purpose_type
+                                )
+                            )
+                    )
+                )
+
+
+                /* =========================================
+                   BED / PURPOSE FILTER
+                ========================================= */
+
+                AND
+                (
+                    @Beds IS NULL
+
+                    OR LTRIM(
+                        RTRIM(
+                            U.Purpose_type
+                        )
+                    )
+                    =
+                    LTRIM(
+                        RTRIM(
+                            @Beds
+                        )
+                    )
+                )
+
+
+                /* =========================================
+                   PRICE
+                ========================================= */
+
+                AND
+                (
+                    @MinPrice IS NULL
+
+                    OR U.unit_annual_rent >=
+                       @MinPrice
+                )
+
+                AND
+                (
+                    @MaxPrice IS NULL
+
+                    OR U.unit_annual_rent <=
+                       @MaxPrice
+                )
+
+
+                /* =========================================
+                   AREA
+                ========================================= */
+
+                AND
+                (
+                    @MinArea IS NULL
+
+                    OR U.unit_areasqft >=
+                       @MinArea
+                )
+
+                AND
+                (
+                    @MaxArea IS NULL
+
+                    OR U.unit_areasqft <=
+                       @MaxArea
+                )
+        )
+
+
+        SELECT
+
+            /* ===============================================
+               UNIQUE CARD ID
+
+               Building wise:
+               listingId = building ID
+            =============================================== */
+
+            LTRIM(
+                RTRIM(
+                    B.build_id
+                )
+            ) AS listingId,
+
+
+            /* ===============================================
+               BUILDING
+            =============================================== */
+
+            LTRIM(
+                RTRIM(
+                    B.build_id
+                )
+            ) AS id,
+
+            LTRIM(
+                RTRIM(
+                    B.build_desc
+                )
+            ) AS title,
+
+            BT.bldg_cat_desc
+                AS buildingType,
+
+            B.build_Add
+                AS address,
+
+            A.area_desc
+                AS areaName,
+
+            P.place_desc
+                AS placeName,
+
+            B.build_neigh
+                AS neighborhood,
+
+
+            /* ===============================================
+               LOCATION
+            =============================================== */
+
+            STUFF(
+                CASE
+                    WHEN NULLIF(
+                        LTRIM(
+                            RTRIM(
+                                B.build_Add
+                            )
+                        ),
+                        ''
+                    ) IS NOT NULL
+                    THEN
+                        ', ' +
+                        LTRIM(
+                            RTRIM(
+                                B.build_Add
+                            )
+                        )
+                    ELSE ''
+                END
+
+                +
+
+                CASE
+                    WHEN NULLIF(
+                        LTRIM(
+                            RTRIM(
+                                A.area_desc
+                            )
+                        ),
+                        ''
+                    ) IS NOT NULL
+                    THEN
+                        ', ' +
+                        LTRIM(
+                            RTRIM(
+                                A.area_desc
+                            )
+                        )
+                    ELSE ''
+                END
+
+                +
+
+                CASE
+                    WHEN NULLIF(
+                        LTRIM(
+                            RTRIM(
+                                P.place_desc
+                            )
+                        ),
+                        ''
+                    ) IS NOT NULL
+                    THEN
+                        ', ' +
+                        LTRIM(
+                            RTRIM(
+                                P.place_desc
+                            )
+                        )
+                    ELSE ''
+                END,
+
+                1,
+                2,
+                ''
+            ) AS location,
+
+
+            /* ===============================================
+               BUILDING DETAILS
+            =============================================== */
+
+            B.plot_no
+                AS plotNumber,
+
+            B.makaniNo
+                AS makaniNumber,
+
+            B.build_floor
+                AS buildingFloors,
+
+            B.build_lift
+                AS lifts,
+
+            B.build_carparks
+                AS carParks,
+
+            B.build_area
+                AS buildingArea,
+
+            B.BuildingNature
+                AS buildingNature,
+
+            B.IsVilla
+                AS isVilla,
+
+            CAST(
+                B.WebDisplayOrder
+                AS INT
+            ) AS webDisplayOrder,
+
+
+            /* ===============================================
+               ALL AVAILABLE UNIT TYPES
+
+               Example:
+               Studio,1 Bedroom Flat,2 Bedroom Flat,Shop
+            =============================================== */
+
+            STUFF(
+                (
+                    SELECT DISTINCT
+                        ', ' +
+                        LTRIM(
+                            RTRIM(
+                                ISNULL(
+                                    UPT2.Descr,
+                                    EU2.Purpose_type
+                                )
+                            )
+                        )
+
+                    FROM EligibleUnits EU2
+
+                    LEFT JOIN dbo.Unit_Purpose_Type UPT2
+                        ON LTRIM(
+                            RTRIM(
+                                UPT2.Code
+                            )
+                        )
                         =
-                        LTRIM(RTRIM(U.Purpose_type))
-            )
-        )
+                        LTRIM(
+                            RTRIM(
+                                EU2.Purpose_type
+                            )
+                        )
+
+                    WHERE
+                        LTRIM(
+                            RTRIM(
+                                EU2.build_id
+                            )
+                        )
+                        =
+                        LTRIM(
+                            RTRIM(
+                                B.build_id
+                            )
+                        )
+
+                    FOR XML PATH(''),
+                    TYPE
+                ).value(
+                    '.',
+                    'NVARCHAR(MAX)'
+                ),
+
+                1,
+                2,
+                ''
+            ) AS availableTypes,
 
 
-       
+            /* ===============================================
+               TOTAL VACANT UNITS IN BUILDING
+            =============================================== */
 
-        AND
-        (
-            @Beds IS NULL
-
-            OR LTRIM(RTRIM(U.Purpose_type))
-                =
-                LTRIM(RTRIM(@Beds))
-        )
+            COUNT_BIG(*)
+                AS vacantUnits,
 
 
-     
+            /* ===============================================
+               BUILDING STARTING / MAX RENT
+            =============================================== */
 
-        AND
-        (
-            @MinPrice IS NULL
+            MIN(
+                U.unit_annual_rent
+            ) AS price,
 
-            OR U.unit_annual_rent >= @MinPrice
-        )
+            MAX(
+                U.unit_annual_rent
+            ) AS maxPrice,
 
+            'AED'
+                AS currency,
 
-       
-
-        AND
-        (
-            @MaxPrice IS NULL
-
-            OR U.unit_annual_rent <= @MaxPrice
-        )
-),
+            'Yearly'
+                AS rentalPeriod,
 
 
+            /* ===============================================
+               BUILDING UNIT AREA RANGE
+            =============================================== */
+
+            MIN(
+                U.unit_areasqft
+            ) AS area,
+
+            MAX(
+                U.unit_areasqft
+            ) AS maxArea,
+
+            'Sq.Ft.'
+                AS areaUnit,
 
 
-    BuildingPropertyTypes AS
-(
-    SELECT
-        EU.build_id,
+            /* ===============================================
+               PURPOSE
+            =============================================== */
 
-        STUFF(
+            'Rent'
+                AS purpose,
+
+
+            /* ===============================================
+               REFERENCE
+            =============================================== */
+
+            MIN(
+                U.Unit_RefNo
+            ) AS referenceNo,
+
+
+            /* ===============================================
+               PRIMARY BUILDING IMAGE
+
+               Home Featured Properties should show
+               building image, not unit image.
+            =============================================== */
+
             (
-                SELECT DISTINCT
-                    ', ' + UPT2.Descr
+                SELECT TOP 1
+                    BI.imagePath
 
-                FROM EligibleUnits EU2
-
-                LEFT JOIN dbo.Unit_Purpose_Type UPT2
-                    ON LTRIM(RTRIM(UPT2.Code))
-                       =
-                       LTRIM(RTRIM(EU2.Purpose_type))
+                FROM dbo.build_images BI
 
                 WHERE
-                    EU2.build_id = EU.build_id
+                    LTRIM(
+                        RTRIM(
+                            BI.buildingId
+                        )
+                    )
+                    =
+                    LTRIM(
+                        RTRIM(
+                            B.build_id
+                        )
+                    )
 
-                    AND UPT2.Descr IS NOT NULL
+                    AND ISNULL(
+                        BI.isActive,
+                        1
+                    ) = 1
 
-                    AND LTRIM(RTRIM(UPT2.Descr)) <> ''
+                ORDER BY
+                    CASE
+                        WHEN ISNULL(
+                            BI.isPrimary,
+                            0
+                        ) = 1
+                        THEN 0
+                        ELSE 1
+                    END,
 
-                FOR XML PATH(''), TYPE
-            ).value('.', 'NVARCHAR(MAX)'),
-            1,
-            2,
-            ''
-        ) AS availableTypes
+                    BI.displayOrder ASC,
 
-    FROM EligibleUnits EU
-
-    GROUP BY
-        EU.build_id
-)
-
-
-    SELECT
-
-        ------------------------------------------------
-        -- BUILDING
-        ------------------------------------------------
-
-        B.build_id
-            AS id,
-
-        B.build_desc
-            AS title,
-
-        BT.bldg_cat_desc
-            AS buildingType,
-
-        B.build_Add
-            AS address,
-
-        A.area_desc
-            AS areaName,
-
-        P.place_desc
-            AS placeName,
-
-        B.build_neigh
-            AS neighborhood,
+                    BI.imageId ASC
+            ) AS primaryImagePath,
 
 
-        ------------------------------------------------
-        -- LOCATION
-        ------------------------------------------------
+            /* ===============================================
+               IMAGE PATHS
 
-       STUFF(
-    CASE
-        WHEN NULLIF(LTRIM(RTRIM(B.build_Add)), '') IS NOT NULL
-            THEN ', ' + LTRIM(RTRIM(B.build_Add))
-        ELSE ''
-    END
-    +
-    CASE
-        WHEN NULLIF(LTRIM(RTRIM(A.area_desc)), '') IS NOT NULL
-            THEN ', ' + LTRIM(RTRIM(A.area_desc))
-        ELSE ''
-    END
-    +
-    CASE
-        WHEN NULLIF(LTRIM(RTRIM(P.place_desc)), '') IS NOT NULL
-            THEN ', ' + LTRIM(RTRIM(P.place_desc))
-        ELSE ''
-    END,
-    1,
-    2,
-    ''
-) AS location,
+               Optional:
+               building gallery available if needed later
+            =============================================== */
+
+            (
+                SELECT
+                    BI.imagePath,
+
+                    'BUILDING'
+                        AS imageType,
+
+                    BI.displayOrder,
+
+                    BI.imageId
+
+                FROM dbo.build_images BI
+
+                WHERE
+                    LTRIM(
+                        RTRIM(
+                            BI.buildingId
+                        )
+                    )
+                    =
+                    LTRIM(
+                        RTRIM(
+                            B.build_id
+                        )
+                    )
+
+                    AND ISNULL(
+                        BI.isActive,
+                        1
+                    ) = 1
+
+                ORDER BY
+                    CASE
+                        WHEN ISNULL(
+                            BI.isPrimary,
+                            0
+                        ) = 1
+                        THEN 0
+                        ELSE 1
+                    END,
+
+                    BI.displayOrder ASC,
+
+                    BI.imageId ASC
+
+                FOR JSON PATH
+            ) AS imagePaths,
 
 
-        ------------------------------------------------
-        -- BUILDING DETAILS
-        ------------------------------------------------
+            MAX(
+                U.Unit_NPayment
+            ) AS numberOfPayments,
 
-        B.plot_no
-            AS plotNumber,
-
-        B.makaniNo
-            AS makaniNumber,
-
-        B.build_floor
-            AS buildingFloors,
-
-        B.build_lift
-            AS lifts,
-
-        B.build_carparks
-            AS carParks,
-
-        B.build_area
-            AS buildingArea,
-
-        B.BuildingNature
-            AS buildingNature,
-
-        B.IsVilla
-            AS isVilla,
+            MAX(
+                U.sysdate
+            ) AS lastUpdated
 
 
-   
+        FROM EligibleUnits U
 
-       CAST(
-    B.WebDisplayOrder
-    AS INT
-) AS webDisplayOrder,
 
-      
+        INNER JOIN dbo.building B
+            ON LTRIM(
+                RTRIM(
+                    B.build_id
+                )
+            )
+            =
+            LTRIM(
+                RTRIM(
+                    U.build_id
+                )
+            )
 
-        BPT.availableTypes,
 
-(
-    SELECT TOP 1
-        BI.imagePath
+        LEFT JOIN dbo.building_type BT
+            ON BT.bldg_cat_id =
+               B.bldg_cat_id
 
-    FROM dbo.build_images BI
 
-    WHERE
-        LTRIM(RTRIM(BI.buildingId))
-        =
-        -- LTRIM(RTRIM(B.build_id))
-         'P:363'
+        LEFT JOIN dbo.area A
+            ON A.area_id =
+               B.area_id
 
-        AND ISNULL(
-            BI.isActive,
-            1
-        ) = 1
 
-    ORDER BY
-        BI.isPrimary DESC,
-        BI.displayOrder ASC,
-        BI.imageId ASC
-) AS primaryImagePath,
-        CASE
+        LEFT JOIN dbo.place P
+            ON P.place_id =
+               B.place_id
 
-            WHEN COUNT(
-                DISTINCT
-                U.Purpose_type
+
+        WHERE
+            ISNULL(
+                B.IsActive,
+                1
             ) = 1
 
-            THEN MAX(
-                UPT.Descr
+
+            AND
+            (
+                B.WebDisplayOrder
+                    IS NULL
+
+                OR B.WebDisplayOrder
+                    BETWEEN 1 AND 6
             )
 
-            ELSE 'Multiple Types'
 
-        END AS propertyType,
+            /* ===============================================
+               LOCATION
+            =============================================== */
 
+            AND
+            (
+                @Search IS NULL
 
-        ------------------------------------------------
-        -- VACANCY
-        ------------------------------------------------
+                OR LTRIM(
+                    RTRIM(
+                        ISNULL(
+                            B.build_Add,
+                            ''
+                        )
+                    )
+                )
+                LIKE
+                    '%' +
+                    @Search +
+                    '%'
 
-        COUNT_BIG(*)
-            AS vacantUnits,
+                OR LTRIM(
+                    RTRIM(
+                        ISNULL(
+                            B.build_neigh,
+                            ''
+                        )
+                    )
+                )
+                LIKE
+                    '%' +
+                    @Search +
+                    '%'
 
+                OR LTRIM(
+                    RTRIM(
+                        ISNULL(
+                            A.area_desc,
+                            ''
+                        )
+                    )
+                )
+                LIKE
+                    '%' +
+                    @Search +
+                    '%'
 
-        ------------------------------------------------
-        -- PRICE
-        ------------------------------------------------
+                OR LTRIM(
+                    RTRIM(
+                        ISNULL(
+                            P.place_desc,
+                            ''
+                        )
+                    )
+                )
+                LIKE
+                    '%' +
+                    @Search +
+                    '%'
+            )
 
-        MIN(
-            U.unit_annual_rent
-        ) AS price,
 
-        MAX(
-            U.unit_annual_rent
-        ) AS maxPrice,
+        GROUP BY
+            B.build_id,
 
-        'AED'
-            AS currency,
+            B.build_desc,
 
-        'Yearly'
-            AS rentalPeriod,
+            BT.bldg_cat_desc,
 
+            B.build_Add,
 
-        ------------------------------------------------
-        -- AREA
-        ------------------------------------------------
+            A.area_desc,
 
-        MIN(
-            U.unit_areasqft
-        ) AS area,
+            P.place_desc,
 
-        MAX(
-            U.unit_areasqft
-        ) AS maxArea,
+            B.build_neigh,
 
-        'Sq.Ft.'
-            AS areaUnit,
+            B.plot_no,
 
+            B.makaniNo,
 
-        ------------------------------------------------
-        -- WEBSITE PURPOSE
-        ------------------------------------------------
+            B.build_floor,
 
-        'Rent'
-            AS purpose,
+            B.build_lift,
 
+            B.build_carparks,
 
-        ------------------------------------------------
-        -- OTHER UNIT SUMMARY
-        ------------------------------------------------
+            B.build_area,
 
-        MIN(
-            U.Unit_RefNo
-        ) AS referenceNo,
+            B.BuildingNature,
 
-        MAX(
-            U.Unit_NPayment
-        ) AS numberOfPayments,
+            B.IsVilla,
 
-        MAX(
-            U.sysdate
-        ) AS lastUpdated
+            B.WebDisplayOrder
 
 
-    FROM EligibleUnits U
+        /* ===============================================
+           TOP PRIORITY BUILDINGS FIRST
+        =============================================== */
 
+        ORDER BY
 
-    INNER JOIN dbo.building B
-        ON B.build_id =
-           U.build_id
+            CASE
+                WHEN B.WebDisplayOrder
+                     BETWEEN 1 AND 6
+                THEN 0
+                ELSE 1
+            END,
 
+            CASE
+                WHEN B.WebDisplayOrder
+                     BETWEEN 1 AND 6
+                THEN B.WebDisplayOrder
+                ELSE 99
+            END,
 
-    LEFT JOIN dbo.building_type BT
-        ON BT.bldg_cat_id =
-           B.bldg_cat_id
+            B.build_desc ASC
 
 
-    LEFT JOIN dbo.area A
-        ON A.area_id =
-           B.area_id
+        OFFSET @Offset ROWS
 
-
-    LEFT JOIN dbo.place P
-        ON P.place_id =
-           B.place_id
-
-
-    LEFT JOIN dbo.Unit_Purpose_Type UPT
-        ON UPT.Code =
-           U.Purpose_type
-
-
-    LEFT JOIN BuildingPropertyTypes BPT
-        ON BPT.build_id =
-           B.build_id
-
-
-    
-
-
-    WHERE
-        ISNULL(
-            B.IsActive,
-            1
-        ) = 1
-
-AND
-    (
-        B.WebDisplayOrder IS NULL
-        OR B.WebDisplayOrder BETWEEN 1 AND 6
-    )
-        /*
-        ================================================
-        LOCATION SEARCH ONLY
-        ================================================
-        */
-
-       AND
-(
-    @Search IS NULL
-
-    OR LTRIM(RTRIM(ISNULL(B.build_Add, '')))
-        LIKE '%' + @Search + '%'
-
-    OR LTRIM(RTRIM(ISNULL(B.build_neigh, '')))
-        LIKE '%' + @Search + '%'
-
-    OR LTRIM(RTRIM(ISNULL(A.area_desc, '')))
-        LIKE '%' + @Search + '%'
-
-    OR LTRIM(RTRIM(ISNULL(P.place_desc, '')))
-        LIKE '%' + @Search + '%'
-
-    OR
-    LTRIM(
-        RTRIM(
-            ISNULL(B.build_Add, '') + ' ' +
-            ISNULL(B.build_neigh, '') + ' ' +
-            ISNULL(A.area_desc, '') + ' ' +
-            ISNULL(P.place_desc, '')
-        )
-    )
-    LIKE '%' + @Search + '%'
-)
-
-
-    /*
-    ====================================================
-    ONE ROW PER BUILDING
-    ====================================================
-    */
-
-    GROUP BY
-
-        B.build_id,
-
-        B.build_desc,
-
-        BT.bldg_cat_desc,
-
-        B.build_Add,
-
-        A.area_desc,
-
-        P.place_desc,
-
-        B.build_neigh,
-
-        B.plot_no,
-
-        B.makaniNo,
-
-        B.build_floor,
-
-        B.build_lift,
-
-        B.build_carparks,
-
-        B.build_area,
-
-        B.BuildingNature,
-
-        B.IsVilla,
-
-        BPT.availableTypes,
-
-      B.WebDisplayOrder
-
-    /*
-    ====================================================
-    PRIORITY BUILDINGS FIRST
-    ====================================================
-    */
-
-   ORDER BY
-    CASE
-        WHEN B.WebDisplayOrder BETWEEN 1 AND 6
-        THEN 0
-        ELSE 1
-    END ASC,
-
-    CASE
-        WHEN B.WebDisplayOrder BETWEEN 1 AND 6
-        THEN B.WebDisplayOrder
-        ELSE 99
-    END ASC,
-
-    MAX(B.sysdate) DESC,
-
-    B.build_desc ASC
-
-
-    OFFSET @Offset ROWS
-
-    FETCH NEXT @PageSize
-    ROWS ONLY;
-  `);
+        FETCH NEXT @PageSize
+        ROWS ONLY;
+      `);
 
   return result.recordset;
 }
@@ -632,16 +1908,18 @@ export async function countProperties(
   const db =
     await getBinShabibEstateNet();
 
-  /*
-   * IMPORTANT:
-   * Use exactly the same search normalization
-   * as findAllProperties().
-   */
   const normalizedSearch =
     filters.search
-      ?.replace(/,/g, " ")
-      .replace(/\s+/g, " ")
-      .trim() || null;
+      ?.replace(
+        /,/g,
+        " "
+      )
+      .replace(
+        /\s+/g,
+        " "
+      )
+      .trim() ||
+    null;
 
   const result =
     await db
@@ -649,7 +1927,9 @@ export async function countProperties(
 
       .input(
         "Search",
-        sql.NVarChar(300),
+        sql.NVarChar(
+          300
+        ),
         normalizedSearch
       )
 
@@ -662,22 +1942,65 @@ export async function countProperties(
 
       .input(
         "Beds",
-        sql.NVarChar(10),
+        sql.NVarChar(
+          10
+        ),
         filters.beds ||
           null
       )
 
       .input(
         "MinPrice",
-        sql.Decimal(18, 2),
+        sql.Decimal(
+          18,
+          2
+        ),
         filters.minPrice ??
           null
       )
 
       .input(
         "MaxPrice",
-        sql.Decimal(18, 2),
+        sql.Decimal(
+          18,
+          2
+        ),
         filters.maxPrice ??
+          null
+      )
+
+      .input(
+        "MinArea",
+        sql.Decimal(
+          18,
+          2
+        ),
+        filters.minArea ??
+          null
+      )
+     .input(
+  "BuildingId",
+  sql.NVarChar(7),
+  filters.buildingId
+    ?.trim() ||
+    null
+)
+
+.input(
+  "UnitDesc",
+  sql.NVarChar(255),
+  filters.unitDesc
+    ?.trim() ||
+    null
+)
+
+      .input(
+        "MaxArea",
+        sql.Decimal(
+          18,
+          2
+        ),
+        filters.maxArea ??
           null
       )
 
@@ -685,7 +2008,13 @@ export async function countProperties(
         WITH EligibleUnits AS
         (
             SELECT
-                U.build_id
+                U.build_id,
+
+                LTRIM(
+                    RTRIM(
+                        U.Purpose_type
+                    )
+                ) AS purposeCode
 
             FROM dbo.unit U
 
@@ -700,10 +2029,6 @@ export async function countProperties(
                     'N'
                 ) = 'Y'
 
-
-                /* =====================================
-                   PROPERTY TYPE
-                ===================================== */
 
                 AND
                 (
@@ -734,10 +2059,6 @@ export async function countProperties(
                 )
 
 
-                /* =====================================
-                   BEDS
-                ===================================== */
-
                 AND
                 (
                     @Beds IS NULL
@@ -756,31 +2077,74 @@ export async function countProperties(
                 )
 
 
-                /* =====================================
-                   MIN PRICE
-                ===================================== */
-
                 AND
                 (
                     @MinPrice IS NULL
 
                     OR U.unit_annual_rent >=
-                        @MinPrice
+                       @MinPrice
                 )
-
-
-                /* =====================================
-                   MAX PRICE
-                ===================================== */
 
                 AND
                 (
                     @MaxPrice IS NULL
 
                     OR U.unit_annual_rent <=
-                        @MaxPrice
+                       @MaxPrice
                 )
+
+
+                AND
+                (
+                    @MinArea IS NULL
+
+                    OR U.unit_areasqft >=
+                       @MinArea
+                )
+
+                AND
+                (
+                    @MaxArea IS NULL
+
+                    OR U.unit_areasqft <=
+                       @MaxArea
+                )
+
+                AND
+                    (
+                        @BuildingId IS NULL
+
+                        OR LTRIM(
+                            RTRIM(
+                                U.build_id
+                            )
+                        )
+                        =
+                        LTRIM(
+                            RTRIM(
+                                @BuildingId
+                            )
+                        )
+                    )
+
+                    AND
+                    (
+                        @UnitDesc IS NULL
+
+                        OR LTRIM(
+                            RTRIM(
+                                U.unit_desc
+                            )
+                        )
+                        =
+                        LTRIM(
+                            RTRIM(
+                                @UnitDesc
+                            )
+                        )
+                    )
         )
+
 
         SELECT
             COUNT(*) AS total
@@ -788,13 +2152,24 @@ export async function countProperties(
         FROM
         (
             SELECT
-                B.build_id
+                B.build_id,
 
-            FROM EligibleUnits U
+                EU.purposeCode
+
+            FROM EligibleUnits EU
 
             INNER JOIN dbo.building B
-                ON B.build_id =
-                   U.build_id
+                ON LTRIM(
+                    RTRIM(
+                        B.build_id
+                    )
+                )
+                =
+                LTRIM(
+                    RTRIM(
+                        EU.build_id
+                    )
+                )
 
             LEFT JOIN dbo.area A
                 ON A.area_id =
@@ -819,10 +2194,6 @@ export async function countProperties(
                         BETWEEN 1 AND 6
                 )
 
-
-                /* =====================================
-                   LOCATION
-                ===================================== */
 
                 AND
                 (
@@ -879,70 +2250,20 @@ export async function countProperties(
                         '%' +
                         @Search +
                         '%'
-
-                    OR LTRIM(
-                        RTRIM(
-                            ISNULL(
-                                B.build_Add,
-                                ''
-                            )
-                            + ' ' +
-                            ISNULL(
-                                B.build_neigh,
-                                ''
-                            )
-                            + ' ' +
-                            ISNULL(
-                                A.area_desc,
-                                ''
-                            )
-                            + ' ' +
-                            ISNULL(
-                                P.place_desc,
-                                ''
-                            )
-                        )
-                    )
-                    LIKE
-                        '%' +
-                        @Search +
-                        '%'
                 )
 
             GROUP BY
-                B.build_id
-        ) AS MatchingBuildings;
+                B.build_id,
+
+                EU.purposeCode
+        ) X;
       `);
 
-  const total =
-    Number(
-      result.recordset?.[0]
-        ?.total ?? 0
-    );
-
-  console.log(
-    "COUNT PROPERTY FILTERS:",
-    {
-      search:
-        normalizedSearch,
-
-      unitTypeId:
-        filters.unitTypeId,
-
-      beds:
-        filters.beds,
-
-      minPrice:
-        filters.minPrice,
-
-      maxPrice:
-        filters.maxPrice,
-
-      total,
-    }
+  return Number(
+    result.recordset?.[0]
+      ?.total ??
+      0
   );
-
-  return total;
 }
 /**
  * Returns building-level information.
@@ -1771,4 +3092,188 @@ export async function findImageManagementBuildings() {
       `);
 
   return result.recordset;
+}
+
+
+export async function getPropertyBuildingUnitOptionsRepo(
+  buildingId?: string
+) {
+  const db =
+    await getBinShabibEstateNet();
+
+  const result =
+    await db
+      .request()
+
+      .input(
+        "BuildingId",
+        sql.NVarChar(7),
+        buildingId || null
+      )
+
+      .query(`
+        /* =============================================
+           BUILDINGS
+        ============================================= */
+
+        SELECT DISTINCT
+            LTRIM(
+                RTRIM(
+                    B.build_id
+                )
+            ) AS buildingId,
+
+            LTRIM(
+                RTRIM(
+                    B.build_desc
+                )
+            ) AS buildingName
+
+        FROM dbo.building B
+
+        WHERE
+            ISNULL(
+                B.IsActive,
+                1
+            ) = 1
+
+            AND
+            (
+                B.WebDisplayOrder
+                    IS NULL
+
+                OR B.WebDisplayOrder
+                    BETWEEN 1 AND 6
+            )
+
+            AND EXISTS
+            (
+                SELECT 1
+
+                FROM dbo.unit U
+
+                WHERE
+                    LTRIM(
+                        RTRIM(
+                            U.build_id
+                        )
+                    )
+                    =
+                    LTRIM(
+                        RTRIM(
+                            B.build_id
+                        )
+                    )
+
+                    AND ISNULL(
+                        U.IsActive,
+                        1
+                    ) = 1
+
+                    AND ISNULL(
+                        U.unit_vacant,
+                        'N'
+                    ) = 'Y'
+            )
+
+        ORDER BY
+            buildingName;
+
+
+        /* =============================================
+           UNITS FOR SELECTED BUILDING
+        ============================================= */
+
+        SELECT DISTINCT
+            LTRIM(
+                RTRIM(
+                    U.unit_desc
+                )
+            ) AS unitDesc,
+
+            LTRIM(
+                RTRIM(
+                    U.Purpose_type
+                )
+            ) AS purposeCode,
+
+            UPT.Descr
+                AS unitType,
+
+            U.unit_annual_rent
+                AS annualRent
+
+        FROM dbo.unit U
+
+        INNER JOIN dbo.building B
+            ON LTRIM(
+                RTRIM(
+                    B.build_id
+                )
+            )
+            =
+            LTRIM(
+                RTRIM(
+                    U.build_id
+                )
+            )
+
+        LEFT JOIN dbo.Unit_Purpose_Type UPT
+            ON LTRIM(
+                RTRIM(
+                    UPT.Code
+                )
+            )
+            =
+            LTRIM(
+                RTRIM(
+                    U.Purpose_type
+                )
+            )
+
+        WHERE
+            @BuildingId IS NOT NULL
+
+            AND LTRIM(
+                RTRIM(
+                    U.build_id
+                )
+            )
+            =
+            LTRIM(
+                RTRIM(
+                    @BuildingId
+                )
+            )
+
+            AND ISNULL(
+                U.IsActive,
+                1
+            ) = 1
+
+            AND ISNULL(
+                U.unit_vacant,
+                'N'
+            ) = 'Y'
+
+            AND ISNULL(
+                B.IsActive,
+                1
+            ) = 1
+
+        ORDER BY
+            unitDesc;
+      `);
+
+const recordsets =
+  result.recordsets as
+    sql.IRecordSet<any>[];
+
+return {
+  buildings:
+    recordsets[0] || [],
+
+  units:
+    recordsets[1] || [],
+};
 }

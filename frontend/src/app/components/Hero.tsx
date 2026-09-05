@@ -14,6 +14,7 @@ import {
   BedDouble,
   ChevronDown,
   MapPinSearch,
+  Ruler,
 } from "lucide-react";
 
 import styles from "./hero.module.css";
@@ -24,6 +25,7 @@ import {
   type Property,
   type PropertyFilterCategory,
 } from "@/lib/propertyApi";
+
 
 /* =========================================================
    TYPES
@@ -42,8 +44,13 @@ interface HeroProps {
     minPrice: string;
 
     maxPrice: string;
+
+    minArea: string;
+
+    maxArea: string;
   }) => void;
 }
+
 
 /* =========================================================
    PRICE OPTIONS
@@ -80,6 +87,44 @@ const PRICE_OPTIONS = [
     label: "AED 200K+",
   },
 ];
+
+
+/* =========================================================
+   UNIT AREA OPTIONS
+========================================================= */
+
+const AREA_OPTIONS = [
+  {
+    value: "All",
+    label: "Any Size",
+  },
+
+  {
+    value: "0-500",
+    label: "Up to 500 Sq.Ft.",
+  },
+
+  {
+    value: "500-1000",
+    label: "500 - 1,000 Sq.Ft.",
+  },
+
+  {
+    value: "1000-2000",
+    label: "1,000 - 2,000 Sq.Ft.",
+  },
+
+  {
+    value: "2000-5000",
+    label: "2,000 - 5,000 Sq.Ft.",
+  },
+
+  {
+    value: "5000-",
+    label: "5,000+ Sq.Ft.",
+  },
+];
+
 
 /* =========================================================
    BED OPTIONS
@@ -120,6 +165,7 @@ const BED_OPTIONS = [
   },
 ];
 
+
 /* =========================================================
    COMPONENT
 ========================================================= */
@@ -149,6 +195,7 @@ export default function Hero({
   ] = useState<Property[]>(
     []
   );
+
 
   /* =======================================================
      PROPERTY TYPE
@@ -200,6 +247,7 @@ export default function Hero({
     number | null
   >(null);
 
+
   /* =======================================================
      PRICE
   ======================================================= */
@@ -209,20 +257,26 @@ export default function Hero({
     setPriceRange,
   ] = useState("All");
 
+
+  /* =======================================================
+     UNIT AREA
+  ======================================================= */
+
+  const [
+    areaRange,
+    setAreaRange,
+  ] = useState("All");
+
+
   /* =======================================================
      BEDS
-
-     This stores ERP Purpose_type:
-     STD
-     1BK
-     2BK
-     etc.
   ======================================================= */
 
   const [
     beds,
     setBeds,
   ] = useState("All");
+
 
   /* =======================================================
      DROPDOWNS
@@ -239,6 +293,11 @@ export default function Hero({
   ] = useState(false);
 
   const [
+    isAreaOpen,
+    setIsAreaOpen,
+  ] = useState(false);
+
+  const [
     isBedsOpen,
     setIsBedsOpen,
   ] = useState(false);
@@ -247,6 +306,7 @@ export default function Hero({
     useRef<HTMLDivElement | null>(
       null
     );
+
 
   /* =======================================================
      LOAD PROPERTY TYPE FILTER OPTIONS
@@ -280,6 +340,7 @@ export default function Hero({
       });
   }, []);
 
+
   /* =======================================================
      LOAD LOCATION SUGGESTION DATA
   ======================================================= */
@@ -288,7 +349,7 @@ export default function Hero({
     getProperties({
       page: 1,
 
-      pageSize: 100,
+      pageSize: 6,
     })
       .then(
         ({
@@ -306,6 +367,7 @@ export default function Hero({
         );
       });
   }, []);
+
 
   /* =======================================================
      OUTSIDE CLICK
@@ -329,6 +391,10 @@ export default function Hero({
           false
         );
 
+        setIsAreaOpen(
+          false
+        );
+
         setIsBedsOpen(
           false
         );
@@ -347,6 +413,7 @@ export default function Hero({
       );
     };
   }, []);
+
 
   /* =======================================================
      CURRENT CATEGORY
@@ -367,6 +434,7 @@ export default function Hero({
       propertyCategories,
       propertyGroup,
     ]);
+
 
   /* =======================================================
      CURRENT UNIT TYPE
@@ -403,10 +471,9 @@ export default function Hero({
       selectedUnitTypeId,
     ]);
 
+
   /* =======================================================
      APARTMENT CHECK
-
-     Beds only applies to Apartment.
   ======================================================= */
 
   const isApartment =
@@ -415,6 +482,7 @@ export default function Hero({
       ?.trim()
       .toUpperCase() ===
     "APARTMENT";
+
 
   /* =======================================================
      LOCATION CHANGE
@@ -438,11 +506,6 @@ export default function Hero({
         .trim()
         .toLowerCase();
 
-    /*
-     * Avoid duplicate location
-     * suggestions from different
-     * buildings.
-     */
     const uniqueLocations =
       new Map<
         string,
@@ -490,9 +553,13 @@ export default function Hero({
     setSuggestions(
       Array.from(
         uniqueLocations.values()
-      ).slice(0, 5)
+      ).slice(
+        0,
+        5
+      )
     );
   };
+
 
   /* =======================================================
      FORMAT CATEGORY
@@ -506,10 +573,13 @@ export default function Hero({
       .toLowerCase()
       .replace(
         /\b\w/g,
-        (char) =>
+        (
+          char
+        ) =>
           char.toUpperCase()
       );
   }
+
 
   /* =======================================================
      FORMAT UNIT TYPE
@@ -543,6 +613,7 @@ export default function Hero({
 
       WAREHOUSE:
         "Warehouse",
+
       STORE:
         "Store",
     };
@@ -559,6 +630,7 @@ export default function Hero({
       )
     );
   }
+
 
   /* =======================================================
      PROPERTY TYPE SELECTION
@@ -579,17 +651,22 @@ export default function Hero({
     );
 
     /*
-     * Whenever property type
-     * changes clear Beds.
+     * Clear Beds whenever
+     * property type changes.
      */
-    setBeds("All");
+    setBeds(
+      "All"
+    );
 
-    setIsBedsOpen(false);
+    setIsBedsOpen(
+      false
+    );
 
     setIsPropertyTypeOpen(
       false
     );
   };
+
 
   /* =======================================================
      ALL TYPES
@@ -605,46 +682,71 @@ export default function Hero({
         "All Types"
       );
 
-      setBeds("All");
+      setBeds(
+        "All"
+      );
 
-      setIsBedsOpen(false);
+      setIsBedsOpen(
+        false
+      );
 
       setIsPropertyTypeOpen(
         false
       );
     };
 
+
   /* =======================================================
-     PRICE LABEL
+     SELECTED LABELS
   ======================================================= */
 
   const selectedPriceLabel =
     PRICE_OPTIONS.find(
-      (option) =>
+      (
+        option
+      ) =>
         option.value ===
         priceRange
     )?.label ||
     "Any Price";
 
-  /* =======================================================
-     BED LABEL
-  ======================================================= */
+
+  const selectedAreaLabel =
+    AREA_OPTIONS.find(
+      (
+        option
+      ) =>
+        option.value ===
+        areaRange
+    )?.label ||
+    "Any Size";
+
 
   const selectedBedLabel =
     BED_OPTIONS.find(
-      (option) =>
+      (
+        option
+      ) =>
         option.value ===
         beds
-    )?.label || "Any";
+    )?.label ||
+    "Any";
+
 
   /* =======================================================
      SEARCH
   ======================================================= */
 
   const handleSearchSubmit = (
-    event: React.FormEvent<HTMLFormElement>
+    event:
+      React.FormEvent<HTMLFormElement>
   ) => {
     event.preventDefault();
+
+
+    /* -----------------------------------------------
+       PRICE
+    ----------------------------------------------- */
 
     let minPrice =
       "";
@@ -656,7 +758,10 @@ export default function Hero({
       priceRange !==
       "All"
     ) {
-      const [min, max] =
+      const [
+        min,
+        max,
+      ] =
         priceRange.split(
           "-"
         );
@@ -668,26 +773,48 @@ export default function Hero({
         max || "";
     }
 
+
+    /* -----------------------------------------------
+       AREA
+    ----------------------------------------------- */
+
+    let minArea =
+      "";
+
+    let maxArea =
+      "";
+
+    if (
+      areaRange !==
+      "All"
+    ) {
+      const [
+        min,
+        max,
+      ] =
+        areaRange.split(
+          "-"
+        );
+
+      minArea =
+        min || "";
+
+      maxArea =
+        max || "";
+    }
+
+
+    /* -----------------------------------------------
+       SEARCH
+    ----------------------------------------------- */
+
     onSearch({
       location:
         location.trim(),
 
-      /*
-       * Database UnitTypeId
-       */
       unitTypeId:
         selectedUnitTypeId,
 
-      /*
-       * Only Apartment can
-       * send a Beds filter.
-       *
-       * Value will be:
-       * STD
-       * 1BK
-       * 2BK
-       * ...
-       */
       beds:
         isApartment
           ? beds
@@ -696,12 +823,34 @@ export default function Hero({
       minPrice,
 
       maxPrice,
+
+      minArea,
+
+      maxArea,
     });
+
 
     setSuggestions(
       []
     );
+
+    setIsPropertyTypeOpen(
+      false
+    );
+
+    setIsPriceOpen(
+      false
+    );
+
+    setIsAreaOpen(
+      false
+    );
+
+    setIsBedsOpen(
+      false
+    );
   };
+
 
   /* =======================================================
      RENDER
@@ -724,6 +873,7 @@ export default function Hero({
           styles.heroInner
         }
       >
+
         {/* =================================================
             HEADING
         ================================================= */}
@@ -750,6 +900,7 @@ export default function Hero({
           </p>
         </div>
 
+
         {/* =================================================
             SEARCH FORM
         ================================================= */}
@@ -762,8 +913,9 @@ export default function Hero({
             handleSearchSubmit
           }
         >
+
           {/* ===============================================
-              LOCATION SEARCH
+              LOCATION
           =============================================== */}
 
           <div
@@ -782,9 +934,12 @@ export default function Hero({
                 }
               >
                 <MapPinSearch
-                  size={20}
+                  size={
+                    20
+                  }
                 />
               </div>
+
 
               <div
                 className={
@@ -795,13 +950,17 @@ export default function Hero({
                   LOCATION
                 </label>
 
+
                 <input
                   value={
                     location
                   }
-                  onChange={(e) =>
+                  onChange={(
+                    event
+                  ) =>
                     handleLocationChange(
-                      e.target
+                      event
+                        .target
                         .value
                     )
                   }
@@ -817,9 +976,8 @@ export default function Hero({
                   placeholder="Enter location (e.g. Al Qusais, Al Nahda)"
                 />
 
-                {/* =========================================
-                    AUTOCOMPLETE
-                ========================================= */}
+
+                {/* AUTOCOMPLETE */}
 
                 {suggestions.length >
                   0 && (
@@ -841,10 +999,6 @@ export default function Hero({
                           onMouseDown={(
                             event
                           ) => {
-                            /*
-                             * Prevent blur
-                             * before selection.
-                             */
                             event.preventDefault();
 
                             setLocation(
@@ -883,6 +1037,7 @@ export default function Hero({
               </div>
             </div>
 
+
             {/* SEARCH BUTTON */}
 
             <div
@@ -911,6 +1066,7 @@ export default function Hero({
             </div>
           </div>
 
+
           {/* ===============================================
               FILTER CARDS
           =============================================== */}
@@ -923,6 +1079,7 @@ export default function Hero({
               styles.filterCards
             }
           >
+
             {/* =============================================
                 PROPERTY TYPE
             ============================================= */}
@@ -949,6 +1106,10 @@ export default function Hero({
                     false
                   );
 
+                  setIsAreaOpen(
+                    false
+                  );
+
                   setIsBedsOpen(
                     false
                   );
@@ -969,6 +1130,7 @@ export default function Hero({
                   />
                 </div>
 
+
                 <div
                   className={
                     styles.filterInfo
@@ -979,8 +1141,7 @@ export default function Hero({
                       styles.filterLabel
                     }
                   >
-                    Property
-                    Type
+                    Property Type
                   </span>
 
                   <strong>
@@ -990,8 +1151,11 @@ export default function Hero({
                   </strong>
                 </div>
 
+
                 <ChevronDown
-                  size={15}
+                  size={
+                    15
+                  }
                   className={`${styles.chevron} ${
                     isPropertyTypeOpen
                       ? styles.chevronOpen
@@ -1000,9 +1164,8 @@ export default function Hero({
                 />
               </button>
 
-              {/* ===========================================
-                  PROPERTY TYPE PANEL
-              =========================================== */}
+
+              {/* PROPERTY TYPE PANEL */}
 
               {isPropertyTypeOpen && (
                 <div
@@ -1010,8 +1173,6 @@ export default function Hero({
                     styles.propertyTypePanel
                   }
                 >
-                  {/* CATEGORY TABS */}
-
                   <div
                     className={
                       styles.propertyTypeTabs
@@ -1046,6 +1207,7 @@ export default function Hero({
                     )}
                   </div>
 
+
                   {/* ALL TYPES */}
 
                   <button
@@ -1071,12 +1233,8 @@ export default function Hero({
                     </span>
                   </button>
 
-                  {/* =========================================
-                      UNIT TYPES
 
-                      IMPORTANT:
-                      Only ONE propertyCategoryList.
-                  ========================================= */}
+                  {/* TYPES */}
 
                   <div
                     className={
@@ -1127,7 +1285,7 @@ export default function Hero({
             </div>
 
             {/* =============================================
-                PRICE
+                UNIT AREA
             ============================================= */}
 
             <div
@@ -1141,7 +1299,7 @@ export default function Hero({
                   styles.filterCard
                 }
                 onClick={() => {
-                  setIsPriceOpen(
+                  setIsAreaOpen(
                     (
                       open
                     ) =>
@@ -1152,12 +1310,16 @@ export default function Hero({
                     false
                   );
 
+                  setIsPriceOpen(
+                    false
+                  );
+
                   setIsBedsOpen(
                     false
                   );
                 }}
                 aria-expanded={
-                  isPriceOpen
+                  isAreaOpen
                 }
               >
                 <div
@@ -1165,12 +1327,13 @@ export default function Hero({
                     styles.filterIcon
                   }
                 >
-                  <Tag
+                  <Ruler
                     size={
                       20
                     }
                   />
                 </div>
+
 
                 <div
                   className={
@@ -1182,33 +1345,37 @@ export default function Hero({
                       styles.filterLabel
                     }
                   >
-                    Price Range
+                    Unit Area
                   </span>
 
                   <strong>
                     {
-                      selectedPriceLabel
+                      selectedAreaLabel
                     }
                   </strong>
                 </div>
 
+
                 <ChevronDown
-                  size={15}
+                  size={
+                    15
+                  }
                   className={`${styles.chevron} ${
-                    isPriceOpen
+                    isAreaOpen
                       ? styles.chevronOpen
                       : ""
                   }`}
                 />
               </button>
 
-              {isPriceOpen && (
+
+              {isAreaOpen && (
                 <div
                   className={
                     styles.simpleDropdownPanel
                   }
                 >
-                  {PRICE_OPTIONS.map(
+                  {AREA_OPTIONS.map(
                     (
                       option
                     ) => (
@@ -1218,17 +1385,17 @@ export default function Hero({
                         }
                         type="button"
                         className={`${styles.dropdownOption} ${
-                          priceRange ===
+                          areaRange ===
                           option.value
                             ? styles.dropdownOptionActive
                             : ""
                         }`}
                         onClick={() => {
-                          setPriceRange(
+                          setAreaRange(
                             option.value
                           );
 
-                          setIsPriceOpen(
+                          setIsAreaOpen(
                             false
                           );
                         }}
@@ -1251,10 +1418,9 @@ export default function Hero({
               )}
             </div>
 
+         
             {/* =============================================
                 BEDS
-
-                Only Apartment should use this filter.
             ============================================= */}
 
             <div
@@ -1284,11 +1450,15 @@ export default function Hero({
                       !open
                   );
 
+                  setIsPropertyTypeOpen(
+                    false
+                  );
+
                   setIsPriceOpen(
                     false
                   );
 
-                  setIsPropertyTypeOpen(
+                  setIsAreaOpen(
                     false
                   );
                 }}
@@ -1311,6 +1481,7 @@ export default function Hero({
                   />
                 </div>
 
+
                 <div
                   className={
                     styles.filterInfo
@@ -1331,8 +1502,11 @@ export default function Hero({
                   </strong>
                 </div>
 
+
                 <ChevronDown
-                  size={15}
+                  size={
+                    15
+                  }
                   className={`${styles.chevron} ${
                     isBedsOpen
                       ? styles.chevronOpen
@@ -1340,6 +1514,7 @@ export default function Hero({
                   }`}
                 />
               </button>
+
 
               {isApartment &&
                 isBedsOpen && (
@@ -1389,6 +1564,140 @@ export default function Hero({
                     )}
                   </div>
                 )}
+            </div>
+
+               {/* =============================================
+                PRICE
+            ============================================= */}
+
+            <div
+              className={
+                styles.filterWrapper
+              }
+            >
+              <button
+                type="button"
+                className={
+                  styles.filterCard
+                }
+                onClick={() => {
+                  setIsPriceOpen(
+                    (
+                      open
+                    ) =>
+                      !open
+                  );
+
+                  setIsPropertyTypeOpen(
+                    false
+                  );
+
+                  setIsAreaOpen(
+                    false
+                  );
+
+                  setIsBedsOpen(
+                    false
+                  );
+                }}
+                aria-expanded={
+                  isPriceOpen
+                }
+              >
+                <div
+                  className={
+                    styles.filterIcon
+                  }
+                >
+                  <Tag
+                    size={
+                      20
+                    }
+                  />
+                </div>
+
+
+                <div
+                  className={
+                    styles.filterInfo
+                  }
+                >
+                  <span
+                    className={
+                      styles.filterLabel
+                    }
+                  >
+                    Price Range
+                  </span>
+
+                  <strong>
+                    {
+                      selectedPriceLabel
+                    }
+                  </strong>
+                </div>
+
+
+                <ChevronDown
+                  size={
+                    15
+                  }
+                  className={`${styles.chevron} ${
+                    isPriceOpen
+                      ? styles.chevronOpen
+                      : ""
+                  }`}
+                />
+              </button>
+
+
+              {isPriceOpen && (
+                <div
+                  className={
+                    styles.simpleDropdownPanel
+                  }
+                >
+                  {PRICE_OPTIONS.map(
+                    (
+                      option
+                    ) => (
+                      <button
+                        key={
+                          option.value
+                        }
+                        type="button"
+                        className={`${styles.dropdownOption} ${
+                          priceRange ===
+                          option.value
+                            ? styles.dropdownOptionActive
+                            : ""
+                        }`}
+                        onClick={() => {
+                          setPriceRange(
+                            option.value
+                          );
+
+                          setIsPriceOpen(
+                            false
+                          );
+                        }}
+                      >
+                        <span
+                          className={
+                            styles.radioMark
+                          }
+                        />
+
+                        <span>
+                          {
+                            option.label
+                          }
+                        </span>
+                      </button>
+                    )
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </form>

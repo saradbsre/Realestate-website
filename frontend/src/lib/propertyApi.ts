@@ -1,60 +1,181 @@
 /* =========================================================
-   PROPERTY TYPES
+   PROPERTY GALLERY IMAGE
+========================================================= */
+
+export interface PropertyGalleryImage {
+  imagePath: string;
+
+  imageUrl:
+    string | null;
+
+  imageType:
+    | "BUILDING"
+    | "UNIT";
+
+  displayOrder: number;
+
+  imageId: number;
+}
+
+
+/* =========================================================
+   PROPERTY
 ========================================================= */
 
 export interface Property {
+  /*
+   * Unique listing ID.
+   *
+   * Example:
+   * P:363|STD
+   */
+  listingId: string;
+
+
+  /*
+   * Building ID.
+   *
+   * Example:
+   * P:363
+   */
   id: string;
+
+
   title: string;
 
   description: string;
 
+
+  /* =======================================================
+     PRICE
+  ======================================================= */
+
   price: number;
+
   maxPrice: number;
+
+
+  /* =======================================================
+     LOCATION
+  ======================================================= */
 
   location: string;
 
+
+  /* =======================================================
+     PROPERTY TYPE
+  ======================================================= */
+
   type: string;
+
   availableTypes: string;
 
+  purposeCode: string;
+
   purpose: string;
+
   status: string;
 
+
+  /* =======================================================
+     BED / BATH
+  ======================================================= */
+
   beds: number;
+
   baths: number;
+
 
   amenities?: string[];
 
+
+  /* =======================================================
+     AREA
+  ======================================================= */
+
   area: number;
+
   maxArea: number;
+
+
+  /* =======================================================
+     LEGACY IMAGES
+  ======================================================= */
 
   images: string;
 
-  erpId: string | null;
+
+  /* =======================================================
+     BUILDING + UNIT GALLERY
+  ======================================================= */
+
+  galleryImages:
+    PropertyGalleryImage[];
+
+
+  /* =======================================================
+     ERP
+  ======================================================= */
+
+  erpId:
+    string | null;
+
+
+  /* =======================================================
+     VACANCY
+  ======================================================= */
 
   vacantUnits: number;
 
+
+  /* =======================================================
+     WEBSITE DISPLAY
+  ======================================================= */
+
   webDisplayOrder:
-  number | null;
+    number | null;
+
+
+  /* =======================================================
+     PRIMARY IMAGE
+  ======================================================= */
 
   primaryImagePath?:
-  string | null;
+    string | null;
 
-primaryImageUrl?:
-  string | null;
+  primaryImageUrl?:
+    string | null;
 }
 
 
-
+/* =========================================================
+   PROPERTY FILTERS
+========================================================= */
 
 export interface PropertyFilters {
+  /* Location / search */
   search?: string;
 
+
+  /* Building */
+  buildingId?: string;
+
+
+  /* Unit */
+  unitDesc?: string;
+
+
+  /* Property Type */
   unitTypeId?:
     | string
     | number;
 
+
+  /* Beds / Purpose Code */
   beds?: string;
 
+
+  /* Price */
   minPrice?:
     | string
     | number;
@@ -63,10 +184,29 @@ export interface PropertyFilters {
     | string
     | number;
 
+
+  /* Area */
+  minArea?:
+    | string
+    | number;
+
+  maxArea?:
+    | string
+    | number;
+
+
+  /* Pagination */
   page?: number;
 
   pageSize?: number;
+
+
+  /* View Mode */
+  view?:
+    | "building"
+    | "unitType";
 }
+
 
 /* =========================================================
    PROPERTY UNIT
@@ -93,18 +233,27 @@ export interface PropertyUnit {
     | number
     | null;
 
-  area: number;
 
-  areaUnit: string;
+  area:
+    number;
 
-  annualRent: number;
+  areaUnit:
+    string;
 
-  maxAnnualRent: number;
 
-  currency: string;
+  annualRent:
+    number;
+
+  maxAnnualRent:
+    number;
+
+  currency:
+    string;
+
 
   numberOfPayments:
     number | null;
+
 
   airConditioning:
     string | null;
@@ -121,139 +270,290 @@ export interface PropertyUnit {
   securityDeposit:
     number | null;
 
-  vacant: string;
+  isWithBalcony:
+    | number
+    | boolean
+    | null;
 
-  isActive: boolean;
+
+  vacant:
+    string;
+
+  isActive:
+    boolean;
+
 
   image:
     string | null;
 
+
   lastUpdated:
     string | null;
-     isWithBalcony:
-    number | boolean | null;
 }
+
 
 /* =========================================================
-   BACKEND PROPERTY LIST RESPONSE
+   BUILDING FILTER OPTION
 ========================================================= */
 
-interface BackendPropertyList {
-  data: BackendProperty[];
+export interface PropertyBuildingOption {
+  buildingId: string;
 
-  pagination: {
-    page: number;
-    pageSize: number;
-    totalRecords: number;
-    totalPages: number;
-  };
+  buildingName: string;
 }
+
+
+/* =========================================================
+   UNIT FILTER OPTION
+========================================================= */
+
+export interface PropertyUnitOption {
+  unitDesc: string;
+
+  purposeCode:
+    string | null;
+
+  unitType:
+    string | null;
+
+  annualRent:
+    number | null;
+}
+
 
 /* =========================================================
    BACKEND PROPERTY
 ========================================================= */
 
 interface BackendProperty {
+  /*
+   * Grouped listing ID.
+   *
+   * P:363|STD
+   */
+  listingId?:
+    string;
+
+
+  /*
+   * Building ID.
+   */
   id: string;
+
 
   title: string;
 
-  buildingType?: string;
 
-  address?: string;
+  buildingType?:
+    string;
 
-  areaName?: string;
+  address?:
+    string;
 
-  placeName?: string;
+  areaName?:
+    string;
 
-  neighborhood?: string;
+  placeName?:
+    string;
 
-  location?: string;
+  neighborhood?:
+    string;
 
-  propertyType?: string;
+  location?:
+    string;
 
-  availableTypes?: string;
 
-  area?: number;
+  /* =======================================================
+     TYPE
+  ======================================================= */
 
-  maxArea?: number;
+  purposeCode?:
+    string;
 
-  price?: number;
+  propertyType?:
+    string;
 
-  maxPrice?: number;
+  availableTypes?:
+    string;
 
-  currency?: string;
 
-  rentalPeriod?: string;
+  /* =======================================================
+     AREA
+  ======================================================= */
 
-  purpose?: string;
+  area?:
+    number;
 
-  vacantUnits?: number;
+  maxArea?:
+    number;
 
-  referenceNo?: string;
+
+  /* =======================================================
+     PRICE
+  ======================================================= */
+
+  price?:
+    number;
+
+  maxPrice?:
+    number;
+
+
+  currency?:
+    string;
+
+  rentalPeriod?:
+    string;
+
+  purpose?:
+    string;
+
+
+  /* =======================================================
+     VACANCY
+  ======================================================= */
+
+  vacantUnits?:
+    number;
+
+
+  /* =======================================================
+     ERP REFERENCE
+  ======================================================= */
+
+  referenceNo?:
+    string;
+
+
+  /* =======================================================
+     DISPLAY
+  ======================================================= */
+
+  webDisplayOrder?:
+    number | null;
+
+
+  /* =======================================================
+     PRIMARY IMAGE
+  ======================================================= */
 
   primaryImagePath?:
-  string | null;
+    string | null;
 
-primaryImageUrl?:
-  string | null;
+  primaryImageUrl?:
+    string | null;
+
+
+  /* =======================================================
+     GALLERY
+  ======================================================= */
+
+  galleryImages?:
+    PropertyGalleryImage[];
 }
 
+
 /* =========================================================
-   FILTER OPTIONS
+   BACKEND PROPERTY LIST RESPONSE
+========================================================= */
+
+interface BackendPropertyList {
+  success?:
+    boolean;
+
+  data:
+    BackendProperty[];
+
+  pagination: {
+    page:
+      number;
+
+    pageSize:
+      number;
+
+    totalRecords:
+      number;
+
+    totalPages:
+      number;
+  };
+}
+
+
+/* =========================================================
+   PROPERTY FILTER TYPE
 ========================================================= */
 
 export interface PropertyFilterType {
   id: number;
+
   name: string;
 }
+
+
+/* =========================================================
+   PROPERTY FILTER CATEGORY
+========================================================= */
 
 export interface PropertyFilterCategory {
   categoryId: string;
 
   categoryName: string;
 
-  types: PropertyFilterType[];
+  types:
+    PropertyFilterType[];
 }
+
+
+/* =========================================================
+   FILTER RESPONSE
+========================================================= */
 
 interface PropertyFilterResponse {
   success: boolean;
 
-  data: PropertyFilterCategory[];
+  data:
+    PropertyFilterCategory[];
 }
+
+
+/* =========================================================
+   BUILDING / UNIT FILTER RESPONSE
+========================================================= */
+
+interface PropertyBuildingUnitOptionsResponse {
+  success: boolean;
+
+  data: {
+    buildings:
+      PropertyBuildingOption[];
+
+    units:
+      PropertyUnitOption[];
+  };
+}
+
 
 /* =========================================================
    BACKEND URL
 ========================================================= */
 
-/*
- * Local:
- *
- * NEXT_PUBLIC_API_URL=http://localhost:5000
- *
- * Production:
- *
- * NEXT_PUBLIC_API_URL=https://your-backend.onrender.com
- */
-
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "";
+  process.env
+    .NEXT_PUBLIC_API_URL ||
+  "";
 
-/*
- * Example:
- *
- * apiUrl("/properties")
- *
- * Local:
- * http://localhost:5000/api/properties
- *
- * Production:
- * https://xxx.onrender.com/api/properties
- */
+
+/* =========================================================
+   API URL HELPER
+========================================================= */
+
 function apiUrl(
   path: string
 ) {
-  if (!API_BASE_URL) {
+  if (
+    !API_BASE_URL
+  ) {
     throw new Error(
       "NEXT_PUBLIC_API_URL is not configured."
     );
@@ -267,6 +567,7 @@ function apiUrl(
   }/api${path}`;
 }
 
+
 /* =========================================================
    COMMON JSON READER
 ========================================================= */
@@ -274,21 +575,31 @@ function apiUrl(
 async function readJson<T>(
   response: Response
 ): Promise<T> {
-  if (!response.ok) {
-    const body = await response
-      .json()
-      .catch(() => null);
+  if (
+    !response.ok
+  ) {
+    const body =
+      await response
+        .json()
+        .catch(
+          () =>
+            null
+        );
 
     throw new Error(
       body?.error ||
-        `API request failed (${response.status})`
+      body?.message ||
+      `API request failed (${response.status})`
     );
   }
 
-  const data = await response.json();
+  const data =
+    await response.json();
 
   return data as T;
 }
+
+
 /* =========================================================
    PROPERTY TYPE FORMATTER
 ========================================================= */
@@ -305,85 +616,96 @@ function formatPropertyType(
       )
       .toUpperCase();
 
+
   const exactMappings:
     Record<
       string,
       string
     > = {
-    STUDIO:
-      "Studio",
+      STUDIO:
+        "Studio",
 
-    "STUDIO FLAT":
-      "Studio",
+      "STUDIO FLAT":
+        "Studio",
 
-    OFFICE:
-      "Office",
+      OFFICE:
+        "Office",
 
-    "OFFICE FLAT":
-      "Office",
+      "OFFICE FLAT":
+        "Office",
 
-    SHOP:
-      "Shop",
+      SHOP:
+        "Shop",
 
-    SHOWROOM:
-      "Showroom",
+      SHOWROOM:
+        "Showroom",
 
-    "SHOW ROOM":
-      "Showroom",
+      "SHOW ROOM":
+        "Showroom",
 
-    VILLA:
-      "Villa",
+      VILLA:
+        "Villa",
 
-    WAREHOUSE:
-      "Warehouse",
+      WAREHOUSE:
+        "Warehouse",
 
-    "WARE HOUSE":
-      "Warehouse",
+      "WARE HOUSE":
+        "Warehouse",
 
-    PENTHOUSE:
-      "Penthouse",
+      PENTHOUSE:
+        "Penthouse",
 
-    DUPLEX:
-      "Duplex",
+      DUPLEX:
+        "Duplex",
 
-    TOWNHOUSE:
-      "Townhouse",
+      TOWNHOUSE:
+        "Townhouse",
 
-    "TOWN HOUSE":
-      "Townhouse",
+      "TOWN HOUSE":
+        "Townhouse",
 
-    RETAIL:
-      "Retail",
+      RETAIL:
+        "Retail",
 
-    "LABOUR CAMP":
-      "Labour Camp",
-  };
+      STORE:
+        "Store",
+
+      "LABOUR CAMP":
+        "Labour Camp",
+    };
+
 
   if (
-    exactMappings[value]
+    exactMappings[
+      value
+    ]
   ) {
     return exactMappings[
       value
     ];
   }
 
+
   /*
-   * ERP examples:
+   * ERP Examples:
    *
    * 1 BED ROOM HALL
    * 2 BED ROOM HALL
-   * 3 BED ROOM
    */
   const bedroomMatch =
     value.match(
       /^(\d+)\s*BED\s*ROOM(?:\s*HALL)?$/
     );
 
+
   if (
     bedroomMatch
   ) {
-    return `${bedroomMatch[1]} Bed`;
+    return `${
+      bedroomMatch[1]
+    } Bed`;
   }
+
 
   /*
    * Examples:
@@ -396,28 +718,36 @@ function formatPropertyType(
       /^(\d+)\s*BEDROOM(?:\s*HALL)?$/
     );
 
+
   if (
     bedroomMatch2
   ) {
-    return `${bedroomMatch2[1]} Bed`;
+    return `${
+      bedroomMatch2[1]
+    } Bed`;
   }
+
 
   return type
     .trim()
     .toLowerCase()
     .replace(
       /\b\w/g,
-      (char) =>
+      (
+        char
+      ) =>
         char.toUpperCase()
     );
 }
+
 
 /* =========================================================
    AVAILABLE TYPES FORMATTER
 ========================================================= */
 
 function formatAvailableTypes(
-  availableTypes?: string
+  availableTypes?:
+    string
 ): string {
   if (
     !availableTypes
@@ -425,32 +755,187 @@ function formatAvailableTypes(
     return "";
   }
 
+
   const formatted =
     availableTypes
       .split(",")
       .map(
-        (type) =>
+        (
+          type
+        ) =>
           formatPropertyType(
             type
           )
       )
-      .filter(Boolean);
+      .filter(
+        Boolean
+      );
+
 
   return [
     ...new Set(
       formatted
     ),
-  ].join(", ");
+  ].join(
+    ", "
+  );
 }
+
+
+/* =========================================================
+   NORMALIZE GALLERY
+========================================================= */
+
+function normalizeGalleryImages(
+  images:
+    | PropertyGalleryImage[]
+    | undefined
+): PropertyGalleryImage[] {
+  if (
+    !Array.isArray(
+      images
+    )
+  ) {
+    return [];
+  }
+
+
+  const seenPaths =
+    new Set<string>();
+
+
+  return images
+    .filter(
+      (
+        image
+      ) => {
+        const path =
+          String(
+            image.imagePath ||
+            ""
+          ).trim();
+
+
+        if (
+          !path
+        ) {
+          return false;
+        }
+
+
+        /*
+         * Avoid duplicate image paths.
+         *
+         * Important because reused
+         * unit images can reference
+         * the same R2 object.
+         */
+        if (
+          seenPaths.has(
+            path
+          )
+        ) {
+          return false;
+        }
+
+
+        seenPaths.add(
+          path
+        );
+
+        return true;
+      }
+    )
+    .map(
+      (
+        image
+      ) => ({
+        imagePath:
+          String(
+            image.imagePath
+          ),
+
+        imageUrl:
+          image.imageUrl ||
+          null,
+
+        imageType:
+          image.imageType ===
+          "UNIT"
+            ? "UNIT"
+            : "BUILDING",
+
+        displayOrder:
+          Number(
+            image.displayOrder
+          ) ||
+          0,
+
+        imageId:
+          Number(
+            image.imageId
+          ) ||
+          0,
+      })
+    );
+}
+
 
 /* =========================================================
    NORMALIZE PROPERTY
 ========================================================= */
 
 function normalizeProperty(
-  property: BackendProperty
+  property:
+    BackendProperty
 ): Property {
+  const purposeCode =
+    String(
+      property.purposeCode ||
+      ""
+    ).trim();
+
+
+  const galleryImages =
+    normalizeGalleryImages(
+      property.galleryImages
+    );
+
+
+  /* =======================================================
+     PRIMARY IMAGE
+  ======================================================= */
+
+  const primaryImageUrl =
+    property.primaryImageUrl ??
+    galleryImages[0]
+      ?.imageUrl ??
+    null;
+
+
+  const primaryImagePath =
+    property.primaryImagePath ??
+    galleryImages[0]
+      ?.imagePath ??
+    null;
+
+
   return {
+    /* =====================================================
+       LISTING ID
+    ===================================================== */
+
+    listingId:
+      property.listingId ||
+      `${String(
+        property.id
+      )}|${purposeCode}`,
+
+
+    /* =====================================================
+       BUILDING
+    ===================================================== */
+
     id:
       String(
         property.id
@@ -463,34 +948,58 @@ function normalizeProperty(
     description:
       "",
 
+
+    /* =====================================================
+       PRICE
+    ===================================================== */
+
     price:
       Number(
-        property.price ||
-          0
+        property.price ??
+        0
       ),
 
     maxPrice:
       Number(
         property.maxPrice ??
-          property.price ??
-          0
+        property.price ??
+        0
       ),
+
+
+    /* =====================================================
+       LOCATION
+    ===================================================== */
 
     location:
       property.location ||
       "",
 
+
+    /* =====================================================
+       TYPE
+    ===================================================== */
+
     type:
       formatPropertyType(
         property.propertyType ||
-          "Property"
+        property.availableTypes ||
+        "Property"
       ),
 
     availableTypes:
       formatAvailableTypes(
         property.availableTypes ||
-          property.propertyType
+        property.propertyType ||
+        ""
       ),
+
+    purposeCode,
+
+
+    /* =====================================================
+       PURPOSE
+    ===================================================== */
 
     purpose:
       property.purpose ||
@@ -499,54 +1008,80 @@ function normalizeProperty(
     status:
       "Ready",
 
+
+    /* =====================================================
+       BED / BATH
+    ===================================================== */
+
     beds:
       0,
 
     baths:
       0,
 
+
+    /* =====================================================
+       AREA
+    ===================================================== */
+
     area:
       Number(
-        property.area ||
-          0
+        property.area ??
+        0
       ),
 
     maxArea:
       Number(
         property.maxArea ??
-          property.area ??
-          0
+        property.area ??
+        0
       ),
+
+
+    /* =====================================================
+       IMAGES
+    ===================================================== */
 
     images:
       "[]",
+
+    galleryImages,
+
+    primaryImagePath,
+
+    primaryImageUrl,
+
+
+    /* =====================================================
+       ERP
+    ===================================================== */
 
     erpId:
       property.referenceNo ||
       null,
 
+
+    /* =====================================================
+       VACANCY
+    ===================================================== */
+
     vacantUnits:
       Number(
-        property.vacantUnits ||
-          0
+        property.vacantUnits ??
+        0
       ),
 
+
+    /* =====================================================
+       WEBSITE DISPLAY
+    ===================================================== */
+
     webDisplayOrder:
-      null,
-
-    /* ========================================
-       CLOUDFLARE BUILDING IMAGE
-    ======================================== */
-
-    primaryImagePath:
-      property.primaryImagePath ??
-      null,
-
-    primaryImageUrl:
-      property.primaryImageUrl ??
+      property.webDisplayOrder ??
       null,
   };
 }
+
 
 /* =========================================================
    SAFE BUILDING ID
@@ -558,6 +1093,7 @@ function encodeBuildingId(
   let decodedId =
     id;
 
+
   try {
     decodedId =
       decodeURIComponent(
@@ -568,10 +1104,12 @@ function encodeBuildingId(
       id;
   }
 
+
   return encodeURIComponent(
     decodedId.trim()
   );
 }
+
 
 /* =========================================================
    GET PROPERTIES
@@ -584,37 +1122,252 @@ export async function getProperties(
   const params =
     new URLSearchParams();
 
-  Object.entries(
-    filters
-  ).forEach(
-    ([key, value]) => {
-      if (
-        value !==
-          undefined &&
-        value !== null &&
-        value !== ""
-      ) {
-        params.set(
-          key,
-          String(value)
-        );
-      }
-    }
-  );
+
+  /* =======================================================
+     SEARCH / LOCATION
+  ======================================================= */
+
+  if (
+    filters.search !==
+      undefined &&
+    String(
+      filters.search
+    ).trim() !==
+      ""
+  ) {
+    params.set(
+      "search",
+      String(
+        filters.search
+      ).trim()
+    );
+  }
+
+
+  /* =======================================================
+     BUILDING
+  ======================================================= */
+
+  if (
+    filters.buildingId &&
+    filters.buildingId
+      .trim() !==
+      ""
+  ) {
+    params.set(
+      "buildingId",
+      filters.buildingId
+        .trim()
+    );
+  }
+
+
+  /* =======================================================
+     UNIT
+  ======================================================= */
+
+  if (
+    filters.unitDesc &&
+    filters.unitDesc
+      .trim() !==
+      ""
+  ) {
+    params.set(
+      "unitDesc",
+      filters.unitDesc
+        .trim()
+    );
+  }
+
+
+  /* =======================================================
+     PROPERTY TYPE
+  ======================================================= */
+
+  if (
+    filters.unitTypeId !==
+      undefined &&
+    filters.unitTypeId !==
+      null &&
+    filters.unitTypeId !==
+      ""
+  ) {
+    params.set(
+      "unitTypeId",
+      String(
+        filters.unitTypeId
+      )
+    );
+  }
+
+
+  /* =======================================================
+     BEDS
+  ======================================================= */
+
+  if (
+    filters.beds &&
+    filters.beds !==
+      "All"
+  ) {
+    params.set(
+      "beds",
+      filters.beds
+    );
+  }
+
+
+  /* =======================================================
+     MIN PRICE
+  ======================================================= */
+
+  if (
+    filters.minPrice !==
+      undefined &&
+    filters.minPrice !==
+      ""
+  ) {
+    params.set(
+      "minPrice",
+      String(
+        filters.minPrice
+      )
+    );
+  }
+
+
+  /* =======================================================
+     MAX PRICE
+  ======================================================= */
+
+  if (
+    filters.maxPrice !==
+      undefined &&
+    filters.maxPrice !==
+      ""
+  ) {
+    params.set(
+      "maxPrice",
+      String(
+        filters.maxPrice
+      )
+    );
+  }
+
+
+  /* =======================================================
+     MIN AREA
+  ======================================================= */
+
+  if (
+    filters.minArea !==
+      undefined &&
+    filters.minArea !==
+      ""
+  ) {
+    params.set(
+      "minArea",
+      String(
+        filters.minArea
+      )
+    );
+  }
+
+
+  /* =======================================================
+     MAX AREA
+  ======================================================= */
+
+  if (
+    filters.maxArea !==
+      undefined &&
+    filters.maxArea !==
+      ""
+  ) {
+    params.set(
+      "maxArea",
+      String(
+        filters.maxArea
+      )
+    );
+  }
+
+
+  /* =======================================================
+     PAGE
+  ======================================================= */
+
+  if (
+    filters.page !==
+      undefined
+  ) {
+    params.set(
+      "page",
+      String(
+        filters.page
+      )
+    );
+  }
+
+
+  /* =======================================================
+     PAGE SIZE
+  ======================================================= */
+
+  if (
+    filters.pageSize !==
+      undefined
+  ) {
+    params.set(
+      "pageSize",
+      String(
+        filters.pageSize
+      )
+    );
+  }
+
+
+  /* =======================================================
+     VIEW
+  ======================================================= */
+
+  if (
+    filters.view
+  ) {
+    params.set(
+      "view",
+      filters.view
+    );
+  }
+
+
+  /* =======================================================
+     URL
+  ======================================================= */
 
   const queryString =
     params.toString();
 
+
   const url =
-    `${
-      apiUrl(
-        "/properties"
-      )
-    }${
+    `${apiUrl(
+      "/properties"
+    )}${
       queryString
         ? `?${queryString}`
         : ""
     }`;
+
+
+  console.log(
+    "GET PROPERTIES:",
+    url
+  );
+
+
+  /* =======================================================
+     REQUEST
+  ======================================================= */
 
   const response =
     await fetch(
@@ -625,29 +1378,42 @@ export async function getProperties(
       }
     );
 
+
   const result =
     await readJson<
       BackendPropertyList
-    >(response);
+    >(
+      response
+    );
+
+
+  /* =======================================================
+     RETURN
+  ======================================================= */
 
   return {
     properties:
-      result.data.map(
-        (
-          property
-        ) =>
-          normalizeProperty(
-            property
+      Array.isArray(
+        result.data
+      )
+        ? result.data.map(
+            (
+              property
+            ) =>
+              normalizeProperty(
+                property
+              )
           )
-      ),
+        : [],
 
     pagination:
       result.pagination,
   };
 }
 
+
 /* =========================================================
-   GET FILTER OPTIONS
+   GET PROPERTY FILTER OPTIONS
 ========================================================= */
 
 export async function getPropertyFilterOptions() {
@@ -662,13 +1428,109 @@ export async function getPropertyFilterOptions() {
       }
     );
 
+
   const result =
     await readJson<
       PropertyFilterResponse
-    >(response);
+    >(
+      response
+    );
 
-  return result.data;
+
+  return Array.isArray(
+    result.data
+  )
+    ? result.data
+    : [];
 }
+
+
+/* =========================================================
+   GET BUILDING + UNIT FILTER OPTIONS
+========================================================= */
+
+export async function getPropertyBuildingUnitOptions(
+  buildingId?: string
+) {
+  const params =
+    new URLSearchParams();
+
+
+  /* =======================================================
+     BUILDING ID
+  ======================================================= */
+
+  if (
+    buildingId &&
+    buildingId
+      .trim() !==
+      ""
+  ) {
+    params.set(
+      "buildingId",
+      buildingId
+        .trim()
+    );
+  }
+
+
+  const queryString =
+    params.toString();
+
+
+  /* =======================================================
+     REQUEST
+  ======================================================= */
+
+  const response =
+    await fetch(
+      `${apiUrl(
+        "/properties/building-unit-options"
+      )}${
+        queryString
+          ? `?${queryString}`
+          : ""
+      }`,
+      {
+        cache:
+          "no-store",
+      }
+    );
+
+
+  const result =
+    await readJson<
+      PropertyBuildingUnitOptionsResponse
+    >(
+      response
+    );
+
+
+  /* =======================================================
+     RETURN
+  ======================================================= */
+
+  return {
+    buildings:
+      Array.isArray(
+        result.data
+          ?.buildings
+      )
+        ? result.data
+            .buildings
+        : [],
+
+    units:
+      Array.isArray(
+        result.data
+          ?.units
+      )
+        ? result.data
+            .units
+        : [],
+  };
+}
+
 
 /* =========================================================
    GET PROPERTY
@@ -682,6 +1544,7 @@ export async function getProperty(
       id
     );
 
+
   const response =
     await fetch(
       apiUrl(
@@ -693,22 +1556,24 @@ export async function getProperty(
       }
     );
 
+
   const result =
     await readJson<{
-      success: boolean;
+      success:
+        boolean;
 
       data:
         BackendProperty;
-    }>(response);
+    }>(
+      response
+    );
 
-  /*
-   * Detail endpoint can return
-   * backend format too.
-   */
+
   return normalizeProperty(
     result.data
   );
 }
+
 
 /* =========================================================
    GET PROPERTY UNITS
@@ -722,6 +1587,7 @@ export async function getPropertyUnits(
       id
     );
 
+
   const response =
     await fetch(
       apiUrl(
@@ -733,6 +1599,7 @@ export async function getPropertyUnits(
       }
     );
 
+
   const result =
     await readJson<{
       success:
@@ -743,14 +1610,23 @@ export async function getPropertyUnits(
 
       data:
         PropertyUnit[];
-    }>(response);
+    }>(
+      response
+    );
+
 
   return {
     total:
-      result.total,
+      Number(
+        result.total ??
+        0
+      ),
 
     units:
-      result.data ||
-      [],
+      Array.isArray(
+        result.data
+      )
+        ? result.data
+        : [],
   };
 }

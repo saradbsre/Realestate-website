@@ -97,13 +97,13 @@ export default function UnitImageManager({
   ] =
     useState("");
 
-  const [
-    selectedFile,
-    setSelectedFile,
-  ] =
-    useState<File | null>(
-      null
-    );
+ const [
+  selectedFiles,
+  setSelectedFiles,
+] =
+  useState<File[]>(
+    []
+  );
 
   const [
     loading,
@@ -424,31 +424,61 @@ setDraggingImageId(
      UPLOAD NEW IMAGE
   ========================================================= */
 
-  const handleUpload =
-    async () => {
-      if (
-        !selectedFile
-      ) {
-        setError(
-          "Please select an image."
-        );
+const handleUpload =
+  async () => {
+    if (
+      selectedFiles.length ===
+      0
+    ) {
+      showAlertError(
+        "Please select at least one image."
+      );
 
-        return;
-      }
+      return;
+    }
 
-      if (
-        selectedFile.size >
-        5 *
-          1024 *
-          1024
-      ) {
-        setError(
-          "Image size must not exceed 5 MB."
-        );
+    const invalidType =
+      selectedFiles.find(
+        (file) =>
+          ![
+            "image/jpeg",
+            "image/png",
+            "image/webp",
+          ].includes(
+            file.type
+          )
+      );
 
-        return;
-      }
+    if (
+      invalidType
+    ) {
+      showAlertError(
+        `${invalidType.name} is not a supported image type.`
+      );
 
+      return;
+    }
+
+    const oversizedFile =
+      selectedFiles.find(
+        (file) =>
+          file.size >
+          5 *
+            1024 *
+            1024
+      );
+
+    if (
+      oversizedFile
+    ) {
+      showAlertError(
+        `${oversizedFile.name} exceeds the 5 MB limit.`
+      );
+
+      return;
+    }
+
+    try {
       setUploading(
         true
       );
@@ -456,73 +486,88 @@ setDraggingImageId(
       setError("");
       setMessage("");
 
-      try {
-        const formData =
-          new FormData();
+      const formData =
+        new FormData();
 
-        formData.append(
-          "image",
-          selectedFile
-        );
-
-        const response =
-          await fetch(
-            `${API_URL}/api/admin/unit-images/${encodeURIComponent(
-              buildingId
-            )}/${encodeURIComponent(
-              unitDesc
-            )}/upload`,
-            {
-              method:
-                "POST",
-
-              credentials:
-                "include",
-
-              body:
-                formData,
-            }
-          );
-
-        const result =
-          await response.json();
-
-        if (
-          !response.ok ||
-          !result.success
-        ) {
-          throw new Error(
-            result.error ||
-              "Image upload failed."
+      selectedFiles.forEach(
+        (
+          file
+        ) => {
+          formData.append(
+            "images",
+            file
           );
         }
+      );
 
-        setMessage(
-          "Image uploaded successfully."
+      const response =
+        await fetch(
+          `${API_URL}/api/admin/unit-images/${encodeURIComponent(
+            buildingId
+          )}/${encodeURIComponent(
+            unitDesc
+          )}/upload`,
+          {
+            method:
+              "POST",
+
+            credentials:
+              "include",
+
+            body:
+              formData,
+          }
         );
 
-        setSelectedFile(
-          null
-        );
+      const result =
+        await response.json();
 
-        await loadImages();
-
-        await loadExistingUnits();
-      } catch (
-        err: any
+      if (
+        !response.ok ||
+        !result.success
       ) {
-        setError(
-          err.message ||
+        throw new Error(
+          result.error ||
             "Image upload failed."
         );
-      } finally {
-        setUploading(
-          false
-        );
       }
-    };
 
+      const uploadedCount =
+        Array.isArray(
+          result.data
+        )
+          ? result.data.length
+          : selectedFiles.length;
 
+      setSelectedFiles(
+        []
+      );
+
+      await loadImages();
+
+      await loadExistingUnits();
+
+      showAlertSuccess(
+        `${uploadedCount} unit image${
+          uploadedCount ===
+          1
+            ? ""
+            : "s"
+        } uploaded successfully.`
+      );
+    } catch (
+      err: any
+    ) {
+      showAlertError(
+        err.message ||
+          "Image upload failed."
+      );
+    } finally {
+      setUploading(
+        false
+      );
+    }
+  };
   /* =========================================================
      REUSE EXISTING UNIT IMAGES
   ========================================================= */
@@ -1145,59 +1190,79 @@ const handleDeleteImage =
             styles.uploadRow
           }
         >
-          <input
-            type="file"
+        <input
+  type="file"
 
-            accept=
-              "image/jpeg,image/png,image/webp"
+  multiple
 
-            onChange={(
-              event
-            ) => {
-              setSelectedFile(
-                event.target
-                  .files?.[0] ||
-                  null
-              );
+  accept="image/jpeg,image/png,image/webp"
 
-              setError("");
-            }}
+  onChange={(
+    event
+  ) => {
+    const files =
+      Array.from(
+        event.target.files ||
+          []
+      );
 
-            className={
-              styles.fileInput
-            }
-          />
+    setSelectedFiles(
+      files
+    );
 
-          <button
-            type="button"
+    setError("");
+  }}
 
-            onClick={
-              handleUpload
-            }
+  className={
+    styles.fileInput
+  }
+/>
 
-            disabled={
-              uploading ||
-              !selectedFile
-            }
+<button
+  type="button"
 
-            className={
-              styles.primaryButton
-            }
-          >
-            {uploading
-              ? "Uploading..."
-              : "Upload Image"}
-          </button>
+  onClick={
+    handleUpload
+  }
+
+  disabled={
+    uploading ||
+    selectedFiles.length ===
+      0
+  }
+
+  className={
+    styles.primaryButton
+  }
+>
+  {uploading
+    ? `Uploading ${selectedFiles.length} Image${
+        selectedFiles.length ===
+        1
+          ? ""
+          : "s"
+      }...`
+    : selectedFiles.length >
+      0
+    ? `Upload ${selectedFiles.length} Image${
+        selectedFiles.length ===
+        1
+          ? ""
+          : "s"
+      }`
+    : "Upload Images"}
+</button>
         </div>
 
-        <div
-          className={
-            styles.helpText
-          }
-        >
-          JPG, PNG or WebP.
-          Maximum size 5 MB.
-        </div>
+       <div
+  className={
+    styles.helpText
+  }
+>
+  JPG, PNG or WebP.
+  Maximum 5 MB per image.
+  You can select multiple images.
+</div>
       </div>
 
 

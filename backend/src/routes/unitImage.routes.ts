@@ -9,13 +9,12 @@ import {
   getUnitsWithImages,
   makeUnitImagePrimary,
   saveUnitImageOrder,
-  uploadUnitImage,
+  uploadUnitImages,
 } from "../controllers/unitImage.controller";
 
 import {
   ImageUpload,
 } from "../config/ImageUpload";
-
 
 const router =
   Router();
@@ -42,17 +41,18 @@ router.get(
 
 
 /* =========================================================
-   UPLOAD
+   UPLOAD MULTIPLE UNIT IMAGES
 ========================================================= */
 
 router.post(
   "/:buildingId/:unitDesc/upload",
 
-  ImageUpload.single(
-    "image"
+  ImageUpload.array(
+    "images",
+    20
   ),
 
-  uploadUnitImage
+  uploadUnitImages
 );
 
 

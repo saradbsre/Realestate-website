@@ -8,9 +8,11 @@ import {
   countProperties,
   findAllAdminProperties,
   findAllProperties,
+  findFeaturedProperties,
   findImageManagementBuildings,
   findPropertyByBuildingId,
   findVacantUnitsByBuildingId,
+  getPropertyBuildingUnitOptionsRepo,
   getPropertyFilterOptionsRepo,
   updatePropertyWebDisplay,
 type PropertySearchParams,
@@ -18,170 +20,299 @@ type PropertySearchParams,
 
 export async function getProperties(
   req: Request,
-  res: Response,
-  next: NextFunction
+  res: Response
 ) {
   try {
     const page =
-      req.query.page !== undefined
-        ? Number(req.query.page)
-        : 1;
+      Math.max(
+        1,
+        Number(
+          req.query.page
+        ) || 1
+      );
 
     const pageSize =
-      req.query.pageSize !== undefined
-        ? Number(req.query.pageSize)
-        : 20;
+      Math.min(
+        100,
+        Math.max(
+          1,
+          Number(
+            req.query.pageSize
+          ) || 20
+        )
+      );
 
-    /* ========================================
-       UNIT TYPE
-    ======================================== */
+    /* =====================================================
+       VIEW MODE
+    ===================================================== */
 
-    const unitTypeId =
-      req.query.unitTypeId !== undefined &&
-      req.query.unitTypeId !== ""
-        ? Number(req.query.unitTypeId)
-        : undefined;
+    const view:
+      "building" |
+      "unitType" =
+      req.query.view ===
+      "building"
+        ? "building"
+        : "unitType";
 
-    if (
-      unitTypeId !== undefined &&
+
+    /* =====================================================
+       FILTERS
+    ===================================================== */
+
+    const filters:
+      PropertySearchParams =
+      {
+        search:
+          typeof req.query.search ===
+          "string"
+            ? req.query.search
+            : undefined,
+
+            
+
+        unitTypeId:
+          req.query.unitTypeId
+            ? Number(
+                req.query.unitTypeId
+              )
+            : undefined,
+
+        beds:
+          typeof req.query.beds ===
+          "string"
+            ? req.query.beds
+            : undefined,
+
+        minPrice:
+          req.query.minPrice
+            ? Number(
+                req.query.minPrice
+              )
+            : undefined,
+
+        maxPrice:
+          req.query.maxPrice
+            ? Number(
+                req.query.maxPrice
+              )
+            : undefined,
+
+        minArea:
+          req.query.minArea
+            ? Number(
+                req.query.minArea
+              )
+            : undefined,
+
+        maxArea:
+          req.query.maxArea
+            ? Number(
+                req.query.maxArea
+              )
+            : undefined,
+
+            buildingId:
+  typeof req.query.buildingId ===
+  "string"
+    ? req.query.buildingId
+    : undefined,
+
+unitDesc:
+  typeof req.query.unitDesc ===
+  "string"
+    ? req.query.unitDesc
+    : undefined,
+
+        page,
+
+        pageSize,
+
+        view,
+      };
+
+
+    /* =====================================================
+       FETCH DATA
+    ===================================================== */
+
+    const rows =
+      view ===
+      "building"
+        ? await findFeaturedProperties(
+            filters
+          )
+        : await findAllProperties(
+            filters
+          );
+
+
+    /* =====================================================
+       COUNT
+    ===================================================== */
+
+    const total =
+      view ===
+      "building"
+        ? rows.length
+        : await countProperties(
+            filters
+          );
+
+
+    /* =====================================================
+       R2 PUBLIC URL
+    ===================================================== */
+
+    const r2PublicUrl =
       (
-        !Number.isInteger(unitTypeId) ||
-        unitTypeId <= 0
-      )
-    ) {
-      return res.status(400).json({
-        error: "Invalid property type",
-      });
-    }
+        process.env
+          .R2_PUBLIC_URL ||
+        ""
+      ).replace(
+        /\/$/,
+        ""
+      );
 
-    /* ========================================
-       PRICE
-    ======================================== */
 
-    const minPrice =
-      req.query.minPrice !== undefined &&
-      req.query.minPrice !== ""
-        ? Number(req.query.minPrice)
-        : undefined;
+    /* =====================================================
+       NORMALIZE IMAGES
+    ===================================================== */
 
-    const maxPrice =
-      req.query.maxPrice !== undefined &&
-      req.query.maxPrice !== ""
-        ? Number(req.query.maxPrice)
-        : undefined;
+    const data =
+      rows.map(
+        (
+          row: any
+        ) => {
+          let images:
+            any[] = [];
 
-    if (
-      minPrice !== undefined &&
-      Number.isNaN(minPrice)
-    ) {
-      return res.status(400).json({
-        error: "Invalid minimum price",
-      });
-    }
 
-    if (
-      maxPrice !== undefined &&
-      Number.isNaN(maxPrice)
-    ) {
-      return res.status(400).json({
-        error: "Invalid maximum price",
-      });
-    }
+          if (
+            typeof row.imagePaths ===
+              "string" &&
+            row.imagePaths
+          ) {
+            try {
+              images =
+                JSON.parse(
+                  row.imagePaths
+                );
+            } catch {
+              images =
+                [];
+            }
+          }
 
-    const filters: PropertySearchParams = {
-      search:
-        typeof req.query.search === "string"
-          ? req.query.search.trim() ||
-            undefined
-          : undefined,
 
-      unitTypeId,
+          const imagePaths =
+            images.map(
+              (
+                image
+              ) => ({
+                ...image,
 
-      beds:
-        typeof req.query.beds === "string"
-          ? req.query.beds.trim() ||
-            undefined
-          : undefined,
+                imageUrl:
+                  image.imagePath &&
+                  r2PublicUrl
+                    ? `${r2PublicUrl}/${image.imagePath}`
+                    : null,
+              })
+            );
 
-      minPrice,
 
-      maxPrice,
+          let primaryImagePath =
+            row.primaryImagePath ||
+            null;
 
-      page,
 
-      pageSize,
-    };
+          /*
+           * Unit type query may not
+           * return primaryImagePath.
+           * Use first gallery image.
+           */
+          if (
+            !primaryImagePath &&
+            imagePaths.length >
+              0
+          ) {
+            primaryImagePath =
+              imagePaths[0]
+                .imagePath ||
+              null;
+          }
 
-    const [rows, total] =
-  await Promise.all([
-    findAllProperties(filters),
-    countProperties(filters),
-  ]);
 
-const r2PublicUrl =
-  (
-    process.env.R2_PUBLIC_URL ||
-    ""
-  ).replace(/\/$/, "");
+          const primaryImageUrl =
+            primaryImagePath &&
+            r2PublicUrl
+              ? `${r2PublicUrl}/${primaryImagePath}`
+              : null;
 
-const data =
-  rows.map((property) => ({
-    ...property,
 
-    primaryImageUrl:
-      property.primaryImagePath &&
-      r2PublicUrl
-        ? `${r2PublicUrl}/${property.primaryImagePath}`
-        : null,
-  }));
+    return {
+  ...row,
 
-const actualPageSize =
-  Math.min(
-    pageSize,
-    100
-  );
-console.log(
-  "R2_PUBLIC_URL:",
-  r2PublicUrl
-);
+  imagePaths,
 
-console.log(
-  "FIRST PROPERTY BEFORE MAP:",
-  rows[0]
-);
+  galleryImages:
+    imagePaths,
 
-console.log(
-  "FIRST PROPERTY AFTER MAP:",
-  data[0]
-);
-return res.json({
-  success: true,
+  primaryImagePath,
 
-  data,
+  primaryImageUrl,
+};
+        }
+      );
 
-  pagination: {
-    page,
 
-    pageSize:
-      actualPageSize,
+    /* =====================================================
+       RESPONSE
+    ===================================================== */
 
-    totalRecords:
-      total,
+    return res.json({
+      success: true,
 
-    totalPages:
-      Math.ceil(
-        total /
-          actualPageSize
-      ),
-  },
-});
-  } catch (error) {
+      data,
+
+      pagination: {
+        page,
+
+        pageSize,
+
+        totalRecords:
+          total,
+
+        totalPages:
+          view ===
+          "building"
+            ? Math.ceil(
+                total /
+                  pageSize
+              ) || 1
+            : Math.ceil(
+                total /
+                  pageSize
+              ),
+      },
+
+      view,
+    });
+  } catch (
+    error
+  ) {
     console.error(
-      "Get properties failed:",
+      "GET PROPERTIES ERROR:",
       error
     );
 
-    return next(error);
+    return res
+      .status(500)
+      .json({
+        success: false,
+
+        error:
+          "Unable to load properties.",
+      });
   }
 }
 export async function getProperty(
@@ -484,6 +615,32 @@ export async function getImageManagementBuildings(
   try {
     const data =
       await findImageManagementBuildings();
+
+    return res.json({
+      success: true,
+      data,
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function getPropertyBuildingUnitOptions(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const buildingId =
+      typeof req.query.buildingId ===
+      "string"
+        ? req.query.buildingId.trim()
+        : undefined;
+
+    const data =
+      await getPropertyBuildingUnitOptionsRepo(
+        buildingId
+      );
 
     return res.json({
       success: true,

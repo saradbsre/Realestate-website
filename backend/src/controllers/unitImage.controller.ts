@@ -173,10 +173,10 @@ export async function getUnitsWithImages(
 
 
 /* =========================================================
-   UPLOAD UNIT IMAGE
+   UPLOAD MULTIPLE UNIT IMAGES
 ========================================================= */
 
-export async function uploadUnitImage(
+export async function uploadUnitImages(
   req: Request,
   res: Response,
   next: NextFunction
@@ -198,8 +198,9 @@ export async function uploadUnitImage(
         )
       ).trim();
 
-    const file =
-      req.file;
+    const files =
+      req.files as
+        Express.Multer.File[];
 
     if (
       !buildingId ||
@@ -209,20 +210,21 @@ export async function uploadUnitImage(
         .status(400)
         .json({
           success: false,
-
           error:
             "Building ID and Unit are required.",
         });
     }
 
-    if (!file) {
+    if (
+      !files ||
+      files.length === 0
+    ) {
       return res
         .status(400)
         .json({
           success: false,
-
           error:
-            "Please select an image.",
+            "Please select at least one image.",
         });
     }
 
@@ -237,7 +239,6 @@ export async function uploadUnitImage(
         .status(404)
         .json({
           success: false,
-
           error:
             "Unit not found.",
         });
@@ -252,11 +253,6 @@ export async function uploadUnitImage(
         unitDesc
       );
 
-    const extension =
-      getExtension(
-        file.mimetype
-      );
-
     const safeBuilding =
       cleanPathPart(
         buildingId
@@ -267,71 +263,111 @@ export async function uploadUnitImage(
         unitDesc
       );
 
-    const cloudFileName =
-      `${randomUUID()}.${extension}`;
+    const uploadedImages:
+      any[] = [];
 
-    const imagePath =
-      `units/${safeBuilding}/${safeUnit}/${cloudFileName}`;
+    const failedImages:
+      {
+        fileName: string;
+        error: string;
+      }[] = [];
 
-    /*
-     * Only first image becomes
-     * primary automatically.
-     */
-    const isPrimary =
-      currentCount === 0;
+    for (
+      let index = 0;
+      index <
+      files.length;
+      index++
+    ) {
+      const file =
+        files[index];
 
-    await r2Client.send(
-      new PutObjectCommand({
-        Bucket:
-          R2_BUCKET_NAME,
+      let imagePath:
+        string | null =
+        null;
 
-        Key:
-          imagePath,
+      try {
+        if (
+          ![
+            "image/jpeg",
+            "image/png",
+            "image/webp",
+          ].includes(
+            file.mimetype
+          )
+        ) {
+          throw new Error(
+            "Unsupported image type."
+          );
+        }
 
-        Body:
-          file.buffer,
+        if (
+          file.size >
+          5 *
+            1024 *
+            1024
+        ) {
+          throw new Error(
+            "Image exceeds 5 MB."
+          );
+        }
 
-        ContentType:
-          file.mimetype,
+        const extension =
+          getExtension(
+            file.mimetype
+          );
 
-        CacheControl:
-          "public, max-age=31536000",
-      })
-    );
+        imagePath =
+          `units/${safeBuilding}/${safeUnit}/${randomUUID()}.${extension}`;
 
-    try {
-      const imageId =
-        await saveUnitImage({
-          buildingId,
+        await r2Client.send(
+          new PutObjectCommand({
+            Bucket:
+              R2_BUCKET_NAME,
 
-          unitDesc,
+            Key:
+              imagePath,
 
-          imagePath,
+            Body:
+              file.buffer,
 
-          fileName:
-            file.originalname,
+            ContentType:
+              file.mimetype,
 
-          fileSize:
-            file.size,
+            CacheControl:
+              "public, max-age=31536000",
+          })
+        );
 
-          displayOrder:
-            nextOrder,
+        try {
+          const imageId =
+            await saveUnitImage({
+              buildingId,
 
-          isPrimary,
+              unitDesc,
 
-          createdBy:
-            "WEBSITE",
-        });
+              imagePath,
 
-      return res
-        .status(201)
-        .json({
-          success: true,
+              fileName:
+                file.originalname,
 
-          message:
-            "Unit image uploaded successfully.",
+              fileSize:
+                file.size,
 
-          data: {
+              displayOrder:
+                nextOrder +
+                uploadedImages.length,
+
+              isPrimary:
+                currentCount ===
+                  0 &&
+                uploadedImages.length ===
+                  0,
+
+              createdBy:
+                "WEBSITE",
+            });
+
+          uploadedImages.push({
             imageId,
 
             buildingId,
@@ -352,42 +388,98 @@ export async function uploadUnitImage(
               file.size,
 
             displayOrder:
-              nextOrder,
+              nextOrder +
+              uploadedImages.length,
 
-            isPrimary,
-          },
-        });
-    } catch (sqlError) {
-      /*
-       * SQL failed after R2 upload,
-       * remove orphan object.
-       */
-      try {
-        await r2Client.send(
-          new DeleteObjectCommand({
-            Bucket:
-              R2_BUCKET_NAME,
+            isPrimary:
+              currentCount ===
+                0 &&
+              uploadedImages.length ===
+                0,
+          });
+        } catch (
+          sqlError
+        ) {
+          if (
+            imagePath
+          ) {
+            try {
+              await r2Client.send(
+                new DeleteObjectCommand({
+                  Bucket:
+                    R2_BUCKET_NAME,
 
-            Key:
-              imagePath,
-          })
-        );
+                  Key:
+                    imagePath,
+                })
+              );
+            } catch (
+              cleanupError
+            ) {
+              console.error(
+                "R2 cleanup failed:",
+                cleanupError
+              );
+            }
+          }
+
+          throw sqlError;
+        }
       } catch (
-        cleanupError
+        error
       ) {
-        console.error(
-          "R2 cleanup failed:",
-          cleanupError
-        );
-      }
+        failedImages.push({
+          fileName:
+            file.originalname,
 
-      throw sqlError;
+          error:
+            error instanceof
+            Error
+              ? error.message
+              : "Upload failed.",
+        });
+      }
     }
-  } catch (error) {
-    return next(error);
+
+    if (
+      uploadedImages.length ===
+      0
+    ) {
+      return res
+        .status(400)
+        .json({
+          success: false,
+
+          error:
+            "No images could be uploaded.",
+
+          failed:
+            failedImages,
+        });
+    }
+
+    return res
+      .status(201)
+      .json({
+        success: true,
+
+        message:
+          `${uploadedImages.length} image(s) uploaded successfully.`,
+
+        data:
+          uploadedImages,
+
+        failed:
+          failedImages,
+      });
+  } catch (
+    error
+  ) {
+    return next(
+      error
+    );
   }
 }
-
 
 /* =========================================================
    REUSE IMAGES

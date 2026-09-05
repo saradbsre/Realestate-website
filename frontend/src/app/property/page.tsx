@@ -9,7 +9,10 @@ import {
   type TouchEvent,
 } from "react";
 
-import { useSearchParams } from "next/navigation";
+import {
+  useSearchParams,
+} from "next/navigation";
+
 import Link from "next/link";
 
 import BookingModal from "../components/BookingModal/BookingModal";
@@ -39,16 +42,28 @@ import {
 } from "@/lib/propertyApi";
 
 import styles from "./property.module.css";
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ||
-  "http://localhost:5000";
-/* =========================================================
-   BUILDING IMAGES
-========================================================= */
-interface PropertyImage {
-  imageId: number;
 
-  imagePath: string;
+
+/* =========================================================
+   API
+========================================================= */
+
+const API_URL =
+  process.env
+    .NEXT_PUBLIC_API_URL ||
+  "http://localhost:5000";
+
+
+/* =========================================================
+   IMAGE TYPE
+========================================================= */
+
+interface PropertyImage {
+  imageId:
+    number;
+
+  imagePath:
+    string;
 
   imageUrl:
     string | null;
@@ -56,10 +71,13 @@ interface PropertyImage {
   fileName:
     string | null;
 
-  displayOrder: number;
+  displayOrder:
+    number;
 
-  isPrimary: boolean;
+  isPrimary:
+    boolean;
 }
+
 
 /* =========================================================
    AMENITIES
@@ -67,30 +85,54 @@ interface PropertyImage {
 
 const DUMMY_AMENITIES = [
   {
-    label: "24/7 Security",
-    icon: ShieldCheck,
+    label:
+      "24/7 Security",
+
+    icon:
+      ShieldCheck,
   },
+
   {
-    label: "Covered Parking",
-    icon: Car,
+    label:
+      "Covered Parking",
+
+    icon:
+      Car,
   },
+
   {
-    label: "Central AC",
-    icon: Wind,
+    label:
+      "Central AC",
+
+    icon:
+      Wind,
   },
+
   {
-    label: "Maintenance Support",
-    icon: Wrench,
+    label:
+      "Maintenance Support",
+
+    icon:
+      Wrench,
   },
+
   {
-    label: "Elevator Access",
-    icon: Grid2X2,
+    label:
+      "Elevator Access",
+
+    icon:
+      Grid2X2,
   },
+
   {
-    label: "Prime Location",
-    icon: MapPinned,
+    label:
+      "Prime Location",
+
+    icon:
+      MapPinned,
   },
 ];
+
 
 /* =========================================================
    MAIN CONTENT
@@ -103,10 +145,12 @@ function PropertyDetailContent() {
   const buildingId =
     searchParams
       .get("id")
-      ?.trim() || "";
+      ?.trim() ||
+    "";
+
 
   /* =======================================================
-     DATA
+     PROPERTY DATA
   ======================================================= */
 
   const [
@@ -145,62 +189,182 @@ function PropertyDetailContent() {
       null
     );
 
+
   /* =======================================================
      VIEW MODE
   ======================================================= */
 
-const [
-  unitView,
-  setUnitView,
-] =
-  useState<
-    "table" | "card"
-  >("table");
-
-useEffect(() => {
-  if (
-    window.innerWidth <= 650
-  ) {
-    setUnitView(
+  const [
+    unitView,
+    setUnitView,
+  ] =
+    useState<
+      "table" |
       "card"
+    >(
+      "table"
     );
-  }
-}, []);
 
-const [
-  buildingImages,
-  setBuildingImages,
-] = useState<
-  PropertyImage[]
->([]);
 
-const [
-  loadingBuildingImages,
-  setLoadingBuildingImages,
-] = useState(false);
-const [
-  selectedImageUnit,
-  setSelectedImageUnit,
-] = useState<
-  PropertyUnit | null
->(null);
+  useEffect(() => {
+    if (
+      window.innerWidth <=
+      650
+    ) {
+      setUnitView(
+        "card"
+      );
+    }
+  }, []);
 
-const [
-  unitImages,
-  setUnitImages,
-] = useState<
-  PropertyImage[]
->([]);
 
-const [
-  loadingUnitImages,
-  setLoadingUnitImages,
-] = useState(false);
+  /* =======================================================
+     BUILDING IMAGES
+  ======================================================= */
 
-const [
-  selectedUnitImageIndex,
-  setSelectedUnitImageIndex,
-] = useState(0);
+  const [
+    buildingImages,
+    setBuildingImages,
+  ] =
+    useState<
+      PropertyImage[]
+    >(
+      []
+    );
+
+  const [
+    loadingBuildingImages,
+    setLoadingBuildingImages,
+  ] =
+    useState(false);
+
+  const [
+    selectedImage,
+    setSelectedImage,
+  ] =
+    useState(0);
+
+
+  /* =======================================================
+     FULL PROPERTY GALLERY
+  ======================================================= */
+
+  const [
+    galleryOpen,
+    setGalleryOpen,
+  ] =
+    useState(false);
+
+  const [
+    galleryIndex,
+    setGalleryIndex,
+  ] =
+    useState(0);
+
+
+  const openBuildingGallery =
+    (
+      index:
+        number = 0
+    ) => {
+      if (
+        buildingImages.length ===
+        0
+      ) {
+        return;
+      }
+
+      const safeIndex =
+        Math.max(
+          0,
+          Math.min(
+            index,
+            buildingImages.length -
+              1
+          )
+        );
+
+      setGalleryIndex(
+        safeIndex
+      );
+
+      setSelectedImage(
+        safeIndex
+      );
+
+      setGalleryOpen(
+        true
+      );
+    };
+
+
+  const closeBuildingGallery =
+    () => {
+      setGalleryOpen(
+        false
+      );
+    };
+
+
+  /*
+   * Lock body scroll while
+   * full gallery is open.
+   */
+  useEffect(() => {
+  if (!galleryOpen) return;
+
+  const previousOverflow = document.body.style.overflow;
+  document.body.style.overflow = "hidden";
+
+  const handleEscape = (event: KeyboardEvent) => {
+    if (event.key === "Escape") {
+      setGalleryOpen(false);
+    }
+  };
+
+  window.addEventListener("keydown", handleEscape);
+
+  return () => {
+    document.body.style.overflow = previousOverflow;
+    window.removeEventListener("keydown", handleEscape);
+  };
+}, [galleryOpen]);
+
+
+  /* =======================================================
+     UNIT IMAGE MODAL
+  ======================================================= */
+
+  const [
+    selectedImageUnit,
+    setSelectedImageUnit,
+  ] =
+    useState<PropertyUnit | null>(
+      null
+    );
+
+  const [
+    unitImages,
+    setUnitImages,
+  ] =
+    useState<
+      PropertyImage[]
+    >(
+      []
+    );
+
+  const [
+    loadingUnitImages,
+    setLoadingUnitImages,
+  ] =
+    useState(false);
+
+  const [
+    selectedUnitImageIndex,
+    setSelectedUnitImageIndex,
+  ] =
+    useState(0);
+
 
   /* =======================================================
      PROPERTY TYPE
@@ -212,68 +376,260 @@ const [
   ] =
     useState("");
 
-  /* =======================================================
-     IMAGE
-  ======================================================= */
-
-  const [
-    selectedImage,
-    setSelectedImage,
-  ] =
-    useState(0);
 
   /* =======================================================
      REFS
   ======================================================= */
-const openUnitImages =
-  async (
-    unit:
-      PropertyUnit
-  ) => {
-    /*
-     * Your API maps:
-     *
-     * dbo.unit.unit_desc
-     *      ↓
-     * unit.description
-     */
 
-    const unitDesc =
-      String(
-        unit.description ||
-          ""
-      ).trim();
+  const thumbnailRowRef =
+    useRef<
+      HTMLDivElement |
+      null
+    >(
+      null
+    );
 
-    if (!unitDesc) {
-      console.error(
-        "unit_desc is missing:",
+  const unitsSectionRef =
+    useRef<
+      HTMLElement |
+      null
+    >(
+      null
+    );
+
+  const touchStartX =
+    useRef<
+      number |
+      null
+    >(
+      null
+    );
+
+  const touchEndX =
+    useRef<
+      number |
+      null
+    >(
+      null
+    );
+
+
+  /* =======================================================
+     OPEN UNIT IMAGES
+  ======================================================= */
+
+  const openUnitImages =
+    async (
+      unit:
+        PropertyUnit
+    ) => {
+      const unitDesc =
+        String(
+          unit.description ||
+            ""
+        ).trim();
+
+
+      if (
+        !unitDesc
+      ) {
+        console.error(
+          "unit_desc is missing:",
+          unit
+        );
+
+        return;
+      }
+
+
+      setSelectedImageUnit(
         unit
       );
 
-      return;
-    }
+      setUnitImages(
+        []
+      );
 
-    setSelectedImageUnit(
-      unit
-    );
+      setSelectedUnitImageIndex(
+        0
+      );
 
-    setUnitImages([]);
 
-    setSelectedUnitImageIndex(
-      0
-    );
+      try {
+        setLoadingUnitImages(
+          true
+        );
 
+
+        const response =
+          await fetch(
+            `${API_URL}/api/properties/${encodeURIComponent(
+              buildingId
+            )}/units/${encodeURIComponent(
+              unitDesc
+            )}/images`,
+            {
+              cache:
+                "no-store",
+            }
+          );
+
+
+        const result =
+          await response.json();
+
+
+        if (
+          !response.ok
+        ) {
+          throw new Error(
+            result.error ||
+              "Unable to load unit images."
+          );
+        }
+
+
+        const sortedImages:
+          PropertyImage[] =
+          Array.isArray(
+            result.data
+          )
+            ? [
+                ...result.data,
+              ].sort(
+                (
+                  a,
+                  b
+                ) => {
+                  const orderA =
+                    Number(
+                      a.displayOrder
+                    ) ||
+                    999999;
+
+                  const orderB =
+                    Number(
+                      b.displayOrder
+                    ) ||
+                    999999;
+
+
+                  if (
+                    orderA !==
+                    orderB
+                  ) {
+                    return (
+                      orderA -
+                      orderB
+                    );
+                  }
+
+
+                  return (
+                    Number(
+                      a.imageId
+                    ) -
+                    Number(
+                      b.imageId
+                    )
+                  );
+                }
+              )
+            : [];
+
+
+        setUnitImages(
+          sortedImages
+        );
+
+        setSelectedUnitImageIndex(
+          0
+        );
+      } catch (
+        error
+      ) {
+        console.error(
+          "Unit image load failed:",
+          error
+        );
+
+        setUnitImages(
+          []
+        );
+      } finally {
+        setLoadingUnitImages(
+          false
+        );
+      }
+    };
+
+
+  /* =======================================================
+     THUMBNAIL MOUSE WHEEL
+  ======================================================= */
+
+  const handleThumbnailWheel =
+    (
+      event:
+        React.WheelEvent<HTMLDivElement>
+    ) => {
+      const container =
+        thumbnailRowRef.current;
+
+
+      if (
+        !container
+      ) {
+        return;
+      }
+
+
+      const canScrollHorizontally =
+        container.scrollWidth >
+        container.clientWidth;
+
+
+      if (
+        !canScrollHorizontally
+      ) {
+        return;
+      }
+
+
+      event.preventDefault();
+
+
+      container.scrollBy({
+        left:
+          event.deltaY !==
+          0
+            ? event.deltaY
+            : event.deltaX,
+
+        behavior:
+          "smooth",
+      });
+    };
+
+
+  /* =======================================================
+     LOAD BUILDING IMAGES
+  ======================================================= */
+
+  async function loadBuildingImages(
+    id:
+      string
+  ) {
     try {
-      setLoadingUnitImages(
+      setLoadingBuildingImages(
         true
       );
+
 
       const response =
         await fetch(
           `${API_URL}/api/properties/${encodeURIComponent(
-            buildingId
-          )}/units/${encodeURIComponent(
-            unitDesc
+            id
           )}/images`,
           {
             cache:
@@ -281,260 +637,210 @@ const openUnitImages =
           }
         );
 
+
       const result =
         await response.json();
 
-      if (!response.ok) {
+
+      if (
+        !response.ok
+      ) {
         throw new Error(
           result.error ||
-            "Unable to load unit images."
+            "Unable to load building images."
         );
       }
 
-  const sortedImages: PropertyImage[] =
-  Array.isArray(result.data)
-    ? [...result.data].sort(
-        (a, b) => {
-          const orderA =
-            Number(
-              a.displayOrder
-            ) || 999999;
 
-          const orderB =
-            Number(
-              b.displayOrder
-            ) || 999999;
+      const sortedImages:
+        PropertyImage[] =
+        Array.isArray(
+          result.data
+        )
+          ? [
+              ...result.data,
+            ].sort(
+              (
+                a,
+                b
+              ) => {
+                const orderA =
+                  Number(
+                    a.displayOrder
+                  ) ||
+                  999999;
 
-          if (
-            orderA !==
-            orderB
-          ) {
-            return (
-              orderA -
-              orderB
-            );
-          }
+                const orderB =
+                  Number(
+                    b.displayOrder
+                  ) ||
+                  999999;
 
-          return (
-            Number(
-              a.imageId
-            ) -
-            Number(
-              b.imageId
+
+                if (
+                  orderA !==
+                  orderB
+                ) {
+                  return (
+                    orderA -
+                    orderB
+                  );
+                }
+
+
+                return (
+                  Number(
+                    a.imageId
+                  ) -
+                  Number(
+                    b.imageId
+                  )
+                );
+              }
             )
-          );
-        }
-      )
-    : [];
+          : [];
 
-setUnitImages(
-  sortedImages
-);
 
-setSelectedUnitImageIndex(
-  0
-);
-    } catch (error) {
+      setBuildingImages(
+        sortedImages
+      );
+
+      setSelectedImage(
+        0
+      );
+
+      setGalleryIndex(
+        0
+      );
+    } catch (
+      error
+    ) {
       console.error(
-        "Unit image load failed:",
+        "Building image load failed:",
         error
       );
 
-      setUnitImages([]);
+      setBuildingImages(
+        []
+      );
     } finally {
-      setLoadingUnitImages(
+      setLoadingBuildingImages(
         false
       );
     }
-  };
-
-  const thumbnailRowRef =
-  useRef<HTMLDivElement | null>(
-    null
-  );
-
-  const unitsSectionRef =
-    useRef<HTMLElement | null>(
-      null
-    );
-
-  const touchStartX =
-    useRef<number | null>(
-      null
-    );
-
-  const touchEndX =
-    useRef<number | null>(
-      null
-    );
-const handleThumbnailWheel = (
-  event:
-    React.WheelEvent<HTMLDivElement>
-) => {
-  const container =
-    thumbnailRowRef.current;
-
-  if (!container) {
-    return;
   }
 
-  const canScrollHorizontally =
-    container.scrollWidth >
-    container.clientWidth;
 
-  if (!canScrollHorizontally) {
-    return;
-  }
-
-  event.preventDefault();
-
-  container.scrollBy({
-    left:
-      event.deltaY !== 0
-        ? event.deltaY
-        : event.deltaX,
-
-    behavior:
-      "smooth",
-  });
-};
   /* =======================================================
-     IMAGE SWIPE
+     BUILDING IMAGE SWIPE
   ======================================================= */
-async function loadBuildingImages(
-  id: string
-) {
-  try {
-    setLoadingBuildingImages(
-      true
-    );
 
-    const response =
-      await fetch(
-        `${API_URL}/api/properties/${encodeURIComponent(
-          id
-        )}/images`,
-        {
-          cache:
-            "no-store",
-        }
-      );
+  const handleTouchStart =
+    (
+      event:
+        TouchEvent<HTMLDivElement>
+    ) => {
+      touchEndX.current =
+        null;
 
-    const result =
-      await response.json();
+      touchStartX.current =
+        event.targetTouches[
+          0
+        ].clientX;
+    };
 
-    if (!response.ok) {
-      throw new Error(
-        result.error ||
-          "Unable to load building images."
-      );
-    }
 
-    setBuildingImages(
-      Array.isArray(
-        result.data
-      )
-        ? result.data
-        : []
-    );
+  const handleTouchMove =
+    (
+      event:
+        TouchEvent<HTMLDivElement>
+    ) => {
+      touchEndX.current =
+        event.targetTouches[
+          0
+        ].clientX;
+    };
 
-    setSelectedImage(0);
-  } catch (error) {
-    console.error(
-      "Building image load failed:",
-      error
-    );
 
-    setBuildingImages([]);
-  } finally {
-    setLoadingBuildingImages(
-      false
-    );
-  }
-}
-  const handleTouchStart = (
-    event: TouchEvent<HTMLDivElement>
-  ) => {
-    touchEndX.current =
-      null;
+  const handleTouchEnd =
+    () => {
+      if (
+        touchStartX.current ===
+          null ||
+        touchEndX.current ===
+          null ||
+        buildingImages.length ===
+          0
+      ) {
+        return;
+      }
 
-    touchStartX.current =
-      event.targetTouches[0]
-        .clientX;
-  };
 
-  const handleTouchMove = (
-    event: TouchEvent<HTMLDivElement>
-  ) => {
-    touchEndX.current =
-      event.targetTouches[0]
-        .clientX;
-  };
+      const distance =
+        touchStartX.current -
+        touchEndX.current;
 
-const handleTouchEnd =
-  () => {
-    if (
-      touchStartX.current ===
-        null ||
-      touchEndX.current ===
-        null ||
-      buildingImages.length ===
-        0
-    ) {
-      return;
-    }
+      const minimumSwipeDistance =
+        50;
 
-    const distance =
-      touchStartX.current -
-      touchEndX.current;
 
-    const minimumSwipeDistance =
-      50;
-
-    if (
-      distance >
-      minimumSwipeDistance
-    ) {
-      setSelectedImage(
-        (current) =>
-          current ===
-          buildingImages.length -
-            1
-            ? 0
-            : current + 1
-      );
-    }
-
-    if (
-      distance <
-      -minimumSwipeDistance
-    ) {
-      setSelectedImage(
-        (current) =>
-          current === 0
-            ? buildingImages.length -
+      if (
+        distance >
+        minimumSwipeDistance
+      ) {
+        setSelectedImage(
+          (
+            current
+          ) =>
+            current ===
+            buildingImages.length -
               1
-            : current - 1
-      );
-    }
+              ? 0
+              : current +
+                1
+        );
+      }
 
-    touchStartX.current =
-      null;
 
-    touchEndX.current =
-      null;
-  };
+      if (
+        distance <
+        -minimumSwipeDistance
+      ) {
+        setSelectedImage(
+          (
+            current
+          ) =>
+            current ===
+            0
+              ? buildingImages.length -
+                1
+              : current -
+                1
+        );
+      }
+
+
+      touchStartX.current =
+        null;
+
+      touchEndX.current =
+        null;
+    };
+
+
   /* =======================================================
      PROPERTY TYPE NAVIGATION
   ======================================================= */
 
   const navigateToPropertyType =
     (
-      typeName: string
+      typeName:
+        string
     ) => {
       setSelectedType(
         typeName
       );
+
 
       requestAnimationFrame(
         () => {
@@ -542,6 +848,7 @@ const handleTouchEnd =
             ?.scrollIntoView({
               behavior:
                 "smooth",
+
               block:
                 "start",
             });
@@ -549,39 +856,48 @@ const handleTouchEnd =
       );
     };
 
+
   /* =======================================================
-     LOAD DATA
+     LOAD PROPERTY DATA
   ======================================================= */
 
   useEffect(() => {
-    if (!buildingId) {
-      setLoading(false);
+    if (
+      !buildingId
+    ) {
+      setLoading(
+        false
+      );
 
       return;
     }
 
+
     async function loadPropertyData() {
       try {
-        setLoading(true);
-        setError("");
+        setLoading(
+          true
+        );
 
-      const [
-  propertyData,
-  unitData,
-] =
-  await Promise.all([
-    getProperty(
-      buildingId
-    ),
+        setError(
+          ""
+        );
 
-    getPropertyUnits(
-      buildingId
-    ),
 
-    loadBuildingImages(
-      buildingId
-    ),
-  ]);
+        const [
+          propertyData,
+          unitData,
+        ] =
+          await Promise.all([
+            getProperty(
+              buildingId
+            ),
+
+            getPropertyUnits(
+              buildingId
+            ),
+          ]);
+
 
         setProperty(
           propertyData
@@ -591,11 +907,19 @@ const handleTouchEnd =
           unitData.units ||
             []
         );
-      } catch (error) {
+
+
+        await loadBuildingImages(
+          buildingId
+        );
+      } catch (
+        error
+      ) {
         console.error(
           "Unable to load property:",
           error
         );
+
 
         setError(
           error instanceof
@@ -604,12 +928,18 @@ const handleTouchEnd =
             : "Unable to load property"
         );
       } finally {
-        setLoading(false);
+        setLoading(
+          false
+        );
       }
     }
 
+
     loadPropertyData();
-  }, [buildingId]);
+  }, [
+    buildingId,
+  ]);
+
 
   /* =======================================================
      PROPERTY TYPES
@@ -621,28 +951,43 @@ const handleTouchEnd =
         new Map<
           string,
           {
-            name: string;
-            code: string;
-            count: number;
+            name:
+              string;
+
+            code:
+              string;
+
+            count:
+              number;
           }
         >();
 
+
       units.forEach(
-        (unit) => {
+        (
+          unit
+        ) => {
           const name =
             unit.propertyType ||
             unit.unitName ||
             "Other";
+
 
           const key =
             name
               .trim()
               .toUpperCase();
 
-          const existing =
-            groups.get(key);
 
-          if (existing) {
+          const existing =
+            groups.get(
+              key
+            );
+
+
+          if (
+            existing
+          ) {
             existing.count +=
               1;
           } else {
@@ -655,17 +1000,22 @@ const handleTouchEnd =
                   unit.purposeCode ||
                   "",
 
-                count: 1,
+                count:
+                  1,
               }
             );
           }
         }
       );
 
+
       return Array.from(
         groups.values()
       );
-    }, [units]);
+    }, [
+      units,
+    ]);
+
 
   /* =======================================================
      DEFAULT PROPERTY TYPE
@@ -678,7 +1028,9 @@ const handleTouchEnd =
       !selectedType
     ) {
       setSelectedType(
-        propertyTypes[0].name
+        propertyTypes[
+          0
+        ].name
       );
     }
   }, [
@@ -686,22 +1038,29 @@ const handleTouchEnd =
     selectedType,
   ]);
 
+
   /* =======================================================
      VISIBLE UNITS
   ======================================================= */
 
   const visibleUnits =
     useMemo(() => {
-      if (!selectedType) {
+      if (
+        !selectedType
+      ) {
         return [];
       }
 
+
       return units.filter(
-        (unit) => {
+        (
+          unit
+        ) => {
           const typeName =
             unit.propertyType ||
             unit.unitName ||
             "Other";
+
 
           return (
             typeName
@@ -718,6 +1077,7 @@ const handleTouchEnd =
       selectedType,
     ]);
 
+
   /* =======================================================
      TYPE SUMMARY
   ======================================================= */
@@ -726,29 +1086,43 @@ const handleTouchEnd =
     useMemo(() => {
       const rents =
         visibleUnits
-          .map((unit) =>
-            Number(
-              unit.annualRent ||
-                0
-            )
+          .map(
+            (
+              unit
+            ) =>
+              Number(
+                unit.annualRent ||
+                  0
+              )
           )
           .filter(
-            (rent) =>
-              rent > 0
+            (
+              rent
+            ) =>
+              rent >
+              0
           );
+
 
       const areas =
         visibleUnits
-          .map((unit) =>
-            Number(
-              unit.area ||
-                0
-            )
+          .map(
+            (
+              unit
+            ) =>
+              Number(
+                unit.area ||
+                  0
+              )
           )
           .filter(
-            (area) =>
-              area > 0
+            (
+              area
+            ) =>
+              area >
+              0
           );
+
 
       return {
         minRent:
@@ -783,7 +1157,10 @@ const handleTouchEnd =
               )
             : 0,
       };
-    }, [visibleUnits]);
+    }, [
+      visibleUnits,
+    ]);
+
 
   /* =======================================================
      PRICE FORMAT
@@ -797,12 +1174,18 @@ const handleTouchEnd =
   ) {
     const amount =
       Number(
-        price || 0
+        price ||
+          0
       );
 
-    if (amount <= 0) {
+
+    if (
+      amount <=
+      0
+    ) {
       return "Price on Request";
     }
+
 
     return new Intl.NumberFormat(
       "en-AE",
@@ -816,8 +1199,11 @@ const handleTouchEnd =
         maximumFractionDigits:
           0,
       }
-    ).format(amount);
+    ).format(
+      amount
+    );
   }
+
 
   /* =======================================================
      BREADCRUMB
@@ -831,21 +1217,32 @@ const handleTouchEnd =
         return [];
       }
 
+
       return property.location
-        .split(",")
-        .map((part) =>
-          part.trim()
+        .split(
+          ","
         )
-        .filter(Boolean);
+        .map(
+          (
+            part
+          ) =>
+            part.trim()
+        )
+        .filter(
+          Boolean
+        );
     }, [
       property?.location,
     ]);
+
 
   /* =======================================================
      LOADING
   ======================================================= */
 
-  if (loading) {
+  if (
+    loading
+  ) {
     return (
       <main
         className={
@@ -853,16 +1250,18 @@ const handleTouchEnd =
         }
       >
         <Building2
-          size={40}
+          size={
+            40
+          }
         />
 
         <h2>
-          Loading
-          property...
+          Loading property...
         </h2>
       </main>
     );
   }
+
 
   /* =======================================================
      ERROR
@@ -879,8 +1278,7 @@ const handleTouchEnd =
         }
       >
         <h1>
-          Property
-          unavailable
+          Property unavailable
         </h1>
 
         <p>
@@ -891,12 +1289,12 @@ const handleTouchEnd =
         <Link
           href="/properties"
         >
-          Back to
-          Properties
+          Back to Properties
         </Link>
       </main>
     );
   }
+
 
   /* =======================================================
      UI
@@ -908,6 +1306,7 @@ const handleTouchEnd =
         styles.page
       }
     >
+
       {/* =================================================
           BREADCRUMB
       ================================================= */}
@@ -935,7 +1334,9 @@ const handleTouchEnd =
               }
             >
               <Home
-                size={15}
+                size={
+                  15
+                }
               />
 
               <span>
@@ -943,12 +1344,16 @@ const handleTouchEnd =
               </span>
             </Link>
 
+
             <ChevronRight
-              size={15}
+              size={
+                15
+              }
               className={
                 styles.breadcrumbArrow
               }
             />
+
 
             <Link
               href="/properties"
@@ -956,9 +1361,9 @@ const handleTouchEnd =
                 styles.breadcrumbLink
               }
             >
-              Properties
-              for Rent
+              Properties for Rent
             </Link>
+
 
             {breadcrumbLocationParts.map(
               (
@@ -972,7 +1377,9 @@ const handleTouchEnd =
                   }
                 >
                   <ChevronRight
-                    size={15}
+                    size={
+                      15
+                    }
                     className={
                       styles.breadcrumbArrow
                     }
@@ -986,18 +1393,24 @@ const handleTouchEnd =
                       styles.breadcrumbLink
                     }
                   >
-                    {part}
+                    {
+                      part
+                    }
                   </Link>
                 </span>
               )
             )}
 
+
             <ChevronRight
-              size={15}
+              size={
+                15
+              }
               className={
                 styles.breadcrumbArrow
               }
             />
+
 
             <span
               className={
@@ -1015,399 +1428,357 @@ const handleTouchEnd =
         </div>
       </div>
 
+
       <div
         className={
           styles.container
         }
       >
+
         {/* =================================================
             PROPERTY OVERVIEW
         ================================================= */}
 
-        <section
-          className={
-            styles.gallerySection
-          }
-        >
-          <div
-            className={
-              styles.sectionHeadingRow
-            }
-          >
-            <div>
-              <h2>
-                Property
-                Overview
-              </h2>
+     {/* =================================================
+    PROPERTY OVERVIEW
+================================================= */}
 
-              <p>
-                View the
-                building and
-                key property
-                information.
-              </p>
-            </div>
+<section className={styles.gallerySection}>
+  {/* ===============================================
+      HEADING
+  =============================================== */}
 
-           {buildingImages.length >
-  1 && (
-  <span
-    className={
-      styles.photoCount
-    }
-  >
-    {
-      buildingImages.length
-    }{" "}
-    Photos
-  </span>
-)}
-          </div>
+  <div className={styles.sectionHeadingRow}>
+    <div>
+      <h2>Property Overview</h2>
 
-          <div
-            className={
-              styles.propertyOverviewGrid
-            }
-          >
-            {/* IMAGE */}
-
-           <div
-  className={
-    styles.buildingImageArea
-  }
-  onTouchStart={
-    handleTouchStart
-  }
-  onTouchMove={
-    handleTouchMove
-  }
-  onTouchEnd={
-    handleTouchEnd
-  }
->
-  {loadingBuildingImages ? (
-    <div
-      className={
-        styles.galleryFallback
-      }
-    >
-      Loading images...
+      <p>
+        View the building and key property information.
+      </p>
     </div>
-  ) : buildingImages.length >
-    0 &&
-    buildingImages[
-      selectedImage
-    ]?.imageUrl ? (
-    <img
-      src={
-        buildingImages[
-          selectedImage
-        ].imageUrl!
-      }
-      alt={
-        property.title
-      }
-      className={
-        styles.buildingMainImage
-      }
-      draggable={
-        false
-      }
-    />
-  ) : (
-    <div
-      className={
-        styles.galleryFallback
-      }
-    >
-      <Building2
-        size={42}
-      />
 
-      <span>
-        No building images
-      </span>
-    </div>
-  )}
-
-  <div
-    className={
-      styles.imageBadge
-    }
-  >
-    <Building2
-      size={15}
-    />
-
-    Property for Rent
-  </div>
-
-  {buildingImages.length >
-    1 && (
-    <div
-      className={
-        styles.imageCounter
-      }
-    >
-      {selectedImage +
-        1}{" "}
-      /{" "}
-      {
-        buildingImages.length
-      }
-    </div>
-  )}
-</div>
-
-            {/* THUMBNAILS */}
-
-           {buildingImages.length >
-  1 && (
-  <div
-    ref={
-      thumbnailRowRef
-    }
-
-    className={
-      styles.thumbnailRow
-    }
-
-    onWheel={
-      handleThumbnailWheel
-    }
-  >
-    {buildingImages.map(
-      (
-        image,
-        index
-      ) => (
-        <button
-          key={
-            image.imageId
-          }
-
-          type="button"
-
-          onClick={() =>
-            setSelectedImage(
-              index
-            )
-          }
-
-          className={`${styles.thumbButton} ${
-            selectedImage ===
-            index
-              ? styles.thumbActive
-              : ""
-          }`}
-        >
-          {image.imageUrl && (
-            <img
-              src={
-                image.imageUrl
-              }
-
-              alt={`${property.title} ${
-                index + 1
-              }`}
-
-              className={
-                styles.thumbImage
-              }
-
-              draggable={
-                false
-              }
-            />
-          )}
-        </button>
-      )
+    {buildingImages.length > 0 && (
+      <button
+        type="button"
+        className={styles.photoCount}
+        onClick={() =>
+          openBuildingGallery(
+            selectedImage
+          )
+        }
+      >
+        {buildingImages.length}{" "}
+        {buildingImages.length === 1
+          ? "Photo"
+          : "Photos"}
+      </button>
     )}
   </div>
-)}
 
-            {/* PROPERTY DETAILS */}
+  {/* ===============================================
+      OVERVIEW CARD
+  =============================================== */}
 
+  <div className={styles.propertyOverviewGrid}>
+    {/* =============================================
+        LEFT - IMAGE COLLAGE
+    ============================================= */}
+
+    <div className={styles.propertyGalleryPreview}>
+      {loadingBuildingImages ? (
+        <div className={styles.galleryPreviewFallback}>
+          Loading images...
+        </div>
+      ) : buildingImages.length === 0 ? (
+        <div className={styles.galleryPreviewFallback}>
+          <Building2 size={42} />
+
+          <span>
+            No building images
+          </span>
+        </div>
+      ) : (
+        <>
+          {/* =========================================
+              MAIN LARGE IMAGE
+          ========================================= */}
+
+          <button
+            type="button"
+            className={styles.galleryPreviewMain}
+            onClick={() =>
+              openBuildingGallery(0)
+            }
+            aria-label="Open main property image"
+          >
+            {buildingImages[0]?.imageUrl && (
+              <img
+                src={
+                  buildingImages[0]
+                    .imageUrl!
+                }
+                alt={property.title}
+                draggable={false}
+              />
+            )}
+
+            <div className={styles.imageBadge}>
+              <Building2 size={15} />
+
+              Property for Rent
+            </div>
+          </button>
+
+          {/* =========================================
+              RIGHT TOP
+          ========================================= */}
+
+          {buildingImages[1]?.imageUrl ? (
+            <button
+              type="button"
+              className={`${styles.galleryPreviewSmall} ${styles.galleryPreviewTop}`}
+              onClick={() =>
+                openBuildingGallery(1)
+              }
+              aria-label="Open property image 2"
+            >
+              <img
+                src={
+                  buildingImages[1]
+                    .imageUrl!
+                }
+                alt={`${property.title} 2`}
+                draggable={false}
+              />
+            </button>
+          ) : (
             <div
-              className={
-                styles.overviewDetails
+              className={`${styles.galleryPreviewSmall} ${styles.galleryPreviewTop} ${styles.galleryPreviewEmpty}`}
+            >
+              <Building2 size={24} />
+            </div>
+          )}
+
+          {/* =========================================
+              RIGHT MIDDLE
+          ========================================= */}
+
+          {buildingImages[2]?.imageUrl ? (
+            <button
+              type="button"
+              className={`${styles.galleryPreviewSmall} ${styles.galleryPreviewMiddle}`}
+              onClick={() =>
+                openBuildingGallery(2)
+              }
+              aria-label="Open property image 3"
+            >
+              <img
+                src={
+                  buildingImages[2]
+                    .imageUrl!
+                }
+                alt={`${property.title} 3`}
+                draggable={false}
+              />
+            </button>
+          ) : (
+            <div
+              className={`${styles.galleryPreviewSmall} ${styles.galleryPreviewMiddle} ${styles.galleryPreviewEmpty}`}
+            >
+              <Building2 size={24} />
+            </div>
+          )}
+
+          {/* =========================================
+              RIGHT BOTTOM
+          ========================================= */}
+
+          {buildingImages[3]?.imageUrl ? (
+            <button
+              type="button"
+              className={`${styles.galleryPreviewSmall} ${styles.galleryPreviewBottom}`}
+              onClick={() =>
+                openBuildingGallery(3)
+              }
+              aria-label="Open property image 4"
+            >
+              <img
+                src={
+                  buildingImages[3]
+                    .imageUrl!
+                }
+                alt={`${property.title} 4`}
+                draggable={false}
+              />
+
+              {buildingImages.length > 4 && (
+                <div
+                  className={
+                    styles.galleryPreviewMore
+                  }
+                >
+                  <span>
+                    +{buildingImages.length - 4}
+                  </span>
+
+                  <small>
+                    More Photos
+                  </small>
+                </div>
+              )}
+            </button>
+          ) : (
+            <button
+              type="button"
+              className={`${styles.galleryPreviewSmall} ${styles.galleryPreviewBottom} ${styles.galleryPreviewEmpty}`}
+              onClick={() =>
+                openBuildingGallery(0)
               }
             >
-              <div
-                className={
-                  styles.overviewTitle
+              <Building2 size={24} />
+
+              <span>
+                View Photos
+              </span>
+            </button>
+          )}
+
+          {/* =========================================
+              MOBILE / GENERAL PHOTO COUNT
+          ========================================= */}
+
+          <button
+            type="button"
+            className={
+              styles.galleryPreviewPhotoCount
+            }
+            onClick={() =>
+              openBuildingGallery(
+                selectedImage
+              )
+            }
+          >
+            {buildingImages.length}{" "}
+            {buildingImages.length === 1
+              ? "Photo"
+              : "Photos"}
+          </button>
+        </>
+      )}
+    </div>
+
+    {/* =============================================
+        RIGHT - PROPERTY DETAILS
+    ============================================= */}
+
+    <div className={styles.overviewDetails}>
+      {/* TITLE */}
+
+      <div className={styles.overviewTitle}>
+        <span>
+          Property Details
+        </span>
+
+        <h2>
+          {property.title}
+        </h2>
+
+        <div className={styles.overviewLocation}>
+          <MapPin size={17} />
+
+          <span>
+            {property.location}
+          </span>
+        </div>
+      </div>
+
+      {/* =========================================
+          STATS
+      ========================================= */}
+
+      {/* <div className={styles.overviewStats}>
+        <div className={styles.overviewStat}>
+          <div className={styles.overviewStatIcon}>
+            <Layers size={19} />
+          </div>
+
+          <div>
+            <span>
+              Vacant Units
+            </span>
+
+            <strong>
+              {units.length}
+            </strong>
+          </div>
+        </div>
+
+        <div className={styles.overviewStat}>
+          <div className={styles.overviewStatIcon}>
+            <Grid2X2 size={19} />
+          </div>
+
+          <div>
+            <span>
+              Property Types
+            </span>
+
+            <strong>
+              {propertyTypes.length}
+            </strong>
+          </div>
+        </div>
+      </div> */}
+
+      {/* =========================================
+          AVAILABLE PROPERTY TYPES
+      ========================================= */}
+
+      <div className={styles.overviewTypes}>
+        <span className={styles.overviewTypesLabel}>
+          Available Property Types
+        </span>
+
+        <div className={styles.overviewTypeList}>
+          {propertyTypes.map(
+            (type) => (
+              <button
+                key={type.name}
+                type="button"
+                onClick={() =>
+                  navigateToPropertyType(
+                    type.name
+                  )
                 }
+                className={`${styles.overviewTypeChip} ${
+                  selectedType ===
+                  type.name
+                    ? styles.overviewTypeChipActive
+                    : ""
+                }`}
               >
                 <span>
-                  Property
-                  Details
+                  {type.name}
                 </span>
 
-                <h2>
-                  {
-                    property.title
-                  }
-                </h2>
+                <small>
+                  {type.count}
+                </small>
 
-                <div
+                <ChevronRight
+                  size={13}
                   className={
-                    styles.overviewLocation
+                    styles.overviewTypeArrow
                   }
-                >
-                  <MapPin
-                    size={
-                      17
-                    }
-                  />
-
-                  <span>
-                    {
-                      property.location
-                    }
-                  </span>
-                </div>
-              </div>
-
-              <div
-                className={
-                  styles.overviewStats
-                }
-              >
-              
-
-                <div
-                  className={
-                    styles.overviewStat
-                  }
-                >
-                  <div
-                    className={
-                      styles.overviewStatIcon
-                    }
-                  >
-                    <Layers
-                      size={
-                        19
-                      }
-                    />
-                  </div>
-
-                  <div>
-                    <span>
-                      Vacant
-                      Units
-                    </span>
-
-                    <strong>
-                      {
-                        units.length
-                      }
-                    </strong>
-                  </div>
-                </div>
-
-                <div
-                  className={
-                    styles.overviewStat
-                  }
-                >
-                  <div
-                    className={
-                      styles.overviewStatIcon
-                    }
-                  >
-                    <Grid2X2
-                      size={
-                        19
-                      }
-                    />
-                  </div>
-
-                  <div>
-                    <span>
-                      Property
-                      Types
-                    </span>
-
-                    <strong>
-                      {
-                        propertyTypes.length
-                      }
-                    </strong>
-                  </div>
-                </div>
-              </div>
-
-              {/* TYPES */}
-
-              <div
-                className={
-                  styles.overviewTypes
-                }
-              >
-                <span
-                  className={
-                    styles.overviewTypesLabel
-                  }
-                >
-                  Available
-                  Property
-                  Types
-                </span>
-
-                <div
-                  className={
-                    styles.overviewTypeList
-                  }
-                >
-                  {propertyTypes.map(
-                    (
-                      type
-                    ) => (
-                      <button
-                        key={
-                          type.name
-                        }
-                        type="button"
-                        onClick={() =>
-                          navigateToPropertyType(
-                            type.name
-                          )
-                        }
-                        className={`${styles.overviewTypeChip} ${
-                          selectedType ===
-                          type.name
-                            ? styles.overviewTypeChipActive
-                            : ""
-                        }`}
-                      >
-                        <span>
-                          {
-                            type.name
-                          }
-                        </span>
-
-                        <small>
-                          {
-                            type.count
-                          }
-                        </small>
-
-                        <ChevronRight
-                          size={
-                            13
-                          }
-                          className={
-                            styles.overviewTypeArrow
-                          }
-                        />
-                      </button>
-                    )
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+                />
+              </button>
+            )
+          )}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
         {/* =================================================
             AMENITIES
@@ -1424,17 +1795,16 @@ const handleTouchEnd =
             }
           >
             <h2>
-              Building
-              Amenities
+              Building Amenities
             </h2>
 
             <p>
               Facilities and
-              services
-              available for
-              this property.
+              services available
+              for this property.
             </p>
           </div>
+
 
           <div
             className={
@@ -1490,6 +1860,7 @@ const handleTouchEnd =
           </div>
         </section>
 
+
         {/* =================================================
             AVAILABLE UNITS
         ================================================= */}
@@ -1508,20 +1879,18 @@ const handleTouchEnd =
             }
           >
             <h2>
-              Available
-              Units
+              Available Units
             </h2>
 
             <p>
-              Choose a
-              property type
-              below to view
+              Choose a property
+              type below to view
               available units,
-              annual rent,
-              size and booking
-              details.
+              annual rent, size
+              and booking details.
             </p>
           </div>
+
 
           {/* PROPERTY TYPE TABS */}
 
@@ -1567,8 +1936,9 @@ const handleTouchEnd =
             )}
           </div>
 
+
           {/* =================================================
-              SUMMARY + VIEW SWITCH
+              SUMMARY
           ================================================= */}
 
           {selectedType && (
@@ -1600,6 +1970,7 @@ const handleTouchEnd =
                 </span>
               </div>
 
+
               <div
                 className={
                   styles.selectedTypeRight
@@ -1612,8 +1983,7 @@ const handleTouchEnd =
                 >
                   <div>
                     <span>
-                      Annual
-                      Rent
+                      Annual Rent
                     </span>
 
                     <strong>
@@ -1630,6 +2000,7 @@ const handleTouchEnd =
                     </strong>
                   </div>
 
+
                   <div>
                     <span>
                       Area
@@ -1644,7 +2015,8 @@ const handleTouchEnd =
                   </div>
                 </div>
 
-                {/* VIEW SWITCHER */}
+
+                {/* VIEW SWITCH */}
 
                 <div
                   className={
@@ -1678,6 +2050,7 @@ const handleTouchEnd =
                     Table
                   </button>
 
+
                   <button
                     type="button"
                     className={`${styles.viewButton} ${
@@ -1705,6 +2078,7 @@ const handleTouchEnd =
             </div>
           )}
 
+
           {/* =================================================
               TABLE VIEW
           ================================================= */}
@@ -1721,8 +2095,6 @@ const handleTouchEnd =
                   styles.unitTableContent
                 }
               >
-                {/* HEADER */}
-
                 <div
                   className={
                     styles.unitTableHeader
@@ -1737,8 +2109,7 @@ const handleTouchEnd =
                   </div>
 
                   <div>
-                    Unit
-                    Information
+                    Unit Information
                   </div>
 
                   <div>
@@ -1746,7 +2117,6 @@ const handleTouchEnd =
                   </div>
                 </div>
 
-                {/* ROWS */}
 
                 {visibleUnits.map(
                   (
@@ -1759,6 +2129,7 @@ const handleTouchEnd =
                         styles.unitRow
                       }
                     >
+
                       {/* UNIT DETAILS */}
 
                       <div
@@ -1766,20 +2137,21 @@ const handleTouchEnd =
                           styles.unitMain
                         }
                       >
-                       <button
-  type="button"
-  className={
-    styles.unitImageNameButton
-  }
-  onClick={() =>
-    openUnitImages(
-      unit
-    )
-  }
->
-  {unit.unitName ||
-    unit.propertyType}
-</button>
+                        <button
+                          type="button"
+                          className={
+                            styles.unitImageNameButton
+                          }
+                          onClick={() =>
+                            openUnitImages(
+                              unit
+                            )
+                          }
+                        >
+                          {unit.unitName ||
+                            unit.propertyType}
+                        </button>
+
 
                         {unit.referenceNo && (
                           <div
@@ -1793,6 +2165,7 @@ const handleTouchEnd =
                             }
                           </div>
                         )}
+
 
                         <div
                           className={
@@ -1813,6 +2186,7 @@ const handleTouchEnd =
                             Sq.Ft.
                           </span>
 
+
                           {unit.floorNumber !==
                             null &&
                             unit.floorNumber !==
@@ -1832,6 +2206,7 @@ const handleTouchEnd =
                             )}
                         </div>
 
+
                         <div
                           className={
                             styles.availableBadge
@@ -1846,6 +2221,7 @@ const handleTouchEnd =
                           Available
                         </div>
                       </div>
+
 
                       {/* RENT */}
 
@@ -1870,6 +2246,7 @@ const handleTouchEnd =
                           </span>
                         )}
                       </div>
+
 
                       {/* INFORMATION */}
 
@@ -1899,27 +2276,31 @@ const handleTouchEnd =
                           </div>
                         )}
 
-                       <div
-    className={
-      styles.unitInfoItem
-    }
-  >
-    <span>
-      {Number(
-        unit.isWithBalcony
-      ) === 1
-        ? "✓"
-        : "—"}
-    </span>
 
-    <span>
-      {Number(
-        unit.isWithBalcony
-      ) === 1
-        ? "Balcony"
-        : "No Balcony"}
-    </span>
-  </div>
+                        <div
+                          className={
+                            styles.unitInfoItem
+                          }
+                        >
+                          <span>
+                            {Number(
+                              unit.isWithBalcony
+                            ) ===
+                            1
+                              ? "✓"
+                              : "—"}
+                          </span>
+
+                          <span>
+                            {Number(
+                              unit.isWithBalcony
+                            ) ===
+                            1
+                              ? "Balcony"
+                              : "No Balcony"}
+                          </span>
+                        </div>
+
 
                         {unit.airConditioning && (
                           <div>
@@ -1930,12 +2311,12 @@ const handleTouchEnd =
                             />
 
                             <span>
-                              Air
-                              conditioning
+                              Air conditioning
                             </span>
                           </div>
                         )}
                       </div>
+
 
                       {/* ACTION */}
 
@@ -1965,6 +2346,7 @@ const handleTouchEnd =
             </div>
           )}
 
+
           {/* =================================================
               CARD VIEW
           ================================================= */}
@@ -1993,20 +2375,21 @@ const handleTouchEnd =
                       }
                     >
                       <div>
-                       <button
-  type="button"
-  className={
-    styles.unitCardImageNameButton
-  }
-  onClick={() =>
-    openUnitImages(
-      unit
-    )
-  }
->
-  {unit.unitName ||
-    unit.propertyType}
-</button>
+                        <button
+                          type="button"
+                          className={
+                            styles.unitCardImageNameButton
+                          }
+                          onClick={() =>
+                            openUnitImages(
+                              unit
+                            )
+                          }
+                        >
+                          {unit.unitName ||
+                            unit.propertyType}
+                        </button>
+
 
                         {unit.referenceNo && (
                           <span
@@ -2021,6 +2404,7 @@ const handleTouchEnd =
                           </span>
                         )}
                       </div>
+
 
                       <div
                         className={
@@ -2037,6 +2421,7 @@ const handleTouchEnd =
                       </div>
                     </div>
 
+
                     <div
                       className={
                         styles.unitCardStats
@@ -2048,8 +2433,7 @@ const handleTouchEnd =
                         }
                       >
                         <span>
-                          Annual
-                          Rent
+                          Annual Rent
                         </span>
 
                         <strong>
@@ -2069,6 +2453,7 @@ const handleTouchEnd =
                         )}
                       </div>
 
+
                       <div
                         className={
                           styles.unitCardStat
@@ -2086,6 +2471,7 @@ const handleTouchEnd =
                           Sq.Ft.
                         </strong>
                       </div>
+
 
                       {unit.floorNumber !==
                         null &&
@@ -2107,6 +2493,7 @@ const handleTouchEnd =
                             </strong>
                           </div>
                         )}
+
 
                       {Number(
                         unit.numberOfPayments ||
@@ -2131,6 +2518,7 @@ const handleTouchEnd =
                       )}
                     </div>
 
+
                     <div
                       className={
                         styles.unitCardInfo
@@ -2143,9 +2531,25 @@ const handleTouchEnd =
                           }
                         />
 
-                        Vacant &
-                        available
+                        Vacant & available
                       </div>
+
+
+                      {Number(
+                        unit.isWithBalcony
+                      ) ===
+                      1 && (
+                        <div>
+                          <Check
+                            size={
+                              15
+                            }
+                          />
+
+                          Balcony
+                        </div>
+                      )}
+
 
                       {unit.airConditioning && (
                         <div>
@@ -2155,11 +2559,11 @@ const handleTouchEnd =
                             }
                           />
 
-                          Air
-                          conditioning
+                          Air conditioning
                         </div>
                       )}
                     </div>
+
 
                     <button
                       type="button"
@@ -2180,6 +2584,7 @@ const handleTouchEnd =
             </div>
           )}
 
+
           {visibleUnits.length ===
             0 && (
             <div
@@ -2187,230 +2592,325 @@ const handleTouchEnd =
                 styles.noUnits
               }
             >
-              No available
-              units found.
+              No available units
+              found.
             </div>
           )}
         </section>
 
-        {/* =================================================
-            BOOKING MODAL
-        ================================================= */}
-{/* =================================================
-    UNIT IMAGE MODAL
-================================================= */}
 
-{selectedImageUnit && (
+        {/* =================================================
+            FULL PROPERTY IMAGE GALLERY
+        ================================================= */}
+
+      {galleryOpen && buildingImages.length > 0 && (
   <div
-    className={
-      styles.unitGalleryBackdrop
-    }
-    onClick={() =>
-      setSelectedImageUnit(
-        null
-      )
-    }
+    className={styles.propertyGalleryBackdrop}
+    onClick={closeBuildingGallery}
   >
     <div
-      className={
-        styles.unitGalleryModal
-      }
-      onClick={(
-        event
-      ) =>
-        event.stopPropagation()
-      }
+      className={styles.propertyGalleryModal}
+      onClick={(event) => event.stopPropagation()}
     >
-      <button
-        type="button"
-        className={
-          styles.unitGalleryClose
-        }
-        onClick={() =>
-          setSelectedImageUnit(
-            null
-          )
-        }
-        aria-label="Close images"
-      >
-        ×
-      </button>
-
-      <div
-        className={
-          styles.unitGalleryHeader
-        }
-      >
-        <div>
-          <span>
-            Unit Images
-          </span>
-
-          <h3>
-            {selectedImageUnit.unitName ||
-              selectedImageUnit.propertyType}
-          </h3>
-
+      <div className={styles.propertyGalleryHeader}>
+        <div className={styles.propertyGalleryHeaderLeft}>
+          <button
+            type="button"
+            className={styles.propertyGalleryCategoryActive}
+          >
+            <Check size={16} />
+            Property Images
+          </button>
         </div>
+
+        <button
+          type="button"
+          className={styles.propertyGalleryClose}
+          onClick={closeBuildingGallery}
+          aria-label="Close gallery"
+        >
+          ×
+        </button>
       </div>
 
-
-      {loadingUnitImages ? (
-        <div
-          className={
-            styles.unitGalleryEmpty
-          }
+      <div className={styles.propertyGalleryTabs}>
+        <button
+          type="button"
+          className={styles.propertyGalleryTabActive}
         >
-          Loading images...
-        </div>
-      ) : unitImages.length ===
-        0 ? (
-        <div
-          className={
-            styles.unitGalleryEmpty
-          }
-        >
-          <Building2
-            size={35}
-          />
+          All Images({buildingImages.length})
+        </button>
 
-          <span>
-            No images uploaded
-            for this unit.
-          </span>
-        </div>
-      ) : (
-        <>
-          <div
-            className={
-              styles.unitGalleryMain
-            }
-          >
-            {unitImages[
-              selectedUnitImageIndex
-            ]?.imageUrl && (
+        {/* <button
+          type="button"
+          className={styles.propertyGalleryTab}
+        >
+          Property Views ({buildingImages.length})
+        </button> */}
+      </div>
+
+      <div className={styles.propertyGalleryGrid}>
+        {buildingImages.map((image, index) => {
+          if (!image.imageUrl) return null;
+
+          return (
+            <button
+              type="button"
+              key={`property-gallery-${image.imageId}`}
+              className={`${styles.propertyGalleryItem} ${
+                galleryIndex === index
+                  ? styles.propertyGalleryItemActive
+                  : ""
+              }`}
+              onClick={() => {
+                setGalleryIndex(index);
+                setSelectedImage(index);
+              }}
+            >
               <img
-                src={
-                  unitImages[
-                    selectedUnitImageIndex
-                  ].imageUrl!
-                }
-                alt={
-                  selectedImageUnit.unitName ||
-                  "Unit"
-                }
+                src={image.imageUrl}
+                alt={`${property.title} ${index + 1}`}
+                draggable={false}
               />
-            )}
 
-            {unitImages.length >
-              1 && (
-              <>
-                <button
-                  type="button"
-                  className={`${styles.unitGalleryArrow} ${styles.unitGalleryArrowLeft}`}
-                  onClick={() =>
-                    setSelectedUnitImageIndex(
-                      (
-                        current
-                      ) =>
-                        current ===
-                        0
-                          ? unitImages.length -
-                            1
-                          : current -
-                            1
-                    )
-                  }
-                  aria-label="Previous image"
-                >
-                  ‹
-                </button>
-
-                <button
-                  type="button"
-                  className={`${styles.unitGalleryArrow} ${styles.unitGalleryArrowRight}`}
-                  onClick={() =>
-                    setSelectedUnitImageIndex(
-                      (
-                        current
-                      ) =>
-                        current ===
-                        unitImages.length -
-                          1
-                          ? 0
-                          : current +
-                            1
-                    )
-                  }
-                  aria-label="Next image"
-                >
-                  ›
-                </button>
-              </>
-            )}
-
-            <span
-              className={
-                styles.unitGalleryCounter
-              }
-            >
-              {selectedUnitImageIndex +
-                1}{" "}
-              /{" "}
-              {
-                unitImages.length
-              }
-            </span>
-          </div>
-
-
-          {unitImages.length >
-            1 && (
-            <div
-              className={
-                styles.unitGalleryThumbs
-              }
-            >
-              {unitImages.map(
-                (
-                  image,
-                  index
-                ) => (
-                  <button
-                    type="button"
-                    key={
-                      image.imageId
-                    }
-                    onClick={() =>
-                      setSelectedUnitImageIndex(
-                        index
-                      )
-                    }
-                    className={`${styles.unitGalleryThumb} ${
-                      selectedUnitImageIndex ===
-                      index
-                        ? styles.unitGalleryThumbActive
-                        : ""
-                    }`}
-                  >
-                    {image.imageUrl && (
-                      <img
-                        src={
-                          image.imageUrl
-                        }
-                        alt=""
-                      />
-                    )}
-                  </button>
-                )
-              )}
-            </div>
-          )}
-        </>
-      )}
+              <span className={styles.propertyGalleryNumber}>
+                {index + 1}
+              </span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   </div>
 )}
+
+
+        {/* =================================================
+            UNIT IMAGE MODAL
+        ================================================= */}
+
+        {selectedImageUnit && (
+          <div
+            className={
+              styles.unitGalleryBackdrop
+            }
+            onClick={() =>
+              setSelectedImageUnit(
+                null
+              )
+            }
+          >
+            <div
+              className={
+                styles.unitGalleryModal
+              }
+              onClick={(
+                event
+              ) =>
+                event.stopPropagation()
+              }
+            >
+              <button
+                type="button"
+                className={
+                  styles.unitGalleryClose
+                }
+                onClick={() =>
+                  setSelectedImageUnit(
+                    null
+                  )
+                }
+                aria-label="Close images"
+              >
+                ×
+              </button>
+
+
+              <div
+                className={
+                  styles.unitGalleryHeader
+                }
+              >
+                <div>
+                  <span>
+                    Unit Images
+                  </span>
+
+                  <h3>
+                    {selectedImageUnit.unitName ||
+                      selectedImageUnit.propertyType}
+                  </h3>
+                </div>
+              </div>
+
+
+              {loadingUnitImages ? (
+                <div
+                  className={
+                    styles.unitGalleryEmpty
+                  }
+                >
+                  Loading images...
+                </div>
+              ) : unitImages.length ===
+                0 ? (
+                <div
+                  className={
+                    styles.unitGalleryEmpty
+                  }
+                >
+                  <Building2
+                    size={
+                      35
+                    }
+                  />
+
+                  <span>
+                    No images uploaded
+                    for this unit.
+                  </span>
+                </div>
+              ) : (
+                <>
+                  <div
+                    className={
+                      styles.unitGalleryMain
+                    }
+                  >
+                    {unitImages[
+                      selectedUnitImageIndex
+                    ]?.imageUrl && (
+                      <img
+                        src={
+                          unitImages[
+                            selectedUnitImageIndex
+                          ].imageUrl!
+                        }
+                        alt={
+                          selectedImageUnit.unitName ||
+                          "Unit"
+                        }
+                      />
+                    )}
+
+
+                    {unitImages.length >
+                      1 && (
+                      <>
+                        <button
+                          type="button"
+                          className={`${styles.unitGalleryArrow} ${styles.unitGalleryArrowLeft}`}
+                          onClick={() =>
+                            setSelectedUnitImageIndex(
+                              (
+                                current
+                              ) =>
+                                current ===
+                                0
+                                  ? unitImages.length -
+                                    1
+                                  : current -
+                                    1
+                            )
+                          }
+                          aria-label="Previous image"
+                        >
+                          ‹
+                        </button>
+
+
+                        <button
+                          type="button"
+                          className={`${styles.unitGalleryArrow} ${styles.unitGalleryArrowRight}`}
+                          onClick={() =>
+                            setSelectedUnitImageIndex(
+                              (
+                                current
+                              ) =>
+                                current ===
+                                unitImages.length -
+                                  1
+                                  ? 0
+                                  : current +
+                                    1
+                            )
+                          }
+                          aria-label="Next image"
+                        >
+                          ›
+                        </button>
+                      </>
+                    )}
+
+
+                    <span
+                      className={
+                        styles.unitGalleryCounter
+                      }
+                    >
+                      {selectedUnitImageIndex +
+                        1}
+                      {" / "}
+                      {
+                        unitImages.length
+                      }
+                    </span>
+                  </div>
+
+
+                  {unitImages.length >
+                    1 && (
+                    <div
+                      className={
+                        styles.unitGalleryThumbs
+                      }
+                    >
+                      {unitImages.map(
+                        (
+                          image,
+                          index
+                        ) => (
+                          <button
+                            type="button"
+                            key={
+                              image.imageId
+                            }
+                            onClick={() =>
+                              setSelectedUnitImageIndex(
+                                index
+                              )
+                            }
+                            className={`${styles.unitGalleryThumb} ${
+                              selectedUnitImageIndex ===
+                              index
+                                ? styles.unitGalleryThumbActive
+                                : ""
+                            }`}
+                          >
+                            {image.imageUrl && (
+                              <img
+                                src={
+                                  image.imageUrl
+                                }
+                                alt=""
+                              />
+                            )}
+                          </button>
+                        )
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
+
+        {/* =================================================
+            BOOKING MODAL
+        ================================================= */}
+
         <BookingModal
           open={
             bookingUnit !==
@@ -2445,7 +2945,6 @@ const handleTouchEnd =
 }
 
 
-
 /* =========================================================
    PAGE
 ========================================================= */
@@ -2460,12 +2959,13 @@ export default function PropertyDetailPage() {
           }
         >
           <Building2
-            size={40}
+            size={
+              40
+            }
           />
 
           <h2>
-            Loading
-            property...
+            Loading property...
           </h2>
         </main>
       }

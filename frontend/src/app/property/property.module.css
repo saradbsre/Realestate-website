@@ -13,6 +13,7 @@
   margin: 0 auto;
 }
 
+
 /* =========================================================
    LOADING / ERROR
 ========================================================= */
@@ -37,23 +38,31 @@
 .statePage h1,
 .statePage h2 {
   margin: 0;
+
   color: #102f57;
+
   font-weight: 850;
 }
 
 .statePage p {
   margin: 0;
+
   color: #76869a;
+
   font-size: 14px;
 }
 
 .statePage a {
   margin-top: 8px;
+
   color: #0872d5;
+
   font-size: 13px;
   font-weight: 750;
+
   text-decoration: none;
 }
+
 
 /* =========================================================
    BREADCRUMB
@@ -61,25 +70,21 @@
 
 .breadcrumbBar {
   width: 100%;
+
   background: #ffffff;
+
   border-bottom: 1px solid #dfe6ee;
 }
 
 .breadcrumb {
-  min-height: 48px;
-
+  min-height: 23px;
   display: flex;
   align-items: center;
-
   gap: 7px;
-
   overflow-x: auto;
-
   white-space: nowrap;
-
   scrollbar-width: none;
-
-  -webkit-overflow-scrolling: touch;
+  padding:  10px 0px;
 }
 
 .breadcrumb::-webkit-scrollbar {
@@ -104,11 +109,13 @@
 
 .breadcrumbLink:hover {
   color: #055cae;
+
   text-decoration: underline;
 }
 
 .breadcrumbArrow {
   flex-shrink: 0;
+
   color: #728296;
 }
 
@@ -134,6 +141,7 @@
   white-space: nowrap;
   text-overflow: ellipsis;
 }
+
 
 /* =========================================================
    COMMON HEADINGS
@@ -175,8 +183,9 @@
   line-height: 1.5;
 }
 
+
 /* =========================================================
-   PROPERTY OVERVIEW
+   PROPERTY OVERVIEW SECTION
 ========================================================= */
 
 .gallerySection {
@@ -187,11 +196,30 @@
 .photoCount {
   flex-shrink: 0;
 
+  padding: 0;
+
+  border: 0;
+
+  background: transparent;
+
   color: #0872d5;
 
-  font-size: 11px;
+  font-family: inherit;
+
+  font-size: 13px;
   font-weight: 800;
+
+  cursor: pointer;
 }
+
+.photoCount:hover {
+  text-decoration: underline;
+}
+
+
+/* =========================================================
+   PROPERTY OVERVIEW CARD
+========================================================= */
 
 .propertyOverviewGrid {
   width: 100%;
@@ -199,67 +227,271 @@
   display: grid;
 
   grid-template-columns:
-    minmax(0, 1.55fr)
-    minmax(360px, 0.85fr);
+    minmax(0, 2fr)
+    minmax(370px, 0.95fr);
 
-  grid-template-rows:
-    300px auto;
+  align-items: stretch;
 
   overflow: hidden;
 
   background: #ffffff;
 
   border: 1px solid #dce5ee;
-  border-radius: 15px;
+
+  border-radius: 18px;
 
   box-shadow:
-    0 10px 28px
-    rgba(8, 40, 72, 0.06);
+    0 12px 30px
+    rgba(15, 45, 85, 0.07);
 }
 
+
 /* =========================================================
-   MAIN IMAGE
+   AGODA STYLE IMAGE COLLAGE
 ========================================================= */
 
-.buildingImageArea {
+.propertyGalleryPreview {
   position: relative;
 
-  grid-column: 1;
-  grid-row: 1;
-
-  height: 300px;
+  width: 100%;
+  height: 430px;
 
   min-width: 0;
 
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 2fr)
+    minmax(210px, 1fr);
+
+  grid-template-rows:
+    repeat(3, minmax(0, 1fr));
+
+  gap: 5px;
+
   overflow: hidden;
 
-  background: #e9eff5;
+  background: #e9eef3;
 
-  touch-action: pan-y;
+  border-right: 1px solid #e1e8ef;
 }
 
-.buildingMainImage {
+
+/* =========================================================
+   LARGE MAIN IMAGE
+========================================================= */
+
+.galleryPreviewMain {
+  position: relative;
+
+  grid-column: 1;
+  grid-row: 1 / 4;
+
+  width: 100%;
+  height: 100%;
+
+  min-width: 0;
+
+  padding: 0;
+
+  overflow: hidden;
+
+  border: 0;
+
+  background: #eef2f6;
+
+  cursor: pointer;
+}
+
+
+/*
+   IMPORTANT:
+   contain = show complete uploaded image.
+   Nothing gets cropped.
+*/
+
+.galleryPreviewMain img {
   width: 100%;
   height: 100%;
 
   display: block;
 
-  object-fit: contain;
+  /* object-fit: contain; */
+  object-position: center;
 
-  pointer-events: none;
+  background: #eef2f6;
 
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-user-drag: none;
+  transition: transform 0.2s ease;
 }
 
-.imageBadge {
+.galleryPreviewMain:hover img {
+  transform: scale(1.01);
+}
+
+
+/* =========================================================
+   SMALL COLLAGE IMAGES
+========================================================= */
+
+.galleryPreviewSmall {
+  position: relative;
+
+  width: 100%;
+  height: 100%;
+
+  min-width: 0;
+
+  padding: 0;
+
+  overflow: hidden;
+
+  border: 0;
+
+  background: #eef2f6;
+
+  cursor: pointer;
+}
+
+.galleryPreviewTop {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.galleryPreviewMiddle {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.galleryPreviewBottom {
+  grid-column: 2;
+  grid-row: 3;
+}
+
+.galleryPreviewSmall img {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  /* object-fit: contain; */
+  object-position: center;
+
+  background: #eef2f6;
+
+  transition: transform 0.2s ease;
+}
+
+.galleryPreviewSmall:hover img {
+  transform: scale(1.01);
+}
+
+
+/* =========================================================
+   IMAGE BADGE
+========================================================= */
+
+.propertyGalleryPreview .imageBadge {
   position: absolute;
 
   top: 16px;
   left: 16px;
 
-  z-index: 2;
+  z-index: 5;
+
+  min-height: 38px;
+
+  padding: 0 14px;
+
+  display: inline-flex;
+  align-items: center;
+
+  gap: 7px;
+
+  border-radius: 8px;
+
+  background: rgba(14, 91, 150, 0.94);
+
+  color: #ffffff;
+
+  font-size: 11px;
+  font-weight: 800;
+
+  pointer-events: none;
+
+  box-shadow:
+    0 4px 12px
+    rgba(0, 0, 0, 0.15);
+}
+
+
+/* =========================================================
+   EMPTY IMAGE SLOT
+========================================================= */
+
+.galleryPreviewEmpty {
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 5px;
+
+  color: #7690a9;
+
+  font-size: 10px;
+}
+
+
+/* =========================================================
+   MORE PHOTOS OVERLAY
+========================================================= */
+
+.galleryPreviewMore {
+  position: absolute;
+
+  inset: 0;
+
+  z-index: 3;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 2px;
+
+  background: rgba(7, 20, 36, 0.58);
+
+  color: #ffffff;
+}
+
+.galleryPreviewMore span {
+  font-size: 22px;
+
+  font-weight: 900;
+}
+
+.galleryPreviewMore small {
+  font-size: 11px;
+
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   COLLAGE PHOTO COUNT
+========================================================= */
+
+.galleryPreviewPhotoCount {
+  position: absolute;
+
+  right: 13px;
+  bottom: 13px;
+
+  z-index: 8;
 
   min-height: 32px;
 
@@ -267,160 +499,93 @@
 
   display: inline-flex;
   align-items: center;
+  justify-content: center;
 
-  gap: 6px;
+  border: 0;
 
-  border-radius: 7px;
+  border-radius: 999px;
 
-  background: rgba(7, 72, 125, 0.9);
-
-  color: #ffffff;
-
-  font-size: 10px;
-  font-weight: 800;
-}
-
-.imageCounter {
-  position: absolute;
-
-  right: 14px;
-  bottom: 14px;
-
-  z-index: 2;
-
-  padding: 6px 9px;
-
-  border-radius: 7px;
-
-  background: rgba(8, 29, 48, 0.7);
+  background: rgba(8, 22, 40, 0.82);
 
   color: #ffffff;
 
+  font-family: inherit;
+
   font-size: 10px;
   font-weight: 800;
-}
-
-/* =========================================================
-   THUMBNAILS
-========================================================= */
-.thumbnailRow {
-  display: flex;
-
-  width: 100%;
-
-  gap: 12px;
-
-  padding:
-    5px 0 5px;
-
-  overflow-x: auto;
-  overflow-y: hidden;
-
-  scroll-behavior: smooth;
-
-  scrollbar-width: thin;
-  scrollbar-color:
-    #94a3b8
-    #e2e8f0;
-
-  overscroll-behavior-x:
-    contain;
-
-  -webkit-overflow-scrolling:
-    touch;
-}
-
-.thumbnailRow::-webkit-scrollbar {
-  display: none;
-}
-
-.thumbButton {
-  position: relative;
-
-  width: 128px;
-  min-width: 128px;
-  height: 74px;
-
-  flex: 0 0 128px;
-
-  padding: 0;
-
-  overflow: hidden;
-
-  border: 2px solid transparent;
-
-  border-radius: 8px;
-
-  background: #eaf0f6;
 
   cursor: pointer;
 
-  scroll-snap-align: start;
-
-  transition:
-    border-color 0.15s ease,
-    transform 0.15s ease;
+  box-shadow:
+    0 3px 10px
+    rgba(0, 0, 0, 0.18);
 }
 
-.thumbButton:hover {
-  border-color: #a9c8e4;
-
-  transform: translateY(-1px);
-}
-
-.thumbActive {
-  border-color: #0872d5;
-}
-
-.thumbImage {
-  width: 100%;
-  height: 100%;
-
-  display: block;
-
-  object-fit: cover;
-
-  pointer-events: none;
-
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-user-drag: none;
-}
 
 /* =========================================================
-   OVERVIEW DETAILS
+   IMAGE FALLBACK
+========================================================= */
+
+.galleryPreviewFallback {
+  grid-column: 1 / -1;
+  grid-row: 1 / -1;
+
+  min-height: 430px;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  background: #edf3f8;
+
+  color: #7892aa;
+}
+
+
+/* =========================================================
+   RIGHT SIDE PROPERTY DETAILS
 ========================================================= */
 
 .overviewDetails {
-  grid-column: 2;
-  grid-row: 1 / 3;
-
   min-width: 0;
 
-  padding: 28px;
+  height: 430px;
+
+  padding: 30px 28px;
 
   display: flex;
   flex-direction: column;
   justify-content: center;
 
+  box-sizing: border-box;
+
   background: #ffffff;
 }
 
-.overviewTitle {
-  padding-bottom: 20px;
 
-  border-bottom: 1px solid #e5ebf1;
+/* =========================================================
+   PROPERTY TITLE
+========================================================= */
+
+.overviewTitle {
+  padding-bottom: 18px;
+
+  border-bottom: 1px solid #e3eaf1;
 }
 
 .overviewTitle > span {
   display: block;
 
-  margin-bottom: 6px;
+  margin-bottom: 7px;
 
   color: #0872d5;
 
   font-size: 9px;
-  font-weight: 850;
+  font-weight: 900;
 
   letter-spacing: 0.8px;
 
@@ -430,7 +595,7 @@
 .overviewTitle h2 {
   margin: 0;
 
-  color: #102f57;
+  color: #0b2f57;
 
   font-size: 21px;
   line-height: 1.3;
@@ -438,109 +603,118 @@
   font-weight: 900;
 }
 
+
+/* =========================================================
+   PROPERTY LOCATION
+========================================================= */
+
 .overviewLocation {
-  margin-top: 12px;
+  margin-top: 14px;
 
   display: flex;
-  align-items: center;
+  align-items: flex-start;
 
-  gap: 7px;
+  gap: 8px;
 
-  color: #5f748a;
+  color: #62758c;
 
   font-size: 11px;
   font-weight: 700;
+
+  line-height: 1.4;
 }
 
 .overviewLocation svg {
   flex-shrink: 0;
 
-  color: #0872d5;
+  color: #0875dc;
 }
+
 
 /* =========================================================
    OVERVIEW STATS
 ========================================================= */
 
 .overviewStats {
-  margin-top: 16px;
+  padding: 18px 0;
 
   display: grid;
 
   grid-template-columns:
     repeat(2, minmax(0, 1fr));
 
-  gap: 8px;
+  gap: 10px;
+
+  border-bottom: 1px solid #e3eaf1;
 }
 
 .overviewStat {
   min-width: 0;
-  min-height: 58px;
 
-  padding: 8px 10px;
+  min-height: 62px;
+
+  padding: 9px 10px;
 
   display: flex;
   align-items: center;
 
-  gap: 8px;
+  gap: 9px;
 
-  background: #f7fafd;
+  border: 1px solid #dce6ef;
 
-  border: 1px solid #dce5ee;
+  border-radius: 9px;
 
-  border-radius: 8px;
+  background: #f8fbfe;
 }
 
 .overviewStatIcon {
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
 
-  flex: 0 0 30px;
+  flex: 0 0 32px;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  border-radius: 7px;
+  border-radius: 8px;
 
-  background: #eaf4fe;
+  background: #eaf5ff;
 
-  color: #0872d5;
+  color: #0875dc;
 }
 
 .overviewStat > div:last-child {
   min-width: 0;
-
-  display: flex;
-  flex-direction: column;
-
-  gap: 2px;
 }
 
 .overviewStat span {
-  color: #8291a2;
+  display: block;
+
+  color: #8291a3;
 
   font-size: 7px;
   font-weight: 700;
 }
 
 .overviewStat strong {
+  display: block;
+
+  margin-top: 2px;
+
   color: #102f57;
 
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 900;
 }
 
+
 /* =========================================================
-   PROPERTY TYPE CHIPS
+   AVAILABLE PROPERTY TYPES
 ========================================================= */
 
 .overviewTypes {
-  margin-top: 16px;
-
-  padding-top: 14px;
-
-  border-top: 1px solid #e5ebf1;
+  padding-top: 16px;
 }
 
 .overviewTypesLabel {
@@ -548,12 +722,12 @@
 
   margin-bottom: 8px;
 
-  color: #75869a;
+  color: #798ba0;
 
   font-size: 8px;
-  font-weight: 850;
+  font-weight: 800;
 
-  letter-spacing: 0.4px;
+  letter-spacing: 0.45px;
 
   text-transform: uppercase;
 }
@@ -573,15 +747,15 @@
   display: inline-flex;
   align-items: center;
 
-  gap: 5px;
+  gap: 6px;
 
-  border: 1px solid #dce8f3;
+  border: 1px solid #d8e4ef;
 
   border-radius: 7px;
 
-  background: #f0f7fd;
+  background: #f3f8fd;
 
-  color: #125b93;
+  color: #135180;
 
   font-family: inherit;
 
@@ -593,34 +767,28 @@
 
 .overviewTypeChip small {
   min-width: 18px;
+  height: 17px;
 
-  padding: 2px 5px;
+  padding: 0 5px;
 
-  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 
-  background: #d9ebfa;
+  border-radius: 999px;
 
-  color: #0868b5;
+  background: #dceefa;
+
+  color: #0872d5;
 
   font-size: 7px;
-  font-weight: 850;
-
-  text-align: center;
-}
-
-.overviewTypeArrow {
-  flex-shrink: 0;
+  font-weight: 900;
 }
 
 .overviewTypeChipActive {
-  border-color: #0872d5;
+  border-color: #0875d8;
 
-  background:
-    linear-gradient(
-      135deg,
-      #0876dd 0%,
-      #075ca7 100%
-    );
+  background: #0875d8;
 
   color: #ffffff;
 }
@@ -630,6 +798,11 @@
 
   color: #ffffff;
 }
+
+.overviewTypeArrow {
+  flex-shrink: 0;
+}
+
 
 /* =========================================================
    AMENITIES
@@ -705,6 +878,7 @@
   color: #16813b;
 }
 
+
 /* =========================================================
    AVAILABLE UNITS
 ========================================================= */
@@ -716,6 +890,7 @@
 
   scroll-margin-top: 120px;
 }
+
 
 /* =========================================================
    PROPERTY TYPE TABS
@@ -734,9 +909,9 @@
 
   overflow-x: auto;
 
-  -webkit-overflow-scrolling: touch;
-
   scrollbar-width: thin;
+
+  -webkit-overflow-scrolling: touch;
 }
 
 .propertyTab {
@@ -802,6 +977,7 @@
   color: #ffffff;
 }
 
+
 /* =========================================================
    SELECTED TYPE HEADER
 ========================================================= */
@@ -821,8 +997,7 @@
 
   border: 1px solid #dce5ef;
 
-  border-radius:
-    13px 13px 0 0;
+  border-radius: 13px 13px 0 0;
 }
 
 .selectedTypeTitle h3 {
@@ -873,9 +1048,9 @@
   font-size: 9px;
   font-weight: 850;
 
-  text-transform: uppercase;
-
   letter-spacing: 0.4px;
+
+  text-transform: uppercase;
 }
 
 .selectedTypeStats strong {
@@ -884,6 +1059,7 @@
   font-size: 12px;
   font-weight: 900;
 }
+
 
 /* =========================================================
    VIEW SWITCHER
@@ -918,7 +1094,7 @@
 
   gap: 6px;
 
-  border: none;
+  border: 0;
 
   border-radius: 6px;
 
@@ -940,7 +1116,8 @@
   background: #eaf4fd;
 }
 
-.viewButtonActive {
+.viewButtonActive,
+.viewButtonActive:hover {
   background: #0872d5;
 
   color: #ffffff;
@@ -950,16 +1127,12 @@
     rgba(8, 114, 213, 0.18);
 }
 
-.viewButtonActive:hover {
-  background: #0872d5;
-
-  color: #ffffff;
-}
-
 .tableViewIcon {
   font-size: 17px;
+
   line-height: 1;
 }
+
 
 /* =========================================================
    TABLE VIEW
@@ -974,19 +1147,17 @@
   background: #ffffff;
 
   border: 1px solid #dce5ef;
+  border-top: 0;
 
-  border-top: none;
-
-  border-radius:
-    0 0 13px 13px;
+  border-radius: 0 0 13px 13px;
 
   box-shadow:
     0 8px 24px
     rgba(8, 39, 70, 0.045);
 
-  -webkit-overflow-scrolling: touch;
-
   scrollbar-width: thin;
+
+  -webkit-overflow-scrolling: touch;
 }
 
 .unitTableContent {
@@ -1029,7 +1200,7 @@
 }
 
 .unitTableHeader > div:last-child {
-  border-right: none;
+  border-right: 0;
 }
 
 .unitRow {
@@ -1047,7 +1218,7 @@
 }
 
 .unitRow:last-child {
-  border-bottom: none;
+  border-bottom: 0;
 }
 
 .unitRow:hover {
@@ -1063,23 +1234,47 @@
 }
 
 .unitRow > div:last-child {
-  border-right: none;
+  border-right: 0;
 }
+
 
 /* =========================================================
    UNIT DETAILS
 ========================================================= */
 
-.unitMain h4 {
-  margin: 0 0 6px;
+.unitImageNameButton,
+.unitCardImageNameButton {
+  padding: 0;
 
-  color: #0870ce;
+  border: 0;
 
-  font-size: 14px;
-  font-weight: 900;
+  background: none;
+
+  color: #0876ce;
+
+  font-family: inherit;
+  font-weight: 800;
+
+  text-align: left;
+
+  cursor: pointer;
+}
+
+.unitImageNameButton {
+  font-size: 17px;
+}
+
+.unitCardImageNameButton {
+  font-size: 16px;
+}
+
+.unitImageNameButton:hover,
+.unitCardImageNameButton:hover {
+  text-decoration: underline;
 }
 
 .reference {
+  margin-top: 5px;
   margin-bottom: 10px;
 
   color: #7c8998;
@@ -1137,6 +1332,7 @@
   font-weight: 800;
 }
 
+
 /* =========================================================
    UNIT PRICE
 ========================================================= */
@@ -1164,6 +1360,7 @@
 
   font-size: 10px;
 }
+
 
 /* =========================================================
    UNIT INFORMATION
@@ -1194,8 +1391,16 @@
   color: #17863e;
 }
 
+.unitInfoItem {
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+}
+
+
 /* =========================================================
-   ACTION
+   UNIT ACTION
 ========================================================= */
 
 .unitAction {
@@ -1208,7 +1413,7 @@
 .cardBookButton {
   min-height: 41px;
 
-  border: none;
+  border: 0;
 
   border-radius: 7px;
 
@@ -1246,8 +1451,9 @@
     rgba(7, 98, 184, 0.22);
 }
 
+
 /* =========================================================
-   CARD VIEW
+   UNIT CARD VIEW
 ========================================================= */
 
 .unitCardGrid {
@@ -1263,11 +1469,9 @@
   background: #f4f7fa;
 
   border: 1px solid #dce5ef;
+  border-top: 0;
 
-  border-top: none;
-
-  border-radius:
-    0 0 13px 13px;
+  border-radius: 0 0 13px 13px;
 }
 
 .unitCard {
@@ -1299,15 +1503,6 @@
   gap: 12px;
 
   border-bottom: 1px solid #e6edf3;
-}
-
-.unitCardHeader h3 {
-  margin: 0;
-
-  color: #0870ce;
-
-  font-size: 15px;
-  font-weight: 900;
 }
 
 .unitCardReference {
@@ -1428,8 +1623,9 @@
   margin-top: auto;
 }
 
+
 /* =========================================================
-   EMPTY
+   NO UNITS
 ========================================================= */
 
 .noUnits {
@@ -1446,6 +1642,555 @@
   text-align: center;
 }
 
+
+/* =========================================================
+   UNIT IMAGE MODAL
+========================================================= */
+
+.unitGalleryBackdrop {
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 9999;
+
+  padding: 20px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(7, 24, 43, 0.78);
+}
+
+.unitGalleryModal {
+  position: relative;
+
+  width: min(850px, 100%);
+
+  max-height: 94vh;
+
+  padding: 22px;
+
+  overflow-y: auto;
+
+  background: #ffffff;
+
+  border-radius: 14px;
+}
+
+.unitGalleryClose {
+  position: absolute;
+
+  top: 12px;
+  right: 14px;
+
+  z-index: 5;
+
+  width: 38px;
+  height: 38px;
+
+  border: 0;
+  border-radius: 50%;
+
+  background: #eef3f8;
+
+  color: #0b3155;
+
+  font-size: 25px;
+  line-height: 1;
+
+  cursor: pointer;
+}
+
+.unitGalleryHeader {
+  margin-bottom: 16px;
+
+  padding-right: 55px;
+}
+
+.unitGalleryHeader span {
+  color: #64748b;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  text-transform: uppercase;
+}
+
+.unitGalleryHeader h3 {
+  margin: 4px 0 2px;
+
+  color: #052f54;
+
+  font-size: 21px;
+}
+
+.unitGalleryMain {
+  position: relative;
+
+  width: 100%;
+
+  overflow: hidden;
+
+  background: #edf2f7;
+
+  border-radius: 10px;
+}
+
+.unitGalleryMain img {
+  width: 100%;
+  height: 500px;
+
+  display: block;
+
+  object-fit: contain;
+  object-position: center;
+}
+
+.unitGalleryArrow {
+  position: absolute;
+
+  top: 50%;
+
+  width: 42px;
+  height: 42px;
+
+  transform: translateY(-50%);
+
+  border: 0;
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.92);
+
+  color: #07365e;
+
+  font-size: 28px;
+
+  cursor: pointer;
+}
+
+.unitGalleryArrowLeft {
+  left: 12px;
+}
+
+.unitGalleryArrowRight {
+  right: 12px;
+}
+
+.unitGalleryCounter {
+  position: absolute;
+
+  right: 12px;
+  bottom: 12px;
+
+  padding: 5px 9px;
+
+  border-radius: 5px;
+
+  background: rgba(0, 0, 0, 0.65);
+
+  color: #ffffff;
+
+  font-size: 11px;
+}
+
+.unitGalleryThumbs {
+  margin-top: 12px;
+
+  display: flex;
+
+  gap: 8px;
+
+  overflow-x: auto;
+}
+
+.unitGalleryThumb {
+  width: 80px;
+  height: 62px;
+
+  flex: 0 0 80px;
+
+  padding: 2px;
+
+  overflow: hidden;
+
+  border: 2px solid transparent;
+  border-radius: 7px;
+
+  background: #ffffff;
+
+  cursor: pointer;
+}
+
+.unitGalleryThumbActive {
+  border-color: #0876ce;
+}
+
+.unitGalleryThumb img {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  object-fit: cover;
+
+  border-radius: 4px;
+}
+
+.unitGalleryEmpty {
+  min-height: 250px;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 10px;
+
+  background: #f8fafc;
+
+  border: 1px dashed #cbd5e1;
+
+  border-radius: 10px;
+
+  color: #64748b;
+}
+
+
+/* =========================================================
+   FULL PROPERTY GALLERY BACKDROP
+========================================================= */
+
+.propertyGalleryBackdrop {
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 10000;
+
+  padding: 22px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(4, 10, 19, 0.86);
+
+  backdrop-filter: blur(2px);
+}
+
+
+/* =========================================================
+   FULL PROPERTY GALLERY MODAL
+========================================================= */
+
+.propertyGalleryModal {
+  width: min(1700px, 100%);
+
+  height: calc(100vh - 44px);
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+
+  background: #ffffff;
+
+  border-radius: 18px;
+
+  box-shadow:
+    0 28px 90px
+    rgba(0, 0, 0, 0.4);
+}
+
+
+/* =========================================================
+   FULL GALLERY HEADER
+========================================================= */
+
+.propertyGalleryHeader {
+  min-height: 72px;
+
+  padding: 0 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 16px;
+
+  flex-shrink: 0;
+
+  border-bottom: 1px solid #e5eaf0;
+
+  background: #ffffff;
+}
+
+.propertyGalleryHeaderLeft {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+}
+
+.propertyGalleryCategoryActive {
+  min-height: 44px;
+
+  padding: 0 18px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  border: 2px solid #2675df;
+
+  border-radius: 999px;
+
+  background: #f4f9ff;
+
+  color: #1c61bc;
+
+  font-family: inherit;
+
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.propertyGalleryClose {
+  width: 42px;
+  height: 42px;
+
+  padding: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 0;
+  border-radius: 50%;
+
+  background: transparent;
+
+  color: #176bd0;
+
+  font-family: inherit;
+
+  font-size: 36px;
+  font-weight: 300;
+  line-height: 1;
+
+  cursor: pointer;
+}
+
+.propertyGalleryClose:hover {
+  background: #eef6ff;
+}
+
+
+/* =========================================================
+   FULL GALLERY TABS
+========================================================= */
+
+.propertyGalleryTabs {
+  min-height: 62px;
+
+  padding: 0 24px;
+
+  display: flex;
+  align-items: flex-end;
+
+  gap: 34px;
+
+  flex-shrink: 0;
+
+  border-bottom: 1px solid #e1e6ed;
+
+  background: #ffffff;
+}
+
+.propertyGalleryTab,
+.propertyGalleryTabActive {
+  position: relative;
+
+  min-height: 61px;
+
+  padding: 0 0 16px;
+
+  display: inline-flex;
+  align-items: flex-end;
+
+  border: 0;
+
+  background: transparent;
+
+  color: #60718a;
+
+  font-family: inherit;
+
+  font-size: 15px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.propertyGalleryTabActive {
+  color: #1768ce;
+}
+
+.propertyGalleryTabActive::after {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  height: 4px;
+
+  border-radius: 4px 4px 0 0;
+
+  background: #2879e3;
+}
+
+
+/* =========================================================
+   FULL GALLERY GRID
+========================================================= */
+
+.propertyGalleryGrid {
+  flex: 1;
+
+  min-height: 0;
+
+  padding: 16px;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  grid-auto-rows: 210px;
+
+  gap: 12px;
+
+  overflow-y: auto;
+
+  background: #f5f6f8;
+
+  scrollbar-width: thin;
+
+  scrollbar-color:
+    #929aa5
+    transparent;
+}
+
+.propertyGalleryGrid::-webkit-scrollbar {
+  width: 8px;
+}
+
+.propertyGalleryGrid::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.propertyGalleryGrid::-webkit-scrollbar-thumb {
+  background: #929aa5;
+
+  border-radius: 999px;
+}
+
+
+/* =========================================================
+   FULL GALLERY ITEM
+========================================================= */
+
+.propertyGalleryItem {
+  position: relative;
+
+  min-width: 0;
+
+  padding: 0;
+
+  overflow: hidden;
+
+  border: 2px solid transparent;
+
+  border-radius: 10px;
+
+  background: #e8edf3;
+
+  cursor: pointer;
+
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.propertyGalleryItem:first-child {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+
+.propertyGalleryItem:hover {
+  border-color: #2a78d6;
+
+  box-shadow:
+    0 8px 22px
+    rgba(15, 72, 145, 0.16);
+}
+
+.propertyGalleryItemActive {
+  border-color: #1873df;
+}
+
+.propertyGalleryItem img {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  /* object-fit: contain; */
+  object-position: center;
+
+  background: #edf1f5;
+
+  transition: transform 0.2s ease;
+}
+
+.propertyGalleryItem:hover img {
+  transform: scale(1.01);
+}
+
+.propertyGalleryNumber {
+  position: absolute;
+
+  left: 10px;
+  bottom: 10px;
+
+  min-width: 26px;
+  height: 26px;
+
+  padding: 0 7px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 999px;
+
+  background: rgba(9, 22, 40, 0.8);
+
+  color: #ffffff;
+
+  font-size: 11px;
+  font-weight: 800;
+}
+
+
 /* =========================================================
    LARGE TABLET
 ========================================================= */
@@ -1457,12 +2202,25 @@
 
   .propertyOverviewGrid {
     grid-template-columns:
-      minmax(0, 1.3fr)
-      minmax(320px, 0.9fr);
+      minmax(0, 1.5fr)
+      minmax(330px, 1fr);
+  }
+
+  .propertyGalleryPreview,
+  .overviewDetails {
+    height: 390px;
+  }
+
+  .galleryPreviewFallback {
+    min-height: 390px;
   }
 
   .overviewDetails {
-    padding: 22px;
+    padding: 24px 22px;
+  }
+
+  .overviewTitle h2 {
+    font-size: 19px;
   }
 
   .amenitiesGrid {
@@ -1486,7 +2244,23 @@
     grid-template-columns:
       repeat(2, minmax(0, 1fr));
   }
+
+  .propertyGalleryBackdrop {
+    padding: 14px;
+  }
+
+  .propertyGalleryModal {
+    height: calc(100vh - 28px);
+  }
+
+  .propertyGalleryGrid {
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr));
+
+    grid-auto-rows: 190px;
+  }
 }
+
 
 /* =========================================================
    TABLET
@@ -1494,36 +2268,25 @@
 
 @media (max-width: 800px) {
   .propertyOverviewGrid {
-    grid-template-columns: 1fr;
-
-    grid-template-rows:
-      auto auto auto;
+    display: block;
   }
 
-  .buildingImageArea {
-    grid-column: 1;
-    grid-row: 1;
+  .propertyGalleryPreview {
+    width: 100%;
 
-    height: 330px;
-  }
+    border-right: 0;
 
-  .thumbnailRow {
-    grid-column: 1;
-    grid-row: 2;
-
-    padding: 8px 10px 10px;
+    border-bottom: 1px solid #e1e8ef;
   }
 
   .overviewDetails {
-    grid-column: 1;
-    grid-row: 3;
+    width: 100%;
+
+    height: auto;
 
     padding: 22px;
-  }
 
-  .overviewStats {
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
+    justify-content: flex-start;
   }
 
   .selectedTypeRight {
@@ -1536,9 +2299,11 @@
 
   .unitTableContent {
     width: 980px;
+
     min-width: 980px;
   }
 }
+
 
 /* =========================================================
    MOBILE
@@ -1553,12 +2318,13 @@
     width: calc(100% - 20px);
   }
 
-  /* -----------------------------------------
+
+  /* =======================================================
      BREADCRUMB
-  ----------------------------------------- */
+  ======================================================= */
 
   .breadcrumb {
-    min-height: 42px;
+    min-height: 23px !important;
 
     gap: 5px;
   }
@@ -1577,9 +2343,10 @@
     height: 11px;
   }
 
-  /* -----------------------------------------
+
+  /* =======================================================
      HEADINGS
-  ----------------------------------------- */
+  ======================================================= */
 
   .sectionHeading {
     margin-bottom: 11px;
@@ -1601,39 +2368,129 @@
     font-size: 9px;
   }
 
-  /* -----------------------------------------
-     OVERVIEW
-  ----------------------------------------- */
+  .photoCount {
+    font-size: 10px;
+  }
+
+
+  /* =======================================================
+     PROPERTY OVERVIEW
+  ======================================================= */
 
   .gallerySection {
     margin-top: 16px;
     margin-bottom: 22px;
   }
 
-  .buildingImageArea {
-    height: 235px;
+  .propertyOverviewGrid {
+    display: block;
+
+    border-radius: 13px;
   }
 
-  .thumbnailRow {
-    gap: 6px;
+  .propertyGalleryPreview {
+    width: 100%;
+    height: 280px;
 
-    padding: 7px 8px 9px;
+    display: grid;
+
+    grid-template-columns:
+      minmax(0, 2fr)
+      minmax(90px, 1fr);
+
+    grid-template-rows:
+      repeat(2, minmax(0, 1fr));
+
+    gap: 3px;
+
+    border-right: 0;
+
+    border-bottom: 1px solid #e1e8ef;
   }
 
-  .thumbButton {
-    width: 78px;
-    min-width: 78px;
-    height: 50px;
+  .galleryPreviewMain {
+    grid-column: 1;
 
-    flex: 0 0 78px;
+    grid-row: 1 / 3;
   }
+
+  .galleryPreviewTop {
+    grid-column: 2;
+
+    grid-row: 1;
+  }
+
+  .galleryPreviewMiddle {
+    grid-column: 2;
+
+    grid-row: 2;
+  }
+
+  .galleryPreviewBottom {
+    display: none;
+  }
+
+  .galleryPreviewMain img,
+  .galleryPreviewSmall img {
+    /* object-fit: contain; */
+  }
+
+  .propertyGalleryPreview .imageBadge {
+    top: 9px;
+    left: 9px;
+
+    min-height: 28px;
+
+    padding: 0 8px;
+
+    font-size: 8px;
+  }
+
+  .propertyGalleryPreview .imageBadge svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .galleryPreviewPhotoCount {
+    right: 7px;
+    bottom: 7px;
+
+    min-height: 27px;
+
+    padding: 0 8px;
+
+    font-size: 8px;
+  }
+
+  .galleryPreviewMore span {
+    font-size: 16px;
+  }
+
+  .galleryPreviewMore small {
+    font-size: 8px;
+  }
+
+  .galleryPreviewFallback {
+    min-height: 280px;
+  }
+
+
+  /* =======================================================
+     RIGHT PROPERTY DETAILS
+  ======================================================= */
 
   .overviewDetails {
-    padding: 14px;
+    width: 100%;
+
+    height: auto;
+
+    padding: 18px 15px;
+
+    justify-content: flex-start;
   }
 
   .overviewTitle {
-    padding-bottom: 12px;
+    padding-bottom: 13px;
   }
 
   .overviewTitle > span {
@@ -1643,16 +2500,16 @@
   }
 
   .overviewTitle h2 {
-    font-size: 15px;
+    font-size: 16px;
     line-height: 1.25;
   }
 
   .overviewLocation {
-    margin-top: 8px;
+    margin-top: 9px;
 
     gap: 5px;
 
-    font-size: 8px;
+    font-size: 9px;
   }
 
   .overviewLocation svg {
@@ -1660,12 +2517,8 @@
     height: 13px;
   }
 
-  /* -----------------------------------------
-     OVERVIEW STATS - TWO IN ONE ROW
-  ----------------------------------------- */
-
   .overviewStats {
-    margin-top: 12px;
+    padding: 13px 0;
 
     grid-template-columns:
       repeat(2, minmax(0, 1fr));
@@ -1674,7 +2527,7 @@
   }
 
   .overviewStat {
-    min-height: 45px;
+    min-height: 48px;
 
     padding: 6px 7px;
 
@@ -1682,10 +2535,10 @@
   }
 
   .overviewStatIcon {
-    width: 25px;
-    height: 25px;
+    width: 26px;
+    height: 26px;
 
-    flex: 0 0 25px;
+    flex-basis: 26px;
   }
 
   .overviewStatIcon svg {
@@ -1701,14 +2554,8 @@
     font-size: 9px;
   }
 
-  /* -----------------------------------------
-     PROPERTY TYPES
-  ----------------------------------------- */
-
   .overviewTypes {
-    margin-top: 12px;
-
-    padding-top: 11px;
+    padding-top: 12px;
   }
 
   .overviewTypesLabel {
@@ -1722,7 +2569,7 @@
   }
 
   .overviewTypeChip {
-    min-height: 25px;
+    min-height: 26px;
 
     padding: 0 7px;
 
@@ -1734,7 +2581,9 @@
   .overviewTypeChip small {
     min-width: 16px;
 
-    padding: 1px 4px;
+    height: 15px;
+
+    padding: 0 4px;
 
     font-size: 6px;
   }
@@ -1744,12 +2593,10 @@
     height: 10px;
   }
 
-  /* -----------------------------------------
-     AMENITIES
 
-     IMPORTANT:
-     TWO CARDS EACH ROW
-  ----------------------------------------- */
+  /* =======================================================
+     AMENITIES
+  ======================================================= */
 
   .amenitiesSection {
     margin-top: 22px;
@@ -1757,8 +2604,6 @@
   }
 
   .amenitiesGrid {
-    display: grid;
-
     grid-template-columns:
       repeat(2, minmax(0, 1fr));
 
@@ -1766,7 +2611,6 @@
   }
 
   .amenityCard {
-    min-width: 0;
     min-height: 46px;
 
     padding: 6px 7px;
@@ -1791,22 +2635,20 @@
   }
 
   .amenityCard > span {
-    min-width: 0;
-
     font-size: 8px;
+
     line-height: 1.15;
   }
 
   .amenityCheck {
     width: 11px;
     height: 11px;
-
-    margin-left: auto;
   }
 
-  /* -----------------------------------------
+
+  /* =======================================================
      AVAILABLE UNITS
-  ----------------------------------------- */
+  ======================================================= */
 
   .unitsSection {
     margin-top: 25px;
@@ -1838,9 +2680,10 @@
     font-size: 7px;
   }
 
-  /* -----------------------------------------
-     SELECTED TYPE HEADER
-  ----------------------------------------- */
+
+  /* =======================================================
+     SELECTED TYPE
+  ======================================================= */
 
   .selectedTypeHeader {
     min-height: 0;
@@ -1849,8 +2692,7 @@
 
     gap: 9px;
 
-    border-radius:
-      9px 9px 0 0;
+    border-radius: 9px 9px 0 0;
   }
 
   .selectedTypeTitle h3 {
@@ -1904,9 +2746,10 @@
     font-size: 9px;
   }
 
-  /* -----------------------------------------
+
+  /* =======================================================
      VIEW SWITCHER
-  ----------------------------------------- */
+  ======================================================= */
 
   .viewSwitcher {
     width: 100%;
@@ -1915,11 +2758,11 @@
   }
 
   .viewButton {
-    flex: 1;
-
     min-width: 0;
 
     height: 31px;
+
+    flex: 1;
 
     padding: 0 8px;
 
@@ -1930,11 +2773,10 @@
     font-size: 14px;
   }
 
-  /* -----------------------------------------
-     MOBILE TABLE VIEW
 
-     LEFT/RIGHT SCROLL
-  ----------------------------------------- */
+  /* =======================================================
+     MOBILE TABLE
+  ======================================================= */
 
   .unitTableScroll {
     width: 100%;
@@ -1942,14 +2784,14 @@
     overflow-x: auto;
     overflow-y: hidden;
 
-    border-radius:
-      0 0 9px 9px;
+    border-radius: 0 0 9px 9px;
 
     -webkit-overflow-scrolling: touch;
   }
 
   .unitTableContent {
     width: 850px;
+
     min-width: 850px;
   }
 
@@ -1970,7 +2812,7 @@
     padding: 12px;
   }
 
-  .unitMain h4 {
+  .unitImageNameButton {
     font-size: 12px;
   }
 
@@ -1978,9 +2820,10 @@
     font-size: 13px;
   }
 
-  /* -----------------------------------------
-     CARD VIEW - HORIZONTAL SWIPE
-  ----------------------------------------- */
+
+  /* =======================================================
+     MOBILE CARD VIEW
+  ======================================================= */
 
   .unitCardGrid {
     width: 100%;
@@ -1988,8 +2831,6 @@
     padding: 10px 9px 14px;
 
     display: flex;
-
-    grid-template-columns: none;
 
     gap: 9px;
 
@@ -2013,6 +2854,7 @@
 
   .unitCard {
     width: 86%;
+
     min-width: 86%;
 
     flex: 0 0 86%;
@@ -2028,7 +2870,7 @@
     padding-bottom: 9px;
   }
 
-  .unitCardHeader h3 {
+  .unitCardImageNameButton {
     font-size: 12px;
   }
 
@@ -2048,9 +2890,6 @@
 
   .unitCardStats {
     padding: 10px 0;
-
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
 
     gap: 6px;
   }
@@ -2086,314 +2925,12 @@
 
     font-size: 9px;
   }
-}
-/* =========================================================
-   UNIT IMAGE LINK
-========================================================= */
 
-.unitImageNameButton,
-.unitCardImageNameButton {
-  padding: 0;
 
-  background: none;
-  border: none;
+  /* =======================================================
+     UNIT GALLERY MOBILE
+  ======================================================= */
 
-  color: #0876ce;
-
-  font-family: inherit;
-  font-weight: 700;
-
-  text-align: left;
-
-  cursor: pointer;
-}
-
-.unitImageNameButton {
-  font-size: 17px;
-}
-
-.unitCardImageNameButton {
-  font-size: 16px;
-}
-
-.unitImageNameButton:hover,
-.unitCardImageNameButton:hover {
-  text-decoration: underline;
-}
-
-
-/* =========================================================
-   BUILDING GALLERY FALLBACK
-========================================================= */
-
-.galleryFallback {
-  display: flex;
-
-  width: 100%;
-  height: 100%;
-
-  min-height: 320px;
-
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-
-  gap: 10px;
-
-  background: #f1f5f9;
-
-  color: #64748b;
-}
-
-
-/* =========================================================
-   UNIT GALLERY MODAL
-========================================================= */
-
-.unitGalleryBackdrop {
-  position: fixed;
-
-  inset: 0;
-
-  z-index: 9999;
-
-  display: flex;
-
-  align-items: center;
-  justify-content: center;
-
-  padding: 20px;
-
-  background:
-    rgba(
-      7,
-      24,
-      43,
-      0.78
-    );
-}
-
-.unitGalleryModal {
-  position: relative;
-
-  width: min(
-    850px,
-    100%
-  );
-
-  max-height: 100vh;
-
-  overflow-y: auto;
-
-  padding: 22px;
-
-  background: #ffffff;
-
-  border-radius: 14px;
-}
-
-.unitGalleryClose {
-  position: absolute;
-
-  top: 12px;
-  right: 14px;
-
-  z-index: 5;
-
-  width: 38px;
-  height: 38px;
-
-  background: #eef3f8;
-  border: none;
-  border-radius: 50%;
-
-  color: #0b3155;
-
-  font-size: 25px;
-  line-height: 1;
-
-  cursor: pointer;
-}
-
-.unitGalleryHeader {
-  padding-right: 55px;
-
-  margin-bottom: 16px;
-}
-
-.unitGalleryHeader span {
-  color: #64748b;
-
-  font-size: 11px;
-  font-weight: 700;
-
-  text-transform: uppercase;
-}
-
-.unitGalleryHeader h3 {
-  margin:
-    4px 0 2px;
-
-  color: #052f54;
-
-  font-size: 21px;
-}
-
-.unitGalleryHeader small {
-  color: #64748b;
-}
-
-.unitGalleryMain {
-  position: relative;
-
-  overflow: hidden;
-
-  width: 100%;
-
-  background: #edf2f7;
-
-  border-radius: 10px;
-}
-
-.unitGalleryMain img {
-  display: block;
-
-  width: 100%;
-  height: 500px;
-
-  object-fit: contain;
-}
-
-.unitGalleryArrow {
-  position: absolute;
-
-  top: 50%;
-
-  width: 42px;
-  height: 42px;
-
-  transform:
-    translateY(
-      -50%
-    );
-
-  background:
-    rgba(
-      255,
-      255,
-      255,
-      0.92
-    );
-
-  border: none;
-  border-radius: 50%;
-
-  color: #07365e;
-
-  font-size: 28px;
-
-  cursor: pointer;
-}
-
-.unitGalleryArrowLeft {
-  left: 12px;
-}
-
-.unitGalleryArrowRight {
-  right: 12px;
-}
-
-.unitGalleryCounter {
-  position: absolute;
-
-  right: 12px;
-  bottom: 12px;
-
-  padding:
-    5px 9px;
-
-  background:
-    rgba(
-      0,
-      0,
-      0,
-      0.65
-    );
-
-  border-radius: 5px;
-
-  color: #ffffff;
-
-  font-size: 11px;
-}
-
-.unitGalleryThumbs {
-  display: flex;
-
-  gap: 8px;
-
-  margin-top: 12px;
-
-  overflow-x: auto;
-}
-
-.unitGalleryThumb {
-  flex: 0 0 80px;
-
-  height: 62px;
-
-  padding: 2px;
-
-  overflow: hidden;
-
-  background: #ffffff;
-
-  border:
-    2px solid transparent;
-
-  border-radius: 7px;
-
-  cursor: pointer;
-}
-
-.unitGalleryThumbActive {
-  border-color: #0876ce;
-}
-
-.unitGalleryThumb img {
-  width: 100%;
-  height: 100%;
-
-  object-fit: cover;
-
-  border-radius: 4px;
-}
-
-.unitGalleryEmpty {
-  display: flex;
-
-  min-height: 250px;
-
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-
-  gap: 10px;
-
-  background: #f8fafc;
-
-  border:
-    1px dashed #cbd5e1;
-
-  border-radius: 10px;
-
-  color: #64748b;
-}
-
-
-@media (
-  max-width: 650px
-) {
   .unitGalleryBackdrop {
     padding: 10px;
   }
@@ -2410,90 +2947,97 @@
     width: 38px;
     height: 38px;
   }
-}
 
-.thumbnailRow::-webkit-scrollbar {
-  height: 9px;
-}
 
-.thumbnailRow::-webkit-scrollbar-track {
-  background:
-    #e2e8f0;
+  /* =======================================================
+     FULL PROPERTY GALLERY MOBILE
+  ======================================================= */
 
-  border-radius:
-    999px;
-}
-
-.thumbnailRow::-webkit-scrollbar-thumb {
-  background:
-    #94a3b8;
-
-  border:
-    2px solid #e2e8f0;
-
-  border-radius:
-    999px;
-}
-
-.thumbnailRow::-webkit-scrollbar-thumb:hover {
-  background:
-    #64748b;
-}
-
-.thumbButton {
-  flex:
-    0 0 155px;
-
-  width:
-    155px;
-
-  height:
-    88px;
-
-  padding: 0;
-
-  overflow: hidden;
-
-  background:
-    #f1f5f9;
-
-  border:
-    2px solid transparent;
-
-  border-radius:
-    10px;
-
-  cursor:
-    pointer;
-}
-
-.thumbImage {
-  display: block;
-
-  width: 100%;
-  height: 100%;
-
-  object-fit: cover;
-}
-
-@media (
-  max-width: 768px
-) {
-  .thumbnailRow {
-    gap: 8px;
-
-    padding-bottom:
-      10px;
+  .propertyGalleryBackdrop {
+    padding: 0;
   }
 
-  .thumbButton {
-    flex:
-      0 0 105px;
+  .propertyGalleryModal {
+    width: 100%;
+    height: 100dvh;
 
-    width:
-      105px;
+    border-radius: 0;
+  }
 
-    height:
-      68px;
+  .propertyGalleryHeader {
+    min-height: 58px;
+
+    padding: 0 12px;
+  }
+
+  .propertyGalleryCategoryActive {
+    min-height: 35px;
+
+    padding: 0 12px;
+
+    border-width: 1px;
+
+    font-size: 11px;
+  }
+
+  .propertyGalleryClose {
+    width: 36px;
+    height: 36px;
+
+    font-size: 30px;
+  }
+
+  .propertyGalleryTabs {
+    min-height: 48px;
+
+    padding: 0 12px;
+
+    gap: 20px;
+  }
+
+  .propertyGalleryTab,
+  .propertyGalleryTabActive {
+    min-height: 47px;
+
+    padding-bottom: 11px;
+
+    font-size: 11px;
+  }
+
+  .propertyGalleryTabActive::after {
+    height: 3px;
+  }
+
+  .propertyGalleryGrid {
+    padding: 8px;
+
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
+    grid-auto-rows: 150px;
+
+    gap: 8px;
+  }
+
+  .propertyGalleryItem:first-child {
+    grid-column: 1 / -1;
+
+    grid-row: span 2;
+  }
+
+  .propertyGalleryItem {
+    border-radius: 6px;
+  }
+
+  .propertyGalleryNumber {
+    left: 6px;
+    bottom: 6px;
+
+    min-width: 20px;
+    height: 20px;
+
+    padding: 0 5px;
+
+    font-size: 8px;
   }
 }

@@ -31,12 +31,6 @@ const API_URL =
 /* =========================================================
    TYPES
 ========================================================= */
-const TEMP_ADMIN_USERNAME =
-  "admin";
-
-const TEMP_ADMIN_PASSWORD =
-  "Admin@123";
-
 interface UpcomingProject {
   id: string;
 
@@ -92,14 +86,13 @@ interface PortalUser {
 interface Booking {
   id: number;
 
-  propertyId:
-    string;
-  requestType:
-    "BOOKING" |
-    "ENQUIRY";
+  propertyId: string;
 
-  propertyName:
-    string;
+  requestType:
+    | "BOOKING"
+    | "ENQUIRY";
+
+  propertyName: string;
 
   unitReference:
     string | null;
@@ -108,8 +101,11 @@ interface Booking {
     string | null;
 
   name: string;
+
   email: string;
+
   phone: string;
+
   nationality: string;
 
   passportFileName:
@@ -124,8 +120,7 @@ interface Booking {
   hasPassport:
     boolean;
 
-  status:
-    string;
+  status: string;
 
   isAutoRejected:
     boolean;
@@ -133,8 +128,16 @@ interface Booking {
   declineReason:
     string | null;
 
-  createdAt:
-    string;
+  inquiryDepartment:
+    string | null;
+
+  enquiryMessage:
+    string | null;
+
+  actionId:
+    string | null;
+
+  createdAt: string;
 
   updatedAt:
     string | null;
@@ -216,7 +219,7 @@ export default function AdminDashboard() {
   const [
     checkingAuth,
     setCheckingAuth,
-  ] = useState(false);
+  ] = useState(true);
 
   const [
     userRole,
@@ -1304,6 +1307,30 @@ const closeAlert = () => {
     })
   );
 };
+
+
+
+const clearAlert = () => {
+  setAlertConfig((current) => ({
+    ...current,
+
+    open: false,
+
+    title: "",
+
+    message: "",
+
+    loading: false,
+
+    inputRequired: false,
+
+    inputValue: "",
+
+    onConfirm: null,
+  }));
+};
+
+
   const showSuccess =
   (
     message:
@@ -1415,7 +1442,7 @@ const closeAlert = () => {
      TEMP LOGIN
   ======================================================= */
 
- const handleLoginSubmit = (
+ const handleLoginSubmit = async (
   event:
     React.FormEvent
 ) => {
@@ -1428,8 +1455,7 @@ const closeAlert = () => {
     const username =
       usernameInput.trim();
 
-    const password =
-      passwordInput.trim();
+    const password = passwordInput;
 
     if (!username) {
       setLoginError(
@@ -1447,16 +1473,15 @@ const closeAlert = () => {
       return;
     }
 
-    if (
-      username !==
-        TEMP_ADMIN_USERNAME ||
-      password !==
-        TEMP_ADMIN_PASSWORD
-    ) {
-      setLoginError(
-        "Invalid username or password."
-      );
+    const response = await fetch("/api/admin-auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password }),
+    });
+    const result = await response.json();
 
+    if (!response.ok) {
+      setLoginError(result.error || "Unable to log in.");
       return;
     }
 
@@ -1469,7 +1494,7 @@ const closeAlert = () => {
     );
 
     setUserUsername(
-      username
+      result.username
     );
 
     setPasswordInput(
@@ -1479,6 +1504,8 @@ const closeAlert = () => {
     setLoginError(
       ""
     );
+  } catch {
+    setLoginError("Unable to log in. Please try again.");
   } finally {
     setLoggingIn(
       false
@@ -1486,7 +1513,9 @@ const closeAlert = () => {
   }
 };
 
-const handleLogout = () => {
+const handleLogout = async () => {
+  await fetch("/api/admin-auth/logout", { method: "POST" });
+
   setIsAuthenticated(false);
 
   setUserRole("Viewer");
@@ -1502,6 +1531,34 @@ const handleLogout = () => {
   setStatusMessage("");
   setErrorMessage("");
 };
+
+useEffect(() => {
+  let active = true;
+
+  const restoreSession = async () => {
+    try {
+      const response = await fetch("/api/admin-auth/session", {
+        cache: "no-store",
+      });
+      const result = await response.json();
+
+      if (active && response.ok && result.authenticated) {
+        setIsAuthenticated(true);
+        setUserUsername(result.username);
+        setUserRole(result.role);
+      }
+    } catch {
+      // A missing or unavailable session leaves the user on the login screen.
+    } finally {
+      if (active) setCheckingAuth(false);
+    }
+  };
+
+  restoreSession();
+  return () => {
+    active = false;
+  };
+}, []);
 
   /* =======================================================
      FETCH PROPERTIES
@@ -2067,15 +2124,9 @@ const openUpcomingTab = () => {
       event:
         React.FormEvent
     ) => {
-      event.preventDefault();
+     event.preventDefault();
 
-      showSuccess(
-        ""
-      );
-
-      showError(
-        ""
-      );
+clearAlert();
 
       const buildId =
         buildingForm.buildId.trim();
@@ -2256,14 +2307,7 @@ const openUpcomingTab = () => {
       project:
         UpcomingProject
     ) => {
-      showSuccess(
-        ""
-      );
-
-      showError(
-        ""
-      );
-
+         clearAlert();
       setEditingBuildingId(
         project.id
       );
@@ -2882,8 +2926,7 @@ const handleAddNationalityRule = async (
 
   try {
     setSavingNationalityRule(true);
-    showSuccess("");
-    showError("");
+      clearAlert();
 
     const response = await fetch(
       `${API_URL}/api/admin/nationality-rules`,
@@ -3754,7 +3797,7 @@ const formatImageFileSize =
               styles.sidebarTitle
             }
           >
-            Bin Shabib Panel
+            Realestate Admin Portal
           </div>
 
           <div
@@ -3784,7 +3827,7 @@ const formatImageFileSize =
                 : ""
             }`}
           >
-            🏠 Welcome &
+             Welcome &
             stats
           </button>
 
@@ -3802,8 +3845,8 @@ const formatImageFileSize =
                 : ""
             }`}
           >
-            🏢 Active Listings
-            ({properties.length})
+             Active Listings
+            {/* ({properties.length}) */}
           </button>
 
           <button
@@ -3818,11 +3861,12 @@ const formatImageFileSize =
                 : ""
             }`}
           >
-            🏗️ Upcoming Projects (
+             Upcoming Projects 
+             {/* (
             {
               upcomingProjects.length
             }
-            )
+            ) */}
           </button>
 
   <button
@@ -3856,7 +3900,7 @@ const formatImageFileSize =
                 : ""
             }`}
           >
-            🔄 Sync ERP
+             Sync ERP
             Database
           </button> */}
 
@@ -3907,12 +3951,13 @@ const formatImageFileSize =
                     : ""
                 }`}
               >
-                📋 Booking
-                Requests (
+              Booking
+                Requests 
+                {/* (
                 {
                   bookings.length
                 }
-                )
+                ) */}
               </button>
 
              <button
@@ -3930,7 +3975,8 @@ const formatImageFileSize =
       : ""
   }`}
 >
-  🛡️ Nationality Rules ({filteredNationalityRules.length})
+   Nationality Rules 
+   {/* ({filteredNationalityRules.length}) */}
 </button>
             </>
           )}
@@ -6891,6 +6937,47 @@ const formatImageFileSize =
             </strong>
           </div>
         )}
+
+        {String(
+  selectedBooking.requestType
+)
+  .trim()
+  .toUpperCase() ===
+  "ENQUIRY" && (
+  <>
+    <div
+      className={
+        styles.enquiryDetailItem
+      }
+    >
+      <small>
+        Department
+      </small>
+
+      <strong>
+        {selectedBooking.inquiryDepartment ||
+          "-"}
+      </strong>
+    </div>
+
+    <div
+      className={
+        styles.enquiryMessageItem
+      }
+    >
+      <small>
+        Enquiry Message
+      </small>
+
+      <strong>
+        {selectedBooking.enquiryMessage ||
+          "-"}
+      </strong>
+    </div>
+  </>
+)}
+
+        
       </div>
 
       {/* PASSPORT */}
@@ -6909,7 +6996,7 @@ const formatImageFileSize =
             {selectedBooking.hasPassport
               ? selectedBooking.passportFileName ||
                 "Uploaded securely"
-              : "Not available"}
+              : "-"}
           </strong>
         </div>
 
@@ -7010,8 +7097,12 @@ const formatImageFileSize =
           </button>
         </div>
       )}
+
+      
     </div>
   </div>
+
+  
 )}
 
 <CommonAlert
