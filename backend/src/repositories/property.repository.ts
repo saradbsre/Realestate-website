@@ -728,154 +728,206 @@ export async function findAllProperties(
                    BUILDING + UNIT IMAGES
                 ===================================== */
 
-                (
-                    SELECT
-                        IMG.imagePath,
+                /* ===============================================
+   BUILDING + UNIT IMAGE GALLERY
+   Compatible with older SQL Server
+================================================ */
 
-                        IMG.imageType,
+'[' +
+ISNULL(
+    STUFF(
+        (
+            SELECT
+                ',' +
 
-                        IMG.displayOrder,
+                '{' +
 
-                        IMG.imageId
-
-                    FROM
-                    (
-                        /* =============================
-                           BUILDING IMAGES
-                        ============================= */
-
-                        SELECT
-                            BI.imagePath,
-
-                            'BUILDING'
-                                AS imageType,
-
-                            BI.displayOrder,
-
-                            BI.imageId
-
-                        FROM dbo.build_images BI
-
-                        WHERE
-                            LTRIM(
-                                RTRIM(
-                                    BI.buildingId
-                                )
-                            )
-                            =
-                            LTRIM(
-                                RTRIM(
-                                    B.build_id
-                                )
-                            )
-
-                            AND ISNULL(
-                                BI.isActive,
-                                1
-                            ) = 1
-
-
-                        UNION ALL
-
-
-                        /* =============================
-                           UNIT IMAGES
-                        ============================= */
-
-                        SELECT
-                            UI.imagePath,
-
-                            'UNIT'
-                                AS imageType,
-
-                            UI.displayOrder,
-
-                            UI.imageId
-
-                        FROM dbo.unit_images UI
-
-                        INNER JOIN dbo.unit UIMG
-
-                            ON LTRIM(
-                                RTRIM(
-                                    UIMG.build_id
-                                )
-                            )
-                            =
-                            LTRIM(
-                                RTRIM(
-                                    UI.buildingId
-                                )
-                            )
-
-                            AND LTRIM(
-                                RTRIM(
-                                    UIMG.unit_desc
-                                )
-                            )
-                            =
-                            LTRIM(
-                                RTRIM(
-                                    UI.unitDesc
-                                )
-                            )
-
-                        WHERE
-                            LTRIM(
-                                RTRIM(
-                                    UI.buildingId
-                                )
-                            )
-                            =
-                            LTRIM(
-                                RTRIM(
-                                    B.build_id
-                                )
-                            )
-
-                            AND LTRIM(
-                                RTRIM(
-                                    UIMG.Purpose_type
-                                )
-                            )
-                            =
-                            LG.purposeCode
-
-                            AND ISNULL(
-                                UI.isActive,
-                                1
-                            ) = 1
-
-                            AND ISNULL(
-                                UIMG.IsActive,
-                                1
-                            ) = 1
-
-                            AND ISNULL(
-                                UIMG.unit_vacant,
-                                'N'
-                            ) = 'Y'
-
-                    ) IMG
-
-                    ORDER BY
-
-                        CASE
-                            WHEN
-                                IMG.imageType =
-                                'BUILDING'
-                            THEN 0
-
-                            ELSE 1
-                        END,
-
-                        IMG.displayOrder ASC,
-
-                        IMG.imageId ASC
-
-                    FOR JSON PATH
+                '"imagePath":"' +
+                REPLACE(
+                    REPLACE(
+                        ISNULL(
+                            IMG.imagePath,
+                            ''
+                        ),
+                        '\',
+                        '\\'
+                    ),
+                    '"',
+                    '\"'
                 )
-                    AS imagePaths,
+                + '",' +
+
+                '"imageType":"' +
+                IMG.imageType
+                + '",' +
+
+                '"displayOrder":' +
+                CAST(
+                    ISNULL(
+                        IMG.displayOrder,
+                        0
+                    )
+                    AS NVARCHAR(20)
+                )
+                + ',' +
+
+                '"imageId":' +
+                CAST(
+                    IMG.imageId
+                    AS NVARCHAR(20)
+                )
+
+                + '}'
+
+            FROM
+            (
+                /* =====================================
+                   BUILDING IMAGES
+                ===================================== */
+
+                SELECT
+                    BI.imagePath,
+
+                    'BUILDING'
+                        AS imageType,
+
+                    BI.displayOrder,
+
+                    BI.imageId
+
+                FROM dbo.build_images BI
+
+                WHERE
+                    LTRIM(
+                        RTRIM(
+                            BI.buildingId
+                        )
+                    )
+                    =
+                    LTRIM(
+                        RTRIM(
+                            B.build_id
+                        )
+                    )
+
+                    AND ISNULL(
+                        BI.isActive,
+                        1
+                    ) = 1
+
+
+                UNION ALL
+
+
+                /* =====================================
+                   UNIT IMAGES
+                ===================================== */
+
+                SELECT
+                    UI.imagePath,
+
+                    'UNIT'
+                        AS imageType,
+
+                    UI.displayOrder,
+
+                    UI.imageId
+
+                FROM dbo.unit_images UI
+
+                INNER JOIN dbo.unit UIMG
+
+                    ON LTRIM(
+                        RTRIM(
+                            UIMG.build_id
+                        )
+                    )
+                    =
+                    LTRIM(
+                        RTRIM(
+                            UI.buildingId
+                        )
+                    )
+
+                    AND LTRIM(
+                        RTRIM(
+                            UIMG.unit_desc
+                        )
+                    )
+                    =
+                    LTRIM(
+                        RTRIM(
+                            UI.unitDesc
+                        )
+                    )
+
+                WHERE
+                    LTRIM(
+                        RTRIM(
+                            UI.buildingId
+                        )
+                    )
+                    =
+                    LTRIM(
+                        RTRIM(
+                            B.build_id
+                        )
+                    )
+
+                    AND LTRIM(
+                        RTRIM(
+                            UIMG.Purpose_type
+                        )
+                    )
+                    =
+                    LG.purposeCode
+
+                    AND ISNULL(
+                        UI.isActive,
+                        1
+                    ) = 1
+
+                    AND ISNULL(
+                        UIMG.IsActive,
+                        1
+                    ) = 1
+
+                    AND ISNULL(
+                        UIMG.unit_vacant,
+                        'N'
+                    ) = 'Y'
+
+            ) IMG
+
+            ORDER BY
+
+                CASE
+                    WHEN
+                        IMG.imageType =
+                        'BUILDING'
+                    THEN 0
+
+                    ELSE 1
+                END,
+
+                IMG.displayOrder ASC,
+
+                IMG.imageId ASC
+
+            FOR XML PATH(''),
+                TYPE
+        ).value(
+            '.',
+            'NVARCHAR(MAX)'
+        ),
+        1,
+        1,
+        ''
+    ),
+    ''
+)
++ ']'
+    AS imagePaths,
 
 
                 /* =====================================
@@ -1902,61 +1954,101 @@ export async function findFeaturedProperties(
                     AS primaryImagePath,
 
 
-                /* =====================================
-                   BUILDING IMAGE GALLERY
-                ===================================== */
 
-                (
-                    SELECT
-                        BI.imagePath,
+'[' +
+ISNULL(
+    STUFF(
+        (
+            SELECT
+                ',' +
 
-                        'BUILDING'
-                            AS imageType,
+                '{' +
 
-                        BI.displayOrder,
-
-                        BI.imageId
-
-                    FROM dbo.build_images BI
-
-                    WHERE
-                        LTRIM(
-                            RTRIM(
-                                BI.buildingId
-                            )
-                        )
-                        =
-                        LTRIM(
-                            RTRIM(
-                                B.build_id
-                            )
-                        )
-
-                        AND ISNULL(
-                            BI.isActive,
-                            1
-                        ) = 1
-
-                    ORDER BY
-
-                        CASE
-                            WHEN ISNULL(
-                                BI.isPrimary,
-                                0
-                            ) = 1
-
-                            THEN 0
-
-                            ELSE 1
-                        END,
-
-                        BI.displayOrder ASC,
-
-                        BI.imageId ASC
-
-                    FOR JSON PATH
+                '"imagePath":"' +
+                REPLACE(
+                    REPLACE(
+                        ISNULL(
+                            BI.imagePath,
+                            ''
+                        ),
+                        '\',
+                        '\\'
+                    ),
+                    '"',
+                    '\"'
                 )
-                    AS imagePaths,
+                + '",' +
+
+                '"imageType":"BUILDING",' +
+
+                '"displayOrder":' +
+                CAST(
+                    ISNULL(
+                        BI.displayOrder,
+                        0
+                    )
+                    AS NVARCHAR(20)
+                )
+                + ',' +
+
+                '"imageId":' +
+                CAST(
+                    BI.imageId
+                    AS NVARCHAR(20)
+                )
+
+                + '}'
+
+            FROM dbo.build_images BI
+
+            WHERE
+                LTRIM(
+                    RTRIM(
+                        BI.buildingId
+                    )
+                )
+                =
+                LTRIM(
+                    RTRIM(
+                        B.build_id
+                    )
+                )
+
+                AND ISNULL(
+                    BI.isActive,
+                    1
+                ) = 1
+
+            ORDER BY
+
+                CASE
+                    WHEN ISNULL(
+                        BI.isPrimary,
+                        0
+                    ) = 1
+                    THEN 0
+
+                    ELSE 1
+                END,
+
+                BI.displayOrder ASC,
+
+                BI.imageId ASC
+
+            FOR XML PATH(''),
+                TYPE
+        ).value(
+            '.',
+            'NVARCHAR(MAX)'
+        ),
+        1,
+        1,
+        ''
+    ),
+    ''
+)
++ ']'
+    AS imagePaths,
 
 
                 MAX(
