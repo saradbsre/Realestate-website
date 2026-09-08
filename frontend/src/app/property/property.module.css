@@ -2163,7 +2163,7 @@
 
   display: block;
 
-  object-fit: cover;
+  object-fit:  contain;
   object-position: center;
 
   background: #edf1f5;
