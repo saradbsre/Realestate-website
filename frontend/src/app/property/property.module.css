@@ -4,12 +4,15 @@
 
 .page {
   min-height: 100vh;
+
   background: #f5f7fa;
+
   color: #102f57;
 }
 
 .container {
   width: min(1280px, calc(100% - 40px));
+
   margin: 0 auto;
 }
 
@@ -20,16 +23,19 @@
 
 .statePage {
   min-height: 75vh;
+
   padding: 40px 20px;
 
   display: flex;
   flex-direction: column;
+
   align-items: center;
   justify-content: center;
 
   gap: 12px;
 
   background: #f5f7fa;
+
   color: #12375d;
 
   text-align: center;
@@ -78,13 +84,19 @@
 
 .breadcrumb {
   min-height: 23px;
+
   display: flex;
   align-items: center;
+
   gap: 7px;
+
   overflow-x: auto;
+
   white-space: nowrap;
+
   scrollbar-width: none;
-  padding:  10px 0px;
+
+  padding: 10px 0;
 }
 
 .breadcrumb::-webkit-scrollbar {
@@ -139,6 +151,7 @@
   font-weight: 750;
 
   white-space: nowrap;
+
   text-overflow: ellipsis;
 }
 
@@ -185,11 +198,12 @@
 
 
 /* =========================================================
-   PROPERTY OVERVIEW SECTION
+   PROPERTY OVERVIEW
 ========================================================= */
 
 .gallerySection {
   margin-top: 26px;
+
   margin-bottom: 34px;
 }
 
@@ -278,7 +292,7 @@
 
 
 /* =========================================================
-   LARGE MAIN IMAGE
+   LARGE IMAGE
 ========================================================= */
 
 .galleryPreviewMain {
@@ -303,20 +317,13 @@
   cursor: pointer;
 }
 
-
-/*
-   IMPORTANT:
-   contain = show complete uploaded image.
-   Nothing gets cropped.
-*/
-
 .galleryPreviewMain img {
   width: 100%;
   height: 100%;
 
   display: block;
 
-  /* object-fit: contain; */
+  object-fit: cover;
   object-position: center;
 
   background: #eef2f6;
@@ -330,7 +337,7 @@
 
 
 /* =========================================================
-   SMALL COLLAGE IMAGES
+   SMALL IMAGES
 ========================================================= */
 
 .galleryPreviewSmall {
@@ -373,7 +380,7 @@
 
   display: block;
 
-  /* object-fit: contain; */
+  object-fit: cover;
   object-position: center;
 
   background: #eef2f6;
@@ -425,7 +432,7 @@
 
 
 /* =========================================================
-   EMPTY IMAGE SLOT
+   EMPTY IMAGE
 ========================================================= */
 
 .galleryPreviewEmpty {
@@ -482,7 +489,7 @@
 
 
 /* =========================================================
-   COLLAGE PHOTO COUNT
+   PHOTO COUNT
 ========================================================= */
 
 .galleryPreviewPhotoCount {
@@ -547,7 +554,7 @@
 
 
 /* =========================================================
-   RIGHT SIDE PROPERTY DETAILS
+   PROPERTY DETAILS
 ========================================================= */
 
 .overviewDetails {
@@ -559,6 +566,7 @@
 
   display: flex;
   flex-direction: column;
+
   justify-content: center;
 
   box-sizing: border-box;
@@ -605,7 +613,7 @@
 
 
 /* =========================================================
-   PROPERTY LOCATION
+   LOCATION
 ========================================================= */
 
 .overviewLocation {
@@ -650,7 +658,6 @@
 
 .overviewStat {
   min-width: 0;
-
   min-height: 62px;
 
   padding: 9px 10px;
@@ -710,7 +717,7 @@
 
 
 /* =========================================================
-   AVAILABLE PROPERTY TYPES
+   PROPERTY TYPES
 ========================================================= */
 
 .overviewTypes {
@@ -810,6 +817,7 @@
 
 .amenitiesSection {
   margin-top: 30px;
+
   margin-bottom: 36px;
 }
 
@@ -900,6 +908,7 @@
   width: 100%;
 
   margin-bottom: 18px;
+
   padding-bottom: 4px;
 
   display: flex;
@@ -979,7 +988,7 @@
 
 
 /* =========================================================
-   SELECTED TYPE HEADER
+   SELECTED TYPE
 ========================================================= */
 
 .selectedTypeHeader {
@@ -1147,6 +1156,7 @@
   background: #ffffff;
 
   border: 1px solid #dce5ef;
+
   border-top: 0;
 
   border-radius: 0 0 13px 13px;
@@ -1275,6 +1285,7 @@
 
 .reference {
   margin-top: 5px;
+
   margin-bottom: 10px;
 
   color: #7c8998;
@@ -1400,7 +1411,7 @@
 
 
 /* =========================================================
-   UNIT ACTION
+   ACTION
 ========================================================= */
 
 .unitAction {
@@ -1453,7 +1464,7 @@
 
 
 /* =========================================================
-   UNIT CARD VIEW
+   UNIT CARDS
 ========================================================= */
 
 .unitCardGrid {
@@ -1469,6 +1480,7 @@
   background: #f4f7fa;
 
   border: 1px solid #dce5ef;
+
   border-top: 0;
 
   border-radius: 0 0 13px 13px;
@@ -1583,6 +1595,7 @@
   font-weight: 900;
 
   white-space: nowrap;
+
   text-overflow: ellipsis;
 }
 
@@ -1644,7 +1657,7 @@
 
 
 /* =========================================================
-   UNIT IMAGE MODAL
+   UNIT GALLERY
 ========================================================= */
 
 .unitGalleryBackdrop {
@@ -1691,6 +1704,7 @@
   height: 38px;
 
   border: 0;
+
   border-radius: 50%;
 
   background: #eef3f8;
@@ -1698,6 +1712,7 @@
   color: #0b3155;
 
   font-size: 25px;
+
   line-height: 1;
 
   cursor: pointer;
@@ -1759,6 +1774,7 @@
   transform: translateY(-50%);
 
   border: 0;
+
   border-radius: 50%;
 
   background: rgba(255, 255, 255, 0.92);
@@ -1816,6 +1832,7 @@
   overflow: hidden;
 
   border: 2px solid transparent;
+
   border-radius: 7px;
 
   background: #ffffff;
@@ -1860,7 +1877,7 @@
 
 
 /* =========================================================
-   FULL PROPERTY GALLERY BACKDROP
+   FULL PROPERTY GALLERY
 ========================================================= */
 
 .propertyGalleryBackdrop {
@@ -1881,11 +1898,6 @@
   backdrop-filter: blur(2px);
 }
 
-
-/* =========================================================
-   FULL PROPERTY GALLERY MODAL
-========================================================= */
-
 .propertyGalleryModal {
   width: min(1700px, 100%);
 
@@ -1904,11 +1916,6 @@
     0 28px 90px
     rgba(0, 0, 0, 0.4);
 }
-
-
-/* =========================================================
-   FULL GALLERY HEADER
-========================================================= */
 
 .propertyGalleryHeader {
   min-height: 72px;
@@ -1971,6 +1978,7 @@
   justify-content: center;
 
   border: 0;
+
   border-radius: 50%;
 
   background: transparent;
@@ -1981,6 +1989,7 @@
 
   font-size: 36px;
   font-weight: 300;
+
   line-height: 1;
 
   cursor: pointer;
@@ -2105,7 +2114,7 @@
 
 
 /* =========================================================
-   FULL GALLERY ITEM
+   GALLERY ITEM
 ========================================================= */
 
 .propertyGalleryItem {
@@ -2132,6 +2141,7 @@
 
 .propertyGalleryItem:first-child {
   grid-column: span 2;
+
   grid-row: span 2;
 }
 
@@ -2153,7 +2163,7 @@
 
   display: block;
 
-  /* object-fit: contain; */
+  object-fit: cover;
   object-position: center;
 
   background: #edf1f5;
@@ -2306,7 +2316,7 @@
 
 
 /* =========================================================
-   MOBILE
+   MOBILE - AGODA STYLE
 ========================================================= */
 
 @media (max-width: 650px) {
@@ -2324,9 +2334,11 @@
   ======================================================= */
 
   .breadcrumb {
-    min-height: 23px !important;
+    min-height: 23px;
 
     gap: 5px;
+
+    padding: 9px 0;
   }
 
   .breadcrumbLink,
@@ -2354,6 +2366,8 @@
 
   .sectionHeadingRow {
     margin-bottom: 10px;
+
+    align-items: center;
   }
 
   .sectionHeading h2,
@@ -2379,51 +2393,79 @@
 
   .gallerySection {
     margin-top: 16px;
+
     margin-bottom: 22px;
   }
 
   .propertyOverviewGrid {
     display: block;
 
-    border-radius: 13px;
+    overflow: hidden;
+
+    background: #ffffff;
+
+    border-radius: 14px;
+
+    box-shadow:
+      0 5px 18px
+      rgba(10, 40, 70, 0.07);
   }
 
+
+  /* =======================================================
+     AGODA STYLE MOBILE COLLAGE
+  ======================================================= */
+
   .propertyGalleryPreview {
+    position: relative;
+
     width: 100%;
-    height: 280px;
+    height: 260px;
 
     display: grid;
 
     grid-template-columns:
-      minmax(0, 2fr)
-      minmax(90px, 1fr);
+      minmax(0, 68%)
+      minmax(0, 32%);
 
     grid-template-rows:
       repeat(2, minmax(0, 1fr));
 
     gap: 3px;
 
+    overflow: hidden;
+
+    background: #e9eef3;
+
     border-right: 0;
 
     border-bottom: 1px solid #e1e8ef;
+
+    border-radius: 14px 14px 0 0;
   }
 
   .galleryPreviewMain {
     grid-column: 1;
 
     grid-row: 1 / 3;
+
+    border-radius: 0;
   }
 
   .galleryPreviewTop {
     grid-column: 2;
 
     grid-row: 1;
+
+    border-radius: 0;
   }
 
   .galleryPreviewMiddle {
     grid-column: 2;
 
     grid-row: 2;
+
+    border-radius: 0;
   }
 
   .galleryPreviewBottom {
@@ -2432,18 +2474,37 @@
 
   .galleryPreviewMain img,
   .galleryPreviewSmall img {
-    /* object-fit: contain; */
+    width: 100%;
+    height: 100%;
+
+    display: block;
+
+    object-fit: cover;
+    object-position: center;
   }
 
+
+  /* =======================================================
+     PROPERTY BADGE
+  ======================================================= */
+
   .propertyGalleryPreview .imageBadge {
-    top: 9px;
-    left: 9px;
+    top: 10px;
+    left: 10px;
 
-    min-height: 28px;
+    min-height: 29px;
 
-    padding: 0 8px;
+    padding: 0 10px;
+
+    gap: 5px;
+
+    border-radius: 7px;
 
     font-size: 8px;
+
+    box-shadow:
+      0 3px 9px
+      rgba(0, 0, 0, 0.15);
   }
 
   .propertyGalleryPreview .imageBadge svg {
@@ -2451,15 +2512,41 @@
     height: 12px;
   }
 
+
+  /* =======================================================
+     PHOTO COUNT
+  ======================================================= */
+
   .galleryPreviewPhotoCount {
-    right: 7px;
-    bottom: 7px;
+    right: 10px;
+    bottom: 10px;
 
-    min-height: 27px;
+    min-height: 30px;
 
-    padding: 0 8px;
+    padding: 0 10px;
 
-    font-size: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border:
+      1px solid
+      rgba(255, 255, 255, 0.2);
+
+    border-radius: 999px;
+
+    background: rgba(10, 25, 43, 0.82);
+
+    color: #ffffff;
+
+    font-size: 9px;
+    font-weight: 800;
+
+    backdrop-filter: blur(4px);
+
+    box-shadow:
+      0 2px 8px
+      rgba(0, 0, 0, 0.22);
   }
 
   .galleryPreviewMore span {
@@ -2471,12 +2558,12 @@
   }
 
   .galleryPreviewFallback {
-    min-height: 280px;
+    min-height: 260px;
   }
 
 
   /* =======================================================
-     RIGHT PROPERTY DETAILS
+     PROPERTY DETAILS
   ======================================================= */
 
   .overviewDetails {
@@ -2500,8 +2587,9 @@
   }
 
   .overviewTitle h2 {
-    font-size: 16px;
-    line-height: 1.25;
+    font-size: 17px;
+
+    line-height: 1.28;
   }
 
   .overviewLocation {
@@ -2510,12 +2598,19 @@
     gap: 5px;
 
     font-size: 9px;
+
+    line-height: 1.4;
   }
 
   .overviewLocation svg {
     width: 13px;
     height: 13px;
   }
+
+
+  /* =======================================================
+     STATS
+  ======================================================= */
 
   .overviewStats {
     padding: 13px 0;
@@ -2554,34 +2649,41 @@
     font-size: 9px;
   }
 
+
+  /* =======================================================
+     PROPERTY TYPES
+  ======================================================= */
+
   .overviewTypes {
     padding-top: 12px;
   }
 
   .overviewTypesLabel {
-    margin-bottom: 6px;
+    margin-bottom: 7px;
 
     font-size: 7px;
   }
 
   .overviewTypeList {
-    gap: 5px;
+    gap: 6px;
   }
 
   .overviewTypeChip {
-    min-height: 26px;
+    min-height: 29px;
 
-    padding: 0 7px;
+    padding: 0 8px;
 
-    gap: 4px;
+    gap: 5px;
 
-    font-size: 7px;
+    border-radius: 7px;
+
+    font-size: 7.5px;
   }
 
   .overviewTypeChip small {
-    min-width: 16px;
+    min-width: 17px;
 
-    height: 15px;
+    height: 16px;
 
     padding: 0 4px;
 
@@ -2600,6 +2702,7 @@
 
   .amenitiesSection {
     margin-top: 22px;
+
     margin-bottom: 24px;
   }
 
@@ -2748,7 +2851,7 @@
 
 
   /* =======================================================
-     VIEW SWITCHER
+     VIEW SWITCH
   ======================================================= */
 
   .viewSwitcher {
@@ -2928,7 +3031,7 @@
 
 
   /* =======================================================
-     UNIT GALLERY MOBILE
+     UNIT GALLERY
   ======================================================= */
 
   .unitGalleryBackdrop {
@@ -2950,7 +3053,7 @@
 
 
   /* =======================================================
-     FULL PROPERTY GALLERY MOBILE
+     FULL PROPERTY GALLERY
   ======================================================= */
 
   .propertyGalleryBackdrop {
@@ -3039,5 +3142,36 @@
     padding: 0 5px;
 
     font-size: 8px;
+  }
+}
+
+
+/* =========================================================
+   VERY SMALL MOBILE
+========================================================= */
+
+@media (max-width: 390px) {
+  .container {
+    width: calc(100% - 14px);
+  }
+
+  .propertyGalleryPreview {
+    height: 235px;
+  }
+
+  .galleryPreviewFallback {
+    min-height: 235px;
+  }
+
+  .overviewTitle h2 {
+    font-size: 16px;
+  }
+
+  .overviewDetails {
+    padding: 16px 13px;
+  }
+
+  .overviewTypeChip {
+    font-size: 7px;
   }
 }

@@ -26,13 +26,19 @@
 
 .breadcrumb {
   min-height: 23px;
+
   display: flex;
   align-items: center;
+
   gap: 7px;
+
   overflow-x: auto;
+
   white-space: nowrap;
+
   scrollbar-width: none;
-  padding:  10px 0px;
+
+  padding: 10px 0;
 }
 
 .breadcrumb::-webkit-scrollbar {
@@ -41,12 +47,17 @@
 
 .breadcrumbLink {
   flex-shrink: 0;
+
   display: inline-flex;
   align-items: center;
+
   gap: 5px;
+
   color: #0872d5;
+
   font-size: 12px;
   font-weight: 700;
+
   text-decoration: none;
 }
 
@@ -62,14 +73,18 @@
 
 .breadcrumbText {
   flex-shrink: 0;
+
   color: #0872d5;
+
   font-size: 12px;
   font-weight: 700;
 }
 
 .breadcrumbCurrent {
   flex-shrink: 0;
+
   color: #263c53;
+
   font-size: 12px;
   font-weight: 750;
 }
@@ -81,63 +96,86 @@
 
 .resultsHero {
   width: 100%;
+
   background: #ffffff;
+
   border-bottom: 1px solid #e3e9ef;
 }
 
 .resultsHeroInner {
   width: min(1280px, calc(100% - 40px));
+
   margin: 0 auto;
+
   padding: 10px 0;
+
   display: flex;
   align-items: center;
   justify-content: space-between;
+
   gap: 30px;
 }
 
 .resultsEyebrow {
   display: block;
+
   margin-bottom: 5px;
+
   color: #0872d5;
+
   font-size: 10px;
   font-weight: 850;
+
   letter-spacing: 0.8px;
 }
 
 .resultsHero h1 {
   margin: 0;
+
   color: #102f57;
+
   font-size: 20px;
   line-height: 1.2;
+
   font-weight: 900;
 }
 
 .resultsHero p {
   margin: 6px 0 0;
+
   color: #75869a;
+
   font-size: 12px;
   line-height: 1.5;
 }
 
 .resultsHeroCount {
   min-width: 118px;
+
   padding: 7px 11px;
+
   border: 1px solid #dce6ef;
+
   border-radius: 11px;
+
   background: #f7fafd;
+
   display: flex;
   flex-direction: column;
 }
 
 .resultsHeroCount strong {
   color: #0872d5;
+
   font-size: 20px;
   font-weight: 900;
 }
 
 .resultsHeroCount span {
   margin-top: 5px;
+
   color: #75869a;
+
   font-size: 9px;
   font-weight: 750;
 }
@@ -149,980 +187,12 @@
 
 .container {
   width: min(1280px, calc(100% - 40px));
+
   margin: 0 auto;
+
   padding: 10px 0 60px;
 }
 
-
-/* =========================================================
-   RESULTS LAYOUT
-========================================================= */
-
-.resultsLayout {
-  display: grid;
-  grid-template-columns: 250px minmax(0, 1fr);
-  gap: 22px;
-  align-items: start;
-}
-
-
-/* =========================================================
-   MOBILE FILTER BUTTON
-========================================================= */
-
-.mobileFilterButton {
-  display: none;
-  width: 100%;
-  min-height: 44px;
-  margin-bottom: 14px;
-  border: 1px solid #0872d5;
-  border-radius: 8px;
-  background: #ffffff;
-  color: #0863b5;
-  font-size: 13px;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-
-/* =========================================================
-   FILTER SIDEBAR
-========================================================= */
-
-.filterSidebar {
-  position: sticky;
-  top: 125px;
-  align-self: start;
-  max-height: calc(100vh - 145px);
-  overflow-y: auto;
-  overflow-x: hidden;
-  background: #ffffff;
-  border: 1px solid #dce5ee;
-  border-radius: 12px;
-}
-
-.filterSidebar::-webkit-scrollbar {
-  width: 5px;
-}
-
-.filterSidebar::-webkit-scrollbar-thumb {
-  background: #c5d2df;
-  border-radius: 10px;
-}
-
-
-/* =========================================================
-   FILTER HEADER
-========================================================= */
-
-.filterHeader {
-  min-height: 54px;
-  padding: 0 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  border-bottom: 1px solid #e3e9ef;
-}
-
-.filterHeader h2 {
-  margin: 0;
-  color: #172e4b;
-  font-size: 17px;
-  font-weight: 850;
-}
-
-.clearFilters {
-  padding: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  border: none;
-  background: transparent;
-  color: #0872d5;
-  font-size: 11px;
-  font-weight: 750;
-  cursor: pointer;
-}
-
-
-/* =========================================================
-   FILTER SECTIONS
-========================================================= */
-
-.filterSection {
-  padding: 16px;
-  border-bottom: 1px solid #e7ebf0;
-}
-
-.filterSection:last-child {
-  border-bottom: none;
-}
-
-.filterSection h3 {
-  margin: 0 0 12px;
-  color: #172e4b;
-  font-size: 13px;
-  font-weight: 850;
-}
-
-.filterLoading {
-  padding: 8px 0;
-  color: #7a8998;
-  font-size: 11px;
-}
-
-
-/* =========================================================
-   LOCATION FILTER
-========================================================= */
-
-.locationFilterWrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.locationFilterWrapper > svg {
-  position: absolute;
-  left: 11px;
-  z-index: 2;
-  color: #49647e;
-  pointer-events: none;
-}
-
-.locationFilter {
-  width: 100%;
-  height: 42px;
-  padding: 0 11px 0 35px;
-  border: 1px solid #cad5df;
-  border-radius: 7px;
-  outline: none;
-  background: #ffffff;
-  color: #1b334f;
-  font-size: 11px;
-}
-
-.locationFilter:focus {
-  border-color: #0872d5;
-}
-
-
-/* =========================================================
-   CATEGORY
-========================================================= */
-
-.propertyCategoryGroup {
-  margin-top: 9px;
-}
-
-.propertyCategoryTitle {
-  margin: 8px 0 5px;
-  color: #26405d;
-  font-size: 12px;
-  font-weight: 800;
-}
-
-
-/* =========================================================
-   CHECK / RADIO
-========================================================= */
-
-.checkOption {
-  position: relative;
-  min-height: 33px;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  cursor: pointer;
-}
-
-.checkOption input {
-  position: absolute;
-  opacity: 0;
-}
-
-.fakeCheckbox {
-  position: relative;
-  width: 18px;
-  height: 18px;
-  flex: 0 0 18px;
-  border: 1.5px solid #afbfce;
-  border-radius: 5px;
-  background: #ffffff;
-}
-
-.checkOption input:checked + .fakeCheckbox {
-  background: #0872d5;
-  border-color: #0872d5;
-}
-
-.checkOption input:checked + .fakeCheckbox::after {
-  content: "";
-  position: absolute;
-  left: 5px;
-  top: 1px;
-  width: 5px;
-  height: 10px;
-  border: solid #ffffff;
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
-}
-
-.checkLabel {
-  color: #40556d;
-  font-size: 11px;
-}
-
-
-/* =========================================================
-   RESULTS COLUMN
-========================================================= */
-
-.resultsColumn {
-  min-width: 0;
-}
-
-.list {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-
-/* =========================================================
-   DESKTOP PROPERTY CARD
-========================================================= */
-
-.propertyCard {
-  height: 224px;
-  display: grid;
-  grid-template-columns:
-    310px
-    minmax(0, 1fr)
-    220px;
-  overflow: hidden;
-  background: #ffffff;
-  border: 1px solid #dce5ee;
-  border-radius: 16px;
-  box-shadow: 0 5px 18px rgba(8, 40, 72, 0.05);
-}
-
-.imageArea,
-.listingGallery,
-.listingGalleryImage,
-.fallbackImage,
-.propertyMainInfo,
-.propertyPricePanel {
-  height: 224px;
-}
-
-
-/* =========================================================
-   IMAGE
-========================================================= */
-
-.imageArea {
-  position: relative;
-  width: 100%;
-  overflow: hidden;
-  background: #eaf1f7;
-}
-
-.listingGallery {
-  position: relative;
-  width: 100%;
-  overflow: hidden;
-}
-
-.listingGalleryImage {
-  width: 100%;
-  display: block;
-  object-fit: cover;
-  object-position: center;
-}
-
-.fallbackImage {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #edf3f8;
-  color: #7892aa;
-}
-
-
-/* =========================================================
-   GALLERY ARROWS
-========================================================= */
-
-.listingGalleryArrow {
-  position: absolute;
-  top: 50%;
-  z-index: 10;
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  transform: translateY(-50%);
-  border: none;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.96);
-  color: #123a67;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.16);
-}
-
-.listingGalleryArrow svg {
-  width: 15px;
-  height: 15px;
-}
-
-.listingGalleryPrevious {
-  left: 8px;
-}
-
-.listingGalleryNext {
-  right: 8px;
-}
-
-.listingGalleryCounter {
-  position: absolute;
-  left: 8px;
-  bottom: 8px;
-  z-index: 5;
-  padding: 5px 8px;
-  border-radius: 999px;
-  background: rgba(15, 23, 42, 0.78);
-  color: #ffffff;
-  font-size: 10px;
-  font-weight: 800;
-}
-
-.listingImageType {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  z-index: 5;
-  padding: 4px 7px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.94);
-  color: #31516f;
-  font-size: 8px;
-  font-weight: 800;
-}
-
-
-/* =========================================================
-   PROPERTY INFO
-========================================================= */
-
-.propertyMainInfo {
-  min-width: 0;
-  padding: 18px 22px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  box-sizing: border-box;
-}
-
-.propertyTopRow {
-  margin-bottom: 7px;
-}
-
-.propertyTypeBadge {
-  padding: 5px 10px;
-  display: inline-flex;
-  border: 1px solid #d5e4f3;
-  border-radius: 999px;
-  background: #eef6ff;
-  color: #0d548f;
-  font-size: 10px;
-  font-weight: 800;
-}
-
-.unitTitleLink {
-  text-decoration: none;
-}
-
-.unitTypeHeading {
-  margin: 0;
-  color: #123a67;
-  font-size: 21px;
-  line-height: 1.15;
-  font-weight: 900;
-}
-
-.buildingNameSubtle {
-  margin: 5px 0 10px;
-  color: #71849b;
-  font-size: 10px;
-  font-weight: 700;
-  line-height: 1.35;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.propertyLocationRow {
-  display: flex;
-  align-items: flex-start;
-  gap: 7px;
-  margin-bottom: 12px;
-  color: #0870ce;
-  font-size: 10px;
-  font-weight: 750;
-}
-
-.propertyMetaStack {
-  padding-left: 11px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  border-left: 2px solid #e6edf4;
-}
-
-.propertyMetaItem {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  color: #233d5d;
-  font-size: 10px;
-  font-weight: 700;
-}
-
-.typeVacancy {
-  width: fit-content;
-  margin-top: 10px;
-  padding: 5px 8px;
-  border-radius: 7px;
-  background: #edf8f1;
-  color: #218247;
-  font-size: 9px;
-  font-weight: 750;
-}
-
-
-/* =========================================================
-   PRICE PANEL
-========================================================= */
-
-.propertyPricePanel {
-  min-width: 0;
-  padding: 18px;
-  border-left: 1px solid #e6ecf2;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-}
-
-.startingFromText {
-  color: #8a9ab0;
-  font-size: 9px;
-}
-
-.propertyPriceValue {
-  margin-top: 4px;
-  color: #0b2957;
-  font-size: 19px;
-  font-weight: 900;
-}
-
-.propertyPricePeriod {
-  margin-top: 2px;
-  color: #8091a6;
-  font-size: 9px;
-}
-
-.viewPropertyButton {
-  width: 100%;
-  min-height: 40px;
-  margin-top: 14px;
-  padding: 0 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  border-radius: 8px;
-  background: #0875dc;
-  color: #ffffff;
-  font-size: 10px;
-  font-weight: 800;
-  text-decoration: none;
-}
-
-
-/* =========================================================
-   LOADING / EMPTY
-========================================================= */
-
-.loading,
-.error,
-.empty {
-  min-height: 300px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.empty {
-  flex-direction: column;
-  background: #ffffff;
-  border: 1px solid #e1e7ee;
-  border-radius: 12px;
-}
-
-
-/* =========================================================
-   PAGINATION
-========================================================= */
-
-.pagination {
-  margin-top: 28px;
-  display: flex;
-  justify-content: center;
-  gap: 6px;
-}
-
-.pageNumber,
-.pageArrow {
-  min-width: 34px;
-  height: 34px;
-  border: 1px solid #d7e0e9;
-  border-radius: 7px;
-  background: #ffffff;
-  color: #264768;
-}
-
-.pageNumberActive {
-  background: #0872d5;
-  color: #ffffff;
-}
-
-
-/* =========================================================
-   TABLET
-========================================================= */
-
-@media (max-width: 850px) {
-  .resultsLayout {
-    display: block;
-  }
-
-  .mobileFilterButton {
-    display: block;
-  }
-
-  .filterSidebar {
-    display: none;
-    position: static;
-    max-height: none;
-    margin-bottom: 14px;
-  }
-
-  .filterSidebarOpen {
-    display: block;
-  }
-
-  .resultsCountRow {
-  display: block;
-
-  margin-bottom: 10px;
-}
-
-.resultsCountText {
-  display: flex;
-  justify-content: flex-end;
-
-  padding-right: 0;
-}
-}
-
-
-
-@media (max-width: 650px) {
-  .breadcrumbContainer,
-  .resultsHeroInner,
-  .container {
-    width: calc(100% - 16px);
-  }
-
-  .container {
-    padding: 12px 0 24px;
-  }
-
-  .list {
-    gap: 10px;
-  }
-.resultsCountRow {
-  margin-bottom: 8px;
-}
-
-.resultsCountText strong {
-  font-size: 14px;
-}
-
-.resultsCountText span {
-  font-size: 13px;
-}
-  .propertyCard {
-    width: 100%;
-    height: 142px;
-
-    display: grid;
-
-    grid-template-columns:
-      108px
-      minmax(0, 1fr)
-      82px;
-
-    overflow: hidden;
-
-    border-radius: 9px;
-  }
-
-  /* image */
-  .imageArea,
-  .listingGallery,
-  .listingGalleryImage,
-  .fallbackImage {
-    width: 108px;
-    height: 142px;
-  }
-
-  .listingGalleryImage {
-    object-fit: cover;
-  }
-
-  /* arrows */
-  .listingGalleryArrow {
-    width: 24px;
-    height: 24px;
-  }
-
-  .listingGalleryArrow svg {
-    width: 13px;
-    height: 13px;
-  }
-
-  .listingGalleryPrevious {
-    left: 4px;
-  }
-
-  .listingGalleryNext {
-    right: 4px;
-  }
-
-  .listingGalleryCounter {
-    left: 5px;
-    bottom: 5px;
-    padding: 4px 6px;
-    font-size: 8px;
-  }
-
-  .listingImageType {
-    top: 5px;
-    left: 5px;
-    padding: 3px 6px;
-    font-size: 7px;
-  }
-
-  /* center content */
-  .propertyMainInfo {
-    width: auto;
-    height: 142px;
-
-    padding: 8px;
-
-    justify-content: flex-start;
-  }
-
-  .propertyTopRow {
-    display: none;
-  }
-
-  .unitTypeHeading {
-    margin: 0 0 4px;
-    font-size: 14px;
-    line-height: 1.1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .buildingNameSubtle {
-    margin: 0 0 4px;
-    font-size: 7px;
-    line-height: 1.2;
-    white-space: normal;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-  }
-
-  .propertyLocationRow {
-    margin-bottom: 4px;
-    gap: 3px;
-    font-size: 7px;
-  }
-
-  .propertyLocationRow svg {
-    width: 10px;
-    height: 10px;
-  }
-
-  .propertyMetaStack {
-    gap: 3px;
-    padding-left: 6px;
-    border-left-width: 1px;
-  }
-
-  .propertyMetaItem {
-    gap: 4px;
-    font-size: 7px;
-  }
-
-  .propertyMetaItem svg {
-    width: 10px;
-    height: 10px;
-  }
-
-  .typeVacancy {
-    margin-top: 5px;
-    padding: 3px 5px;
-    font-size: 7px;
-  }
-
-  /* price */
-  .propertyPricePanel {
-    width: auto;
-    height: 142px;
-
-    padding: 8px 5px;
-
-    border-left: 1px solid #e6ecf2;
-
-    justify-content: flex-end;
-    align-items: flex-end;
-
-    text-align: right;
-  }
-
-  .startingFromText {
-    font-size: 7px;
-  }
-
-  .propertyPriceValue {
-    margin-top: 2px;
-    font-size: 12px;
-    white-space: nowrap;
-  }
-
-  .propertyPricePeriod {
-    font-size: 7px;
-  }
-
-  .viewPropertyButton {
-    width: 100%;
-
-    min-height: 28px;
-
-    margin-top: 7px;
-
-    padding: 0 5px;
-
-    gap: 2px;
-
-    font-size: 7px;
-
-    border-radius: 5px;
-  }
-
-  /* hero */
-  .resultsHeroInner {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .resultsHero h1 {
-    font-size: 13px;
-  }
-
-  .resultsHero p {
-    font-size: 8px;
-  }
-
-  .resultsHeroCount {
-    min-width: 72px;
-    padding: 6px;
-  }
-
-  .resultsHeroCount strong {
-    font-size: 18px;
-  }
-
-  .resultsHeroCount span {
-    font-size: 7px;
-  }
-}
-
-
-/* =========================================================
-   VERY SMALL MOBILE
-========================================================= */
-
-@media (max-width: 390px) {
-  .breadcrumbContainer,
-  .resultsHeroInner,
-  .container {
-    width: calc(100% - 12px);
-  }
-
-  .propertyCard {
-    height: 136px;
-
-    grid-template-columns:
-      100px
-      minmax(0, 1fr)
-      76px;
-  }
-
-  .imageArea,
-  .listingGallery,
-  .listingGalleryImage,
-  .fallbackImage {
-    width: 100px;
-    height: 136px;
-  }
-
-  .propertyMainInfo,
-  .propertyPricePanel {
-    height: 136px;
-  }
-
-  .propertyMainInfo {
-    padding: 7px;
-  }
-
-  .unitTypeHeading {
-    font-size: 13px;
-  }
-
-  .buildingNameSubtle {
-    font-size: 6.5px;
-  }
-
-  .propertyLocationRow,
-  .propertyMetaItem {
-    font-size: 6.5px;
-  }
-
-  .propertyPriceValue {
-    font-size: 11px;
-  }
-
-  .viewPropertyButton {
-    font-size: 6.5px;
-  }
-}
-
-/* =========================================================
-   IMAGE FALLBACK
-========================================================= */
-
-.galleryPreviewFallback {
-  grid-column: 1 / -1;
-  grid-row: 1 / -1;
-
-  min-height: 222px;
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-
-  gap: 12px;
-
-  padding: 49px;
-
-  background:
-    linear-gradient(
-      145deg,
-      #f7fafd 0%,
-      #edf3f8 100%
-    );
-
-  color: #6f89a3;
-
-  text-align: center;
-}
-
-
-/* icon circle */
-
-.galleryPreviewFallbackIcon {
-  width: 72px;
-  height: 72px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 18px;
-
-  background: #ffffff;
-
-  border: 1px solid #dce6ef;
-
-  color: #5f7f9f;
-
-  box-shadow:
-    0 8px 20px
-    rgba(27, 65, 105, 0.08);
-}
-
-
-.galleryPreviewFallbackIcon svg {
-  width: 34px;
-  height: 34px;
-
-  stroke-width: 1.8;
-}
-
-
-/* title */
-
-.galleryPreviewFallbackTitle {
-  margin: 0;
-
-  color: #315779;
-
-  font-size: 16px;
-  font-weight: 800;
-}
-
-
-/* subtitle */
-
-.galleryPreviewFallbackText {
-  max-width: 260px;
-
-  margin: 0;
-
-  color: #8093a6;
-
-  font-size: 11px;
-  line-height: 1.5;
-}
-
-/* =========================================================
-   RESULTS COUNT
-========================================================= */
 
 /* =========================================================
    RESULTS COUNT
@@ -1170,6 +240,215 @@
   font-weight: 600;
 }
 
+
+/* =========================================================
+   RESULTS LAYOUT
+========================================================= */
+
+.resultsLayout {
+  display: grid;
+
+  grid-template-columns:
+    250px
+    minmax(0, 1fr);
+
+  gap: 22px;
+
+  align-items: start;
+}
+
+
+/* =========================================================
+   MOBILE FILTER BUTTON
+========================================================= */
+
+.mobileFilterButton {
+  display: none;
+
+  width: 100%;
+  min-height: 44px;
+
+  margin-bottom: 14px;
+
+  border: 1px solid #0872d5;
+
+  border-radius: 8px;
+
+  background: #ffffff;
+
+  color: #0863b5;
+
+  font-size: 13px;
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+
+/* =========================================================
+   FILTER SIDEBAR
+========================================================= */
+
+.filterSidebar {
+  position: sticky;
+
+  top: 125px;
+
+  align-self: start;
+
+  max-height: calc(100vh - 145px);
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  background: #ffffff;
+
+  border: 1px solid #dce5ee;
+
+  border-radius: 12px;
+}
+
+.filterSidebar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.filterSidebar::-webkit-scrollbar-thumb {
+  background: #c5d2df;
+  border-radius: 10px;
+}
+
+
+/* =========================================================
+   FILTER HEADER
+========================================================= */
+
+.filterHeader {
+  min-height: 54px;
+
+  padding: 0 16px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  border-bottom: 1px solid #e3e9ef;
+}
+
+.filterHeader h2 {
+  margin: 0;
+
+  color: #172e4b;
+
+  font-size: 17px;
+  font-weight: 850;
+}
+
+.clearFilters {
+  padding: 0;
+
+  display: inline-flex;
+  align-items: center;
+
+  gap: 4px;
+
+  border: none;
+
+  background: transparent;
+
+  color: #0872d5;
+
+  font-size: 11px;
+  font-weight: 750;
+
+  cursor: pointer;
+}
+
+
+/* =========================================================
+   FILTER SECTIONS
+========================================================= */
+
+.filterSection {
+  padding: 16px;
+
+  border-bottom: 1px solid #e7ebf0;
+}
+
+.filterSection:last-child {
+  border-bottom: none;
+}
+
+.filterSection h3 {
+  margin: 0 0 12px;
+
+  color: #172e4b;
+
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.filterLoading {
+  padding: 8px 0;
+
+  color: #7a8998;
+
+  font-size: 11px;
+}
+
+
+/* =========================================================
+   LOCATION FILTER
+========================================================= */
+
+.locationFilterWrapper {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+}
+
+.locationFilterWrapper > svg {
+  position: absolute;
+
+  left: 11px;
+
+  z-index: 2;
+
+  color: #49647e;
+
+  pointer-events: none;
+}
+
+.locationFilter {
+  width: 100%;
+  height: 42px;
+
+  padding: 0 11px 0 35px;
+
+  border: 1px solid #cad5df;
+
+  border-radius: 7px;
+
+  outline: none;
+
+  background: #ffffff;
+
+  color: #1b334f;
+
+  font-size: 11px;
+}
+
+.locationFilter:focus {
+  border-color: #0872d5;
+}
+
+
+/* =========================================================
+   SELECT FILTER
+========================================================= */
+
 .filterSelect {
   width: 100%;
   height: 42px;
@@ -1207,4 +486,1236 @@
   color: #94a3b8;
 
   cursor: not-allowed;
+}
+
+
+/* =========================================================
+   CATEGORY
+========================================================= */
+
+.propertyCategoryGroup {
+  margin-top: 9px;
+}
+
+.propertyCategoryTitle {
+  margin: 8px 0 5px;
+
+  color: #26405d;
+
+  font-size: 12px;
+  font-weight: 800;
+}
+
+
+/* =========================================================
+   CHECK / RADIO
+========================================================= */
+
+.checkOption {
+  position: relative;
+
+  min-height: 33px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 9px;
+
+  cursor: pointer;
+}
+
+.checkOption input {
+  position: absolute;
+  opacity: 0;
+}
+
+.fakeCheckbox {
+  position: relative;
+
+  width: 18px;
+  height: 18px;
+
+  flex: 0 0 18px;
+
+  border: 1.5px solid #afbfce;
+
+  border-radius: 5px;
+
+  background: #ffffff;
+}
+
+.checkOption input:checked + .fakeCheckbox {
+  background: #0872d5;
+
+  border-color: #0872d5;
+}
+
+.checkOption input:checked + .fakeCheckbox::after {
+  content: "";
+
+  position: absolute;
+
+  left: 5px;
+  top: 1px;
+
+  width: 5px;
+  height: 10px;
+
+  border: solid #ffffff;
+
+  border-width: 0 2px 2px 0;
+
+  transform: rotate(45deg);
+}
+
+.checkLabel {
+  color: #40556d;
+
+  font-size: 11px;
+}
+
+
+/* =========================================================
+   RESULTS COLUMN
+========================================================= */
+
+.resultsColumn {
+  min-width: 0;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+
+  gap: 18px;
+}
+
+
+/* =========================================================
+   DESKTOP PROPERTY CARD
+========================================================= */
+
+.propertyCard {
+  height: 224px;
+
+  display: grid;
+
+  grid-template-columns:
+    310px
+    minmax(0, 1fr)
+    220px;
+
+  overflow: hidden;
+
+  background: #ffffff;
+
+  border: 1px solid #dce5ee;
+
+  border-radius: 16px;
+
+  box-shadow:
+    0 5px 18px
+    rgba(8, 40, 72, 0.05);
+}
+
+.imageArea,
+.listingGallery,
+.listingGalleryImage,
+.fallbackImage,
+.propertyMainInfo,
+.propertyPricePanel {
+  height: 224px;
+}
+
+
+/* =========================================================
+   IMAGE
+========================================================= */
+
+.imageArea {
+  position: relative;
+
+  width: 100%;
+
+  overflow: hidden;
+
+  background: #eaf1f7;
+}
+
+.listingGallery {
+  position: relative;
+
+  width: 100%;
+
+  overflow: hidden;
+}
+
+.listingGalleryImage {
+  width: 100%;
+
+  display: block;
+
+  object-fit: cover;
+  object-position: center;
+}
+
+.fallbackImage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #edf3f8;
+
+  color: #7892aa;
+}
+
+
+/* =========================================================
+   GALLERY ARROWS
+========================================================= */
+
+.listingGalleryArrow {
+  position: absolute;
+
+  top: 50%;
+
+  z-index: 10;
+
+  width: 28px;
+  height: 28px;
+
+  padding: 0;
+
+  transform: translateY(-50%);
+
+  border: none;
+
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.96);
+
+  color: #123a67;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 2px 8px
+    rgba(15, 23, 42, 0.16);
+}
+
+.listingGalleryArrow svg {
+  width: 15px;
+  height: 15px;
+}
+
+.listingGalleryPrevious {
+  left: 8px;
+}
+
+.listingGalleryNext {
+  right: 8px;
+}
+
+.listingGalleryCounter {
+  position: absolute;
+
+  left: 8px;
+  bottom: 8px;
+
+  z-index: 5;
+
+  padding: 5px 8px;
+
+  border-radius: 999px;
+
+  background: rgba(15, 23, 42, 0.78);
+
+  color: #ffffff;
+
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.listingImageType {
+  position: absolute;
+
+  top: 8px;
+  left: 8px;
+
+  z-index: 5;
+
+  padding: 4px 7px;
+
+  border-radius: 999px;
+
+  background: rgba(255, 255, 255, 0.94);
+
+  color: #31516f;
+
+  font-size: 8px;
+  font-weight: 800;
+}
+
+
+/* =========================================================
+   PROPERTY INFO
+========================================================= */
+
+.propertyMainInfo {
+  min-width: 0;
+
+  padding: 18px 22px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  box-sizing: border-box;
+}
+
+.propertyTopRow {
+  margin-bottom: 7px;
+}
+
+.propertyTypeBadge {
+  padding: 5px 10px;
+
+  display: inline-flex;
+
+  border: 1px solid #d5e4f3;
+
+  border-radius: 999px;
+
+  background: #eef6ff;
+
+  color: #0d548f;
+
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.unitTitleLink {
+  text-decoration: none;
+}
+
+.unitTypeHeading {
+  margin: 0;
+
+  color: #123a67;
+
+  font-size: 21px;
+  line-height: 1.15;
+
+  font-weight: 900;
+}
+
+.buildingNameSubtle {
+  margin: 5px 0 10px;
+
+  color: #71849b;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  line-height: 1.35;
+
+  white-space: nowrap;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+}
+
+.propertyLocationRow {
+  display: flex;
+
+  align-items: flex-start;
+
+  gap: 7px;
+
+  margin-bottom: 12px;
+
+  color: #0870ce;
+
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.propertyMetaStack {
+  padding-left: 11px;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 8px;
+
+  border-left: 2px solid #e6edf4;
+}
+
+.propertyMetaItem {
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+
+  color: #233d5d;
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.typeVacancy {
+  width: fit-content;
+
+  margin-top: 10px;
+
+  padding: 5px 8px;
+
+  border-radius: 7px;
+
+  background: #edf8f1;
+
+  color: #218247;
+
+  font-size: 9px;
+  font-weight: 750;
+}
+
+
+/* =========================================================
+   PRICE PANEL
+========================================================= */
+
+.propertyPricePanel {
+  min-width: 0;
+
+  padding: 18px;
+
+  border-left: 1px solid #e6ecf2;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  box-sizing: border-box;
+}
+
+.startingFromText {
+  color: #8a9ab0;
+
+  font-size: 9px;
+}
+
+.propertyPriceValue {
+  margin-top: 4px;
+
+  color: #0b2957;
+
+  font-size: 19px;
+  font-weight: 900;
+}
+
+.propertyPriceRequest {
+  margin-top: 4px;
+
+  color: #102f57;
+
+  font-size: 18px;
+  font-weight: 800;
+
+  line-height: 1.15;
+}
+
+.propertyPricePeriod {
+  margin-top: 2px;
+
+  color: #8091a6;
+
+  font-size: 9px;
+}
+
+.viewPropertyButton {
+  width: 100%;
+  min-height: 40px;
+
+  margin-top: 14px;
+
+  padding: 0 12px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 6px;
+
+  border-radius: 8px;
+
+  background: #0875dc;
+
+  color: #ffffff;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  text-decoration: none;
+}
+
+
+/* =========================================================
+   LOADING / EMPTY
+========================================================= */
+
+.loading,
+.error,
+.empty {
+  min-height: 300px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty {
+  flex-direction: column;
+
+  background: #ffffff;
+
+  border: 1px solid #e1e7ee;
+
+  border-radius: 12px;
+}
+
+
+/* =========================================================
+   EMPTY IMAGE
+========================================================= */
+
+.galleryPreviewFallback {
+  min-height: 222px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 12px;
+
+  padding: 49px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #f7fafd 0%,
+      #edf3f8 100%
+    );
+
+  color: #6f89a3;
+
+  text-align: center;
+
+  box-sizing: border-box;
+}
+
+.galleryPreviewFallbackIcon {
+  width: 72px;
+  height: 72px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 18px;
+
+  background: #ffffff;
+
+  border: 1px solid #dce6ef;
+
+  color: #5f7f9f;
+
+  box-shadow:
+    0 8px 20px
+    rgba(27, 65, 105, 0.08);
+}
+
+.galleryPreviewFallbackIcon svg {
+  width: 34px;
+  height: 34px;
+
+  stroke-width: 1.8;
+}
+
+.galleryPreviewFallbackTitle {
+  margin: 0;
+
+  color: #315779;
+
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.galleryPreviewFallbackText {
+  max-width: 260px;
+
+  margin: 0;
+
+  color: #8093a6;
+
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+
+/* =========================================================
+   PAGINATION
+========================================================= */
+
+.pagination {
+  margin-top: 28px;
+
+  display: flex;
+  justify-content: center;
+
+  gap: 6px;
+}
+
+.pageNumber,
+.pageArrow {
+  min-width: 34px;
+  height: 34px;
+
+  border: 1px solid #d7e0e9;
+
+  border-radius: 7px;
+
+  background: #ffffff;
+
+  color: #264768;
+}
+
+.pageNumberActive {
+  background: #0872d5;
+
+  color: #ffffff;
+}
+
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 850px) {
+  .resultsLayout {
+    display: block;
+  }
+
+  .mobileFilterButton {
+    display: block;
+  }
+
+  .filterSidebar {
+    display: none;
+
+    position: static;
+
+    max-height: none;
+
+    margin-bottom: 14px;
+  }
+
+  .filterSidebarOpen {
+    display: block;
+  }
+
+  .resultsCountRow {
+    display: block;
+
+    margin-bottom: 10px;
+  }
+
+  .resultsCountText {
+    display: flex;
+
+    justify-content: flex-end;
+
+    padding-right: 0;
+  }
+}
+
+
+/* =========================================================
+   MOBILE - AGODA STYLE
+========================================================= */
+
+@media (max-width: 650px) {
+  .page {
+    background: #f6f8fb;
+  }
+
+  .breadcrumbContainer,
+  .resultsHeroInner,
+  .container {
+    width: calc(100% - 16px);
+  }
+
+  .container {
+    padding: 12px 0 28px;
+  }
+
+
+  /* =======================================================
+     BREADCRUMB
+  ======================================================= */
+
+  .breadcrumb {
+    min-height: 24px;
+
+    padding: 9px 0;
+
+    gap: 5px;
+  }
+
+  .breadcrumbLink,
+  .breadcrumbText,
+  .breadcrumbCurrent {
+    font-size: 9px;
+  }
+
+  .breadcrumbArrow {
+    width: 11px;
+    height: 11px;
+  }
+
+
+  /* =======================================================
+     RESULT COUNT
+  ======================================================= */
+
+  .resultsCountRow {
+    margin-bottom: 12px;
+  }
+
+  .resultsCountText {
+    justify-content: flex-end;
+
+    gap: 4px;
+
+    padding-right: 4px;
+
+    line-height: 1.05;
+  }
+
+  .resultsCountText strong {
+    font-size: 15px;
+    font-weight: 800;
+  }
+
+  .resultsCountText span {
+    font-size: 15px;
+    font-weight: 800;
+  }
+
+
+  /* =======================================================
+     FILTER BUTTON
+  ======================================================= */
+
+  .mobileFilterButton {
+    min-height: 46px;
+
+    margin-bottom: 14px;
+
+    border-radius: 9px;
+
+    font-size: 13px;
+  }
+
+
+  /* =======================================================
+     PROPERTY LIST
+  ======================================================= */
+
+  .list {
+    gap: 14px;
+  }
+
+
+  /* =======================================================
+     AGODA STYLE MOBILE CARD
+  ======================================================= */
+
+  .propertyCard {
+    width: 100%;
+    height: auto;
+
+    display: grid;
+
+    grid-template-columns:
+      minmax(0, 1fr)
+      108px;
+
+    grid-template-areas:
+      "image image"
+      "details price";
+
+    overflow: hidden;
+
+    background: #ffffff;
+
+    border: 1px solid #dce5ee;
+
+    border-radius: 14px;
+
+    box-shadow:
+      0 5px 16px
+      rgba(13, 43, 75, 0.08);
+  }
+
+
+  /* =======================================================
+     LARGE PROPERTY IMAGE
+  ======================================================= */
+
+  .imageArea {
+    grid-area: image;
+
+    width: 100%;
+    height: 215px;
+
+    display: block;
+
+    overflow: hidden;
+
+    background: #eaf1f7;
+
+    border-bottom: 1px solid #e4eaf0;
+  }
+
+  .listingGallery {
+    position: relative;
+
+    width: 100%;
+    height: 215px;
+
+    overflow: hidden;
+
+    background: #eaf1f7;
+  }
+
+  .listingGalleryImage {
+    width: 100%;
+    height: 100%;
+
+    display: block;
+
+    object-fit: cover;
+    object-position: center;
+
+    transition: transform 0.2s ease;
+  }
+
+
+  /* =======================================================
+     EMPTY IMAGE
+  ======================================================= */
+
+  .galleryPreviewFallback {
+    width: 100%;
+    height: 215px;
+    min-height: 215px;
+
+    padding: 20px;
+
+    gap: 7px;
+
+    box-sizing: border-box;
+  }
+
+  .galleryPreviewFallbackTitle {
+    font-size: 17px;
+  }
+
+  .galleryPreviewFallbackText {
+    max-width: 230px;
+
+    font-size: 10px;
+  }
+
+
+  /* =======================================================
+     IMAGE ARROWS
+  ======================================================= */
+
+  .listingGalleryArrow {
+    width: 34px;
+    height: 34px;
+
+    background: rgba(255, 255, 255, 0.94);
+
+    color: #0d365e;
+
+    box-shadow:
+      0 2px 10px
+      rgba(0, 0, 0, 0.2);
+  }
+
+  .listingGalleryArrow svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .listingGalleryPrevious {
+    left: 10px;
+  }
+
+  .listingGalleryNext {
+    right: 10px;
+  }
+
+
+  /* =======================================================
+     IMAGE COUNTER
+  ======================================================= */
+
+  .listingGalleryCounter {
+    left: auto;
+
+    right: 10px;
+    bottom: 10px;
+
+    padding: 5px 9px;
+
+    background: rgba(12, 29, 48, 0.82);
+
+    font-size: 10px;
+  }
+
+
+  /* =======================================================
+     IMAGE TYPE
+  ======================================================= */
+
+  .listingImageType {
+    top: 10px;
+    left: 10px;
+
+    padding: 5px 9px;
+
+    background: rgba(255, 255, 255, 0.95);
+
+    color: #174c7a;
+
+    font-size: 9px;
+  }
+
+
+  /* =======================================================
+     DETAILS
+  ======================================================= */
+
+  .propertyMainInfo {
+    grid-area: details;
+
+    width: auto;
+    height: auto;
+
+    min-width: 0;
+
+    padding: 13px 12px;
+
+    justify-content: flex-start;
+
+    box-sizing: border-box;
+  }
+
+  .propertyTopRow {
+    display: none;
+  }
+
+  .unitTypeHeading {
+    margin: 0 0 5px;
+
+    color: #123a67;
+
+    font-size: 17px;
+    line-height: 1.15;
+
+    font-weight: 900;
+
+    white-space: normal;
+  }
+
+  .buildingNameSubtle {
+    margin: 0 0 7px;
+
+    color: #71849b;
+
+    font-size: 8px;
+    font-weight: 700;
+
+    line-height: 1.35;
+
+    white-space: normal;
+
+    display: -webkit-box;
+
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+
+    overflow: hidden;
+  }
+
+  .propertyLocationRow {
+    margin-bottom: 8px;
+
+    gap: 4px;
+
+    font-size: 8px;
+
+    line-height: 1.35;
+  }
+
+  .propertyLocationRow svg {
+    width: 12px;
+    height: 12px;
+
+    flex-shrink: 0;
+  }
+
+  .propertyMetaStack {
+    gap: 5px;
+
+    padding-left: 8px;
+
+    border-left-width: 2px;
+  }
+
+  .propertyMetaItem {
+    gap: 5px;
+
+    font-size: 8px;
+
+    line-height: 1.3;
+  }
+
+  .propertyMetaItem svg {
+    width: 12px;
+    height: 12px;
+
+    flex-shrink: 0;
+  }
+
+  .typeVacancy {
+    margin-top: 6px;
+
+    padding: 3px 6px;
+
+    font-size: 7px;
+  }
+
+
+  /* =======================================================
+     PRICE
+  ======================================================= */
+
+  .propertyPricePanel {
+    grid-area: price;
+
+    width: auto;
+    height: auto;
+
+    min-width: 0;
+
+    padding: 13px 9px;
+
+    border-left: 1px solid #e6ecf2;
+
+    justify-content: flex-end;
+    align-items: flex-end;
+
+    text-align: right;
+
+    background: #ffffff;
+
+    box-sizing: border-box;
+  }
+
+  .startingFromText {
+    font-size: 8px;
+  }
+
+  .propertyPriceValue {
+    margin-top: 3px;
+
+    font-size: 15px;
+
+    line-height: 1.1;
+
+    white-space: nowrap;
+  }
+
+  .propertyPriceRequest {
+    margin-top: 3px;
+
+    font-size: 14px;
+
+    line-height: 1.15;
+
+    text-align: right;
+  }
+
+  .propertyPricePeriod {
+    margin-top: 3px;
+
+    font-size: 8px;
+  }
+
+  .viewPropertyButton {
+    width: 100%;
+    min-height: 34px;
+
+    margin-top: 10px;
+
+    padding: 0 6px;
+
+    gap: 3px;
+
+    border-radius: 7px;
+
+    font-size: 8px;
+  }
+
+
+  /* =======================================================
+     HERO
+  ======================================================= */
+
+  .resultsHeroInner {
+    display: grid;
+
+    grid-template-columns:
+      1fr
+      auto;
+
+    align-items: center;
+
+    gap: 8px;
+  }
+
+  .resultsHero h1 {
+    font-size: 13px;
+  }
+
+  .resultsHero p {
+    font-size: 8px;
+  }
+
+  .resultsHeroCount {
+    min-width: 72px;
+
+    padding: 6px;
+  }
+
+  .resultsHeroCount strong {
+    font-size: 18px;
+  }
+
+  .resultsHeroCount span {
+    font-size: 7px;
+  }
+
+
+  /* =======================================================
+     FILTER CONTENT MOBILE
+  ======================================================= */
+
+  .filterSidebar {
+    border-radius: 10px;
+  }
+
+  .filterHeader {
+    min-height: 48px;
+
+    padding: 0 13px;
+  }
+
+  .filterHeader h2 {
+    font-size: 15px;
+  }
+
+  .filterSection {
+    padding: 13px;
+  }
+
+  .filterSection h3 {
+    margin-bottom: 10px;
+
+    font-size: 12px;
+  }
+
+  .locationFilter,
+  .filterSelect {
+    height: 40px;
+
+    font-size: 11px;
+  }
+
+  .checkOption {
+    min-height: 31px;
+  }
+}
+
+
+/* =========================================================
+   VERY SMALL MOBILE
+========================================================= */
+
+@media (max-width: 390px) {
+  .breadcrumbContainer,
+  .resultsHeroInner,
+  .container {
+    width: calc(100% - 12px);
+  }
+
+  .propertyCard {
+    grid-template-columns:
+      minmax(0, 1fr)
+      100px;
+  }
+
+  .imageArea,
+  .listingGallery,
+  .galleryPreviewFallback {
+    height: 190px;
+    min-height: 190px;
+  }
+
+  .unitTypeHeading {
+    font-size: 15px;
+  }
+
+  .buildingNameSubtle {
+    font-size: 7.5px;
+  }
+
+  .propertyLocationRow,
+  .propertyMetaItem {
+    font-size: 7.5px;
+  }
+
+  .propertyPriceValue {
+    font-size: 14px;
+  }
+
+  .propertyPriceRequest {
+    font-size: 13px;
+  }
+
+  .viewPropertyButton {
+    font-size: 7.5px;
+  }
 }
