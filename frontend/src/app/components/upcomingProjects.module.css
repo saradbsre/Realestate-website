@@ -281,3 +281,112 @@
   font-size: 13px;
   line-height: 1.6;
 }
+.imageWrap {
+  position: relative;
+  min-height: 230px !important;
+  overflow: hidden;
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.imageArrow {
+  position: absolute;
+  top: 50%;
+
+  width: 24px !important;
+  height: 24px !important;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transform: translateY(-50%);
+
+  border: 0;
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.92);
+  color: #0b3157;
+
+  cursor: pointer;
+
+  z-index: 3;
+
+  box-shadow:
+    0 3px 12px
+    rgba(0, 0, 0, 0.18);
+
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease;
+}
+
+.imageArrow:hover {
+  background: #ffffff;
+
+  transform:
+    translateY(-50%)
+    scale(1.06);
+}
+
+.imageArrowLeft {
+  left: 12px;
+}
+
+.imageArrowRight {
+  right: 12px;
+}
+
+.imageCounter {
+  position: absolute;
+
+  right: 12px;
+  bottom: 10px;
+
+  z-index: 3;
+
+  padding:
+    5px 9px;
+
+  border-radius: 999px;
+
+  background:
+    rgba(
+      8,
+      31,
+      58,
+      0.72
+    );
+
+  color: #ffffff;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (
+  max-width: 768px
+) {
+  .imageArrow {
+    width: 24px;
+    height: 24px;
+  }
+
+  .imageArrowLeft {
+    left: 8px;
+  }
+
+  .imageArrowRight {
+    right: 8px;
+  }
+}

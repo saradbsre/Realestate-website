@@ -67,6 +67,16 @@ export async function submitBooking(
       cleanText(
         req.body.nationId
       );
+ const emiratesId =
+  String(
+    req.body.emiratesId ||
+    ""
+  )
+    .replace(
+      /\D/g,
+      ""
+    )
+    .trim();
 
     /* =====================================================
        VALIDATE BASIC FIELDS
@@ -247,7 +257,7 @@ const status =
         email,
         phone,
         nationId,
-
+  emiratesId,
         passportFile:
           passport.buffer,
 

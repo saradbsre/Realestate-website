@@ -382,6 +382,11 @@ export async function findUpcomingProjects() {
             B.build_area
                 AS buildArea,
 
+
+            /* =============================================
+               PRIMARY IMAGE
+            ============================================= */
+
             (
                 SELECT TOP 1
                     BI.imagePath
@@ -407,10 +412,97 @@ export async function findUpcomingProjects() {
                     ) = 1
 
                 ORDER BY
-                    BI.isPrimary DESC,
+
+                    CASE
+                        WHEN ISNULL(
+                            BI.isPrimary,
+                            0
+                        ) = 1
+                        THEN 0
+
+                        ELSE 1
+                    END,
+
                     BI.displayOrder ASC,
+
                     BI.imageId ASC
             ) AS primaryImagePath,
+
+
+            /* =============================================
+               ALL BUILDING IMAGES
+
+               Uses | as separator because production SQL
+               Server does not support FOR JSON PATH.
+            ============================================= */
+
+            STUFF(
+                (
+                    SELECT
+                        '|' +
+                        LTRIM(
+                            RTRIM(
+                                BI2.imagePath
+                            )
+                        )
+
+                    FROM dbo.build_images BI2
+
+                    WHERE
+                        LTRIM(
+                            RTRIM(
+                                BI2.buildingId
+                            )
+                        )
+                        =
+                        LTRIM(
+                            RTRIM(
+                                B.build_id
+                            )
+                        )
+
+                        AND ISNULL(
+                            BI2.isActive,
+                            1
+                        ) = 1
+
+                        AND BI2.imagePath
+                            IS NOT NULL
+
+                        AND LTRIM(
+                            RTRIM(
+                                BI2.imagePath
+                            )
+                        ) <> ''
+
+                    ORDER BY
+
+                        CASE
+                            WHEN ISNULL(
+                                BI2.isPrimary,
+                                0
+                            ) = 1
+                            THEN 0
+
+                            ELSE 1
+                        END,
+
+                        BI2.displayOrder ASC,
+
+                        BI2.imageId ASC
+
+                    FOR XML PATH(''),
+                        TYPE
+                ).value(
+                    '.',
+                    'NVARCHAR(MAX)'
+                ),
+
+                1,
+                1,
+                ''
+            ) AS imagePaths,
+
 
             B.build_notes
                 AS description,
@@ -425,9 +517,12 @@ export async function findUpcomingProjects() {
                 1
             ) AS isActive
 
+
         FROM dbo.building B
 
+
         INNER JOIN dbo.Place P
+
             ON LTRIM(
                 RTRIM(
                     P.place_id
@@ -440,7 +535,9 @@ export async function findUpcomingProjects() {
                 )
             )
 
+
         LEFT JOIN dbo.Area A
+
             ON LTRIM(
                 RTRIM(
                     A.area_id
@@ -465,6 +562,7 @@ export async function findUpcomingProjects() {
                 )
             )
 
+
         WHERE
             ISNULL(
                 B.IsUpcomingProject,
@@ -476,8 +574,10 @@ export async function findUpcomingProjects() {
                 0
             ) = 0
 
+
         ORDER BY
             B.sysdate DESC,
+
             B.build_desc ASC;
       `);
 

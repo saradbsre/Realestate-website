@@ -30,6 +30,7 @@ interface BookingForm {
   email: string;
   phone: string;
   nationality: string;
+   emiratesId: string;
   passport: File | null;
 }
 
@@ -52,6 +53,7 @@ export default function BookingModal({
       email: "",
       phone: "",
       nationality: "",
+        emiratesId: "",
       passport: null,
     });
 const [
@@ -128,6 +130,7 @@ useEffect(() => {
       email: "",
       phone: "",
       nationality: "",
+      emiratesId: "",
       passport: null,
     });
 
@@ -172,6 +175,33 @@ useEffect(() => {
 
       return;
     }
+    const emiratesId =
+  booking.emiratesId.trim();
+
+if (!emiratesId) {
+  setError(
+    "Please enter Emirates ID."
+  );
+
+  return;
+}
+
+const emiratesIdDigits =
+  emiratesId.replace(
+    /\D/g,
+    ""
+  );
+
+if (
+  emiratesIdDigits.length !==
+  15
+) {
+  setError(
+    "Please enter a valid 15-digit Emirates ID."
+  );
+
+  return;
+}
 
     try {
       setSending(true);
@@ -233,6 +263,11 @@ if (property.unitType) {
       form.append(
         "nationId",
         booking.nationality
+      );
+
+      form.append(
+        "emiratesId",
+        booking.emiratesId.trim()
       );
 
       form.append(
@@ -478,7 +513,50 @@ if (property.unitType) {
   )}
 </select>
               </div>
+<div
+  className={
+    styles.field
+  }
+>
+  <label>
+    Emirates ID *
+  </label>
 
+  <input
+    required
+    type="text"
+    inputMode="numeric"
+    maxLength={18}
+    placeholder="784-XXXX-XXXXXXX-X"
+    value={
+      booking.emiratesId
+    }
+    onChange={(e) => {
+      const value =
+        e.target.value;
+
+      /*
+       * Allow digits and hyphens only.
+       */
+      if (
+        !/^[0-9-]*$/.test(
+          value
+        )
+      ) {
+        return;
+      }
+
+      setBooking(
+        (current) => ({
+          ...current,
+
+          emiratesId:
+            value,
+        })
+      );
+    }}
+  />
+</div>
               <div
                 className={
                   styles.field

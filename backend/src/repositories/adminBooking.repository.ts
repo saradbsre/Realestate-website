@@ -55,7 +55,8 @@ export async function findAllWebRequests(
 
             WB.NationId
                 AS nationId,
-
+WB.EmiratesId
+    AS emiratesId,
             LTRIM(
                 RTRIM(
                     N.nation_nationality
@@ -193,7 +194,8 @@ export async function findWebBookingById(
 
             WB.NationId
                 AS nationId,
-
+WB.EmiratesId
+    AS emiratesId,
             LTRIM(
                 RTRIM(
                     N.nation_nationality

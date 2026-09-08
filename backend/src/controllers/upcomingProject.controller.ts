@@ -118,15 +118,56 @@ export async function getUpcomingProjects(
 
     const data =
       rows.map(
-        (project) => ({
-          ...project,
+        (project) => {
+          const imagePaths =
+            String(
+              project.imagePaths ||
+              ""
+            )
+              .split("|")
+              .map(
+                (
+                  path
+                ) =>
+                  path.trim()
+              )
+              .filter(
+                Boolean
+              );
 
-          image:
+          const images =
+            imagePaths.map(
+              (
+                path
+              ) =>
+                r2PublicUrl
+                  ? `${r2PublicUrl}/${path}`
+                  : path
+            );
+
+          const primaryImage =
             project.primaryImagePath &&
             r2PublicUrl
               ? `${r2PublicUrl}/${project.primaryImagePath}`
-              : null,
-        })
+              : null;
+
+          return {
+            ...project,
+
+            image:
+              primaryImage ||
+              images[0] ||
+              null,
+
+            images,
+
+            imagePaths:
+              undefined,
+
+            primaryImagePath:
+              undefined,
+          };
+        }
       );
 
     return res.json({

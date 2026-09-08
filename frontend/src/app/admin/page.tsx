@@ -107,7 +107,8 @@ interface Booking {
   phone: string;
 
   nationality: string;
-
+emiratesId:
+  string | null;
   passportFileName:
     string | null;
 
@@ -6370,6 +6371,7 @@ const formatImageFileSize =
         <th>Unit</th>
         <th>Customer</th>
         <th>Nationality</th>
+        <th>Emirates ID</th>
         <th>Contact</th>
         <th>Passport</th>
         <th>Submitted</th>
@@ -6427,6 +6429,10 @@ const formatImageFileSize =
 
                   <td>
                     {booking.nationality || "-"}
+                  </td>
+
+                  <td>
+                    {booking.emiratesId || "-"}
                   </td>
 
                   <td>
@@ -6909,6 +6915,16 @@ const formatImageFileSize =
             }
           </strong>
         </div>
+        <div>
+  <small>
+    Emirates ID
+  </small>
+
+  <strong>
+    {selectedBooking.emiratesId ||
+      "-"}
+  </strong>
+</div>
 
         {selectedBooking.unitReference && (
           <div>

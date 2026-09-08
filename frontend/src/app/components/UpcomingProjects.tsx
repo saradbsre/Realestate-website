@@ -6,8 +6,9 @@ import {
   useState,
 } from "react";
 import {
+  ChevronLeft,
+  ChevronRight,
   MapPin,
-  
 } from "lucide-react";
 import styles
   from "./upcomingProjects.module.css";
@@ -34,8 +35,11 @@ interface UpcomingProject {
   buildArea:
     number | null;
 
-  image:
-    string | null;
+image:
+  string | null;
+
+images:
+  string[];
 
   description:
     string | null;
@@ -45,6 +49,157 @@ interface UpcomingProject {
 
   isActive:
     boolean;
+}
+function ProjectImageCarousel({
+  project,
+}: {
+  project: UpcomingProject;
+}) {
+  const images =
+    Array.isArray(
+      project.images
+    ) &&
+    project.images.length >
+      0
+      ? project.images
+      : project.image
+      ? [project.image]
+      : [];
+
+  const [
+    currentIndex,
+    setCurrentIndex,
+  ] =
+    useState(0);
+
+  const hasMultipleImages =
+    images.length > 1;
+
+
+  const previousImage = (
+    event:
+      React.MouseEvent
+  ) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    setCurrentIndex(
+      (
+        current
+      ) =>
+        current === 0
+          ? images.length -
+            1
+          : current - 1
+    );
+  };
+
+
+  const nextImage = (
+    event:
+      React.MouseEvent
+  ) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    setCurrentIndex(
+      (
+        current
+      ) =>
+        current ===
+        images.length - 1
+          ? 0
+          : current + 1
+    );
+  };
+
+
+  if (
+    images.length === 0
+  ) {
+    return (
+      <div
+        className={`${styles.imageWrap} ${styles.noProjectImage}`}
+      >
+        <div>
+          <span
+            style={{
+              opacity: "0.3",
+            }}
+          >
+            🏢
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+
+  return (
+    <div
+      className={
+        styles.imageWrap
+      }
+    >
+      <img
+        src={
+          images[
+            currentIndex
+          ]
+        }
+        alt={`${project.title} ${
+          currentIndex + 1
+        }`}
+        className={
+          styles.image
+        }
+      />
+
+
+      {hasMultipleImages && (
+        <>
+          <button
+            type="button"
+            onClick={
+              previousImage
+            }
+            className={`${styles.imageArrow} ${styles.imageArrowLeft}`}
+            aria-label="Previous image"
+          >
+            <ChevronLeft
+              size={20}
+            />
+          </button>
+
+
+          <button
+            type="button"
+            onClick={
+              nextImage
+            }
+            className={`${styles.imageArrow} ${styles.imageArrowRight}`}
+            aria-label="Next image"
+          >
+            <ChevronRight
+              size={20}
+            />
+          </button>
+
+
+          <div
+            className={
+              styles.imageCounter
+            }
+          >
+            {currentIndex +
+              1}
+            {" / "}
+            {images.length}
+          </div>
+        </>
+      )}
+    </div>
+  );
 }
 
 export default function UpcomingProjects() {
@@ -303,15 +458,15 @@ export default function UpcomingProjects() {
      PROJECT IMAGE
   ============================================ */
 
-  const hasProjectImage = (
-    image:
-      string | null
-  ) => {
-    return Boolean(
-      image &&
-        image.trim()
-    );
-  };
+  // const hasProjectImage = (
+  //   image:
+  //     string | null
+  // ) => {
+  //   return Boolean(
+  //     image &&
+  //       image.trim()
+  //   );
+  // };
 
   return (
     <section
@@ -459,7 +614,7 @@ export default function UpcomingProjects() {
                       IMAGE
                   ================================= */}
 
-                  {hasProjectImage(
+                  {/* {hasProjectImage(
                     project.image
                   ) ? (
                     <div
@@ -534,7 +689,13 @@ export default function UpcomingProjects() {
                        
                       </div>
                     </div>
-                  )}
+                  )} */}
+
+                  <ProjectImageCarousel
+  project={
+    project
+  }
+/>
 
                   {/* =================================
                       CONTENT

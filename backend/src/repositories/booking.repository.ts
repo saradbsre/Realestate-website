@@ -18,7 +18,7 @@ export interface CreateBookingInput {
 
   phone: string;
 
-  
+    emiratesId: string;
 
   passportFile: Buffer;
 
@@ -117,7 +117,11 @@ export async function createBooking(
         booking.phone
       )
 
-     
+      .input(
+        "EmiratesId",
+        sql.NVarChar(50),
+        booking.emiratesId
+      )
       .input(
         "NationId",
         sql.NVarChar(7),
@@ -186,7 +190,7 @@ export async function createBooking(
             email,
             phone,
              nationId,
-
+emiratesId,
             passportFile,                         
             passportFileName,
             passportMimeType,
@@ -219,7 +223,7 @@ export async function createBooking(
             @Email,
             @Phone,
           @NationId,
-
+@EmiratesId,
             @PassportFile,
             @PassportFileName,
             @PassportMimeType,
