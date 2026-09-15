@@ -49,13 +49,13 @@ export default function Footer() {
         <div className={styles.footerCol}>
           <h3>Location</h3>
           <p style={{ fontSize: "13px", color: "#a3a3a3", lineHeight: "1.6", marginBottom: "12px" }}>
-            🏢 Street # 44A - Hor Al Anz - Deira - Dubai, UAE
+           Street # 44A - Hor Al Anz - Deira - Dubai, UAE
           </p>
           <p style={{ fontSize: "13px", color: "#ffffff", lineHeight: "1.6", fontWeight: "600" }}>
-            📞 Tollfree: <a href="tel:80022773" style={{ color: "#f58220", textDecoration: "none" }}>800 22773</a>
+          Tollfree: <a href="tel:80022773" style={{ color: "#f58220", textDecoration: "none" }}>800 22773</a>
           </p>
           <p style={{ fontSize: "13px", color: "#ffffff", lineHeight: "1.6", fontWeight: "600" }}>
-            📞 Landline: <a href="tel:043298000" style={{ color: "#f58220", textDecoration: "none" }}>04 329 8000</a>
+            Landline: <a href="tel:043298000" style={{ color: "#f58220", textDecoration: "none" }}>04 329 8000</a>
           </p>
         </div>
 
@@ -63,13 +63,13 @@ export default function Footer() {
         <div className={styles.footerCol}>
           <h3>Office Timing</h3>
           <p style={{ fontSize: "13px", color: "#ffffff", fontWeight: "700", lineHeight: "1.6" }}>
-            ⏰ 9:30 AM to 7:30 PM
+            9:30 AM to 7:30 PM
           </p>
           <p style={{ fontSize: "12px", color: "#a3a3a3", marginBottom: "8px" }}>
             (Monday - Saturday)
           </p>
           <p style={{ fontSize: "13px", color: "#ef4444", fontWeight: "700", lineHeight: "1.6" }}>
-            🚪 Sunday: Closed
+            Sunday: Closed
           </p>
         </div>
 

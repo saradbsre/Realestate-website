@@ -16,7 +16,222 @@
   color: white;
   text-align: center;
 }
+.contactInfo {
+  padding: 28px;
+  background: #ffffff;
+  border: 1px solid #dfe7ef;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(16, 47, 87, 0.06);
+}
 
+.contactInfo h2 {
+  margin: 0;
+  color: #102f57;
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.introText {
+  margin: 8px 0 24px;
+  color: #738399;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.infoList {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.infoItem {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 14px;
+  padding: 20px 0;
+  border-bottom: 1px solid #e7edf3;
+}
+
+.infoItem:first-child {
+  padding-top: 4px;
+}
+
+.infoItem:last-child {
+  border-bottom: 0;
+  padding-bottom: 4px;
+}
+
+.infoIcon {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: #edf6ff;
+  color: #0872d5;
+}
+
+.infoDetails {
+  min-width: 0;
+}
+
+.infoLabel {
+  display: block;
+  margin-bottom: 3px;
+  color: #0872d5;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.8px;
+}
+
+.infoDetails h4 {
+  margin: 0 0 5px;
+  color: #152f4e;
+  font-size: 15px;
+  font-weight: 850;
+}
+
+.infoDetails p {
+  margin: 0;
+  color: #60758d;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.mapLink {
+  width: fit-content;
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 10px;
+  border: 1px solid #c9dcec;
+  border-radius: 7px;
+  color: #0868ba;
+  background: #f8fbfe;
+  font-size: 10px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.mapLink:hover {
+  background: #0872d5;
+  border-color: #0872d5;
+  color: #ffffff;
+}
+
+.contactRows {
+  margin-top: 7px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.contactRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  font-size: 11px;
+}
+
+.contactRow span {
+  color: #72839a;
+}
+
+.contactRow a,
+.contactRow strong {
+  color: #123f6d;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.contactRow a:hover {
+  color: #0872d5;
+}
+
+.emailLink {
+  display: inline-block;
+  margin-top: 2px;
+  color: #0872d5;
+  font-size: 11px;
+  font-weight: 700;
+  text-decoration: none;
+  word-break: break-word;
+}
+
+.emailLink:hover {
+  text-decoration: underline;
+}
+
+.closedText {
+  color: #dc2626 !important;
+}
+
+@media (max-width: 650px) {
+  .contactInfo {
+    padding: 18px;
+    border-radius: 12px;
+  }
+
+  .contactInfo h2 {
+    font-size: 20px;
+  }
+
+  .introText {
+    font-size: 11px;
+  }
+
+  .infoItem {
+    grid-template-columns: 40px minmax(0, 1fr);
+    gap: 11px;
+    padding: 16px 0;
+  }
+
+  .infoIcon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+  }
+
+  .infoDetails h4 {
+    font-size: 13px;
+  }
+
+  .infoDetails p,
+  .contactRow {
+    font-size: 10px;
+  }
+
+  .contactRow {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .emailLink {
+    font-size: 10px;
+  }
+}
+.successIcon {
+  width: 64px;
+  height: 64px;
+
+  margin-bottom: 13px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #eaf9ef;
+
+  color: #16813b;
+  margin-left: 40%;
+}
 .hero h1 {
   font-size: 38px;
   font-weight: 700;

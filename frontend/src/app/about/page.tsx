@@ -197,7 +197,7 @@ export default function AboutPage() {
       </section>
 
       {/* Become a Real Estate Agent CTA Bar */}
-      <section className={styles.ctaSection}>
+      {/* <section className={styles.ctaSection}>
         <div className={styles.ctaContent}>
           <h3 className={styles.ctaTitle}>Become a Real Estate Agent</h3>
           <p className={styles.ctaText}>
@@ -212,7 +212,7 @@ export default function AboutPage() {
             Register Now
           </a>
         </div>
-      </section>
+      </section> */}
 
    
     </div>

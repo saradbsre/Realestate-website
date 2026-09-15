@@ -6,7 +6,15 @@ import React, {
 } from "react";
 
 import styles from "./contact.module.css";
-
+import { CircleCheck } from "lucide-react";
+import {
+  Building2,
+  Clock3,
+  Mail,
+  MapPin,
+  Phone,
+  ExternalLink,
+} from "lucide-react";
 /* =========================================================
    API
 ========================================================= */
@@ -518,224 +526,126 @@ export default function ContactPage() {
               journey.
             </p>
 
-            <div
-              className={
-                styles.infoList
-              }
-            >
-              {/* HEAD OFFICE */}
+          <div className={styles.infoList}>
+  {/* HEAD OFFICE */}
+  <div className={styles.infoItem}>
+    <div className={styles.infoIcon}>
+      <Building2 size={20} />
+    </div>
 
-              <div
-                className={
-                  styles.infoItem
-                }
-              >
-                <div
-                  className={
-                    styles.infoIcon
-                  }
-                >
-                  🏢
-                </div>
+    <div className={styles.infoDetails}>
+      <span className={styles.infoLabel}>
+        HEAD OFFICE
+      </span>
 
-                <div
-                  className={
-                    styles.infoDetails
-                  }
-                >
-                  <h4>
-                    Head Office
-                  </h4>
+      <h4>Dubai Head Office</h4>
 
-                  <p>
-                    Street # 44A -
-                    Hor Al Anz -
-                    Deira - Dubai,
-                    United Arab
-                    Emirates
-                  </p>
+      <p>
+        Street # 44A, Hor Al Anz,
+        Deira, Dubai, United Arab Emirates
+      </p>
 
-                  <p
-                    style={{
-                      marginTop:
-                        "6px",
-                    }}
-                  >
-                    <a
-                      href="https://www.google.com/maps/place/Abdulwahed+Bin+Shabib+Real+Estate+L.L.C"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{
-                        color:
-                          "#0f4c81",
+      <a
+        href="https://www.google.com/maps/place/Abdulwahed+Bin+Shabib+Real+Estate+L.L.C"
+        target="_blank"
+        rel="noopener noreferrer"
+        className={styles.mapLink}
+      >
+        <MapPin size={14} />
+        View on Google Maps
+        <ExternalLink size={12} />
+      </a>
+    </div>
+  </div>
 
-                        fontWeight:
-                          600,
+  {/* PHONE */}
+  <div className={styles.infoItem}>
+    <div className={styles.infoIcon}>
+      <Phone size={20} />
+    </div>
 
-                        fontSize:
-                          "13px",
+    <div className={styles.infoDetails}>
+      <span className={styles.infoLabel}>
+        TELEPHONE SUPPORT
+      </span>
 
-                        textDecoration:
-                          "underline",
-                      }}
-                    >
-                      View on Google
-                      Maps →
-                    </a>
-                  </p>
-                </div>
-              </div>
+      <h4>Talk to Our Team</h4>
 
-              {/* PHONE */}
+      <div className={styles.contactRows}>
+        <div className={styles.contactRow}>
+          <span>Toll Free</span>
 
-              <div
-                className={
-                  styles.infoItem
-                }
-              >
-                <div
-                  className={
-                    styles.infoIcon
-                  }
-                >
-                  📞
-                </div>
+          <a href="tel:80022773">
+            800 22773
+          </a>
+        </div>
 
-                <div
-                  className={
-                    styles.infoDetails
-                  }
-                >
-                  <h4>
-                    Telephone
-                    Support
-                  </h4>
+        <div className={styles.contactRow}>
+          <span>Direct Landline</span>
 
-                  <p>
-                    📞 Tollfree
-                    Support:{" "}
-                    <a
-                      href="tel:80022773"
-                      style={{
-                        color:
-                          "#0f4c81",
+          <a href="tel:043298000">
+            04 329 8000
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
 
-                        fontWeight:
-                          700,
-                      }}
-                    >
-                      800 22773
-                    </a>
-                  </p>
+  {/* EMAIL */}
+  <div className={styles.infoItem}>
+    <div className={styles.infoIcon}>
+      <Mail size={20} />
+    </div>
 
-                  <p>
-                    📞 Direct
-                    Landline:{" "}
-                    <a
-                      href="tel:043298000"
-                      style={{
-                        color:
-                          "#0f4c81",
+    <div className={styles.infoDetails}>
+      <span className={styles.infoLabel}>
+        EMAIL SUPPORT
+      </span>
 
-                        fontWeight:
-                          700,
-                      }}
-                    >
-                      04 329 8000
-                    </a>
-                  </p>
-                </div>
-              </div>
+      <h4>General Enquiries</h4>
 
-              {/* EMAIL */}
+      <a
+        href="mailto:info@abdulwahedbinshabibproperty.com"
+        className={styles.emailLink}
+      >
+        info@abdulwahedbinshabibproperty.com
+      </a>
+    </div>
+  </div>
 
-              <div
-                className={
-                  styles.infoItem
-                }
-              >
-                <div
-                  className={
-                    styles.infoIcon
-                  }
-                >
-                  📧
-                </div>
+  {/* HOURS */}
+  <div className={styles.infoItem}>
+    <div className={styles.infoIcon}>
+      <Clock3 size={20} />
+    </div>
 
-                <div
-                  className={
-                    styles.infoDetails
-                  }
-                >
-                  <h4>
-                    Email Support
-                  </h4>
+    <div className={styles.infoDetails}>
+      <span className={styles.infoLabel}>
+        OFFICE HOURS
+      </span>
 
-                  <p>
-                    General
-                    Enquiries:{" "}
+      <h4>Business Hours</h4>
 
-                    <a
-                      href="mailto:info@abdulwahedbinshabibproperty.com"
-                      style={{
-                        color:
-                          "#0f4c81",
+      <div className={styles.contactRows}>
+        <div className={styles.contactRow}>
+          <span>Monday - Saturday</span>
 
-                        fontWeight:
-                          600,
-                      }}
-                    >
-                      info@abdulwahedbinshabibproperty.com
-                    </a>
-                  </p>
-                </div>
-              </div>
+          <strong>
+            9:30 AM - 7:30 PM
+          </strong>
+        </div>
 
-              {/* HOURS */}
+        <div className={styles.contactRow}>
+          <span>Sunday</span>
 
-              <div
-                className={
-                  styles.infoItem
-                }
-              >
-                <div
-                  className={
-                    styles.infoIcon
-                  }
-                >
-                  🕒
-                </div>
-
-                <div
-                  className={
-                    styles.infoDetails
-                  }
-                >
-                  <h4>
-                    Office Hours
-                  </h4>
-
-                  <p>
-                    Monday -
-                    Saturday:
-                    9:30 AM -
-                    7:30 PM
-                  </p>
-
-                  <p
-                    style={{
-                      color:
-                        "#ef4444",
-
-                      fontWeight:
-                        700,
-                    }}
-                  >
-                    Sunday: Closed
-                  </p>
-                </div>
-              </div>
-            </div>
+          <strong className={styles.closedText}>
+            Closed
+          </strong>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
           </div>
 
           {/* ===============================================
@@ -973,7 +883,7 @@ export default function ContactPage() {
                         Leasing
                       </option>
 
-                      <option value="ERP / API Developer Integration">
+                      {/* <option value="ERP / API Developer Integration">
                         ERP / API
                         Developer
                         Integration
@@ -982,7 +892,7 @@ export default function ContactPage() {
                       <option value="Listing My Property">
                         Listing My
                         Property
-                      </option>
+                      </option> */}
                     </select>
                   </div>
 
@@ -1045,16 +955,16 @@ export default function ContactPage() {
                 }}
               >
                 <div
-                  style={{
-                    fontSize:
-                      "48px",
-
-                    marginBottom:
-                      "16px",
-                  }}
-                >
-                  ✅
-                </div>
+              className={
+                styles.successIcon
+              }
+            >
+              <CircleCheck
+                size={
+                  38
+                }
+              />
+            </div>
 
                 <h3
                   style={{

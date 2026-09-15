@@ -17,12 +17,12 @@ export default function Header() {
       <div className={styles.ribbon}>
         {/* Left Side Contact Info */}
         <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-          <a href="tel:043298000" className={styles.ribbonLink}>📞 Landline: 04 329 8000</a>
+          <a href="tel:043298000" className={styles.ribbonLink}>Landline: 04 329 8000</a>
           <span className={styles.ribbonDivider}>|</span>
-          <a href="tel:80022773" className={styles.ribbonLink}>📞 Tollfree: 800 22773</a>
+          <a href="tel:80022773" className={styles.ribbonLink}>Tollfree: 800 22773</a>
           <span className={styles.ribbonDivider}>|</span>
           <a href="mailto:info@abdulwahedbinshabibproperty.com" className={styles.ribbonLink}>
-            📧 info@abdulwahedbinshabibproperty.com
+           info@abdulwahedbinshabibproperty.com
           </a>
         </div>
         
