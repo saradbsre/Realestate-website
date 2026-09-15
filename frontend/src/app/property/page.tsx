@@ -2322,8 +2322,7 @@ const goToBookingPage = (
                             )
                           }
                         >
-                          {unit.unitName ||
-                            unit.propertyType}
+                          {unit.propertyType || "Unit"}
                         </button>
 
 

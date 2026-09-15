@@ -27,7 +27,7 @@ export default function Footer() {
 
         {/* Column 2: Company */}
         <div className={styles.footerCol}>
-          <h3>Company</h3>
+          <h3>Building Type</h3>
           <ul className={styles.footerLinks}>
             <li><Link href="/#listings">Residential</Link></li>
             <li><Link href="/#listings">Commercial</Link></li>

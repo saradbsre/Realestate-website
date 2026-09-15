@@ -2,14 +2,14 @@
 
 import React from "react";
 import Link from "next/link";
-import Header from "../components/Header";
+
 import Footer from "../components/Footer";
 
 export default function TermsPage() {
   return (
     <div style={{ backgroundColor: "#f8fafc", minHeight: "100vh" }}>
       {/* Unified Sticky Header */}
-      <Header />
+   
 
       {/* Breadcrumb Hero */}
       <div style={{ backgroundColor: "#0b1a30", padding: "60px 20px", textAlign: "center", color: "white" }}>

@@ -28,6 +28,11 @@ import {
   type DynamicOption,
 } from "@/lib/propertyApi";
 
+import {
+  savePropertyFilters,
+  getSavedPropertyFilters,
+} from "@/lib/propertyFilterStorage";
+
 
 /* =========================================================
    TYPES
@@ -62,6 +67,16 @@ export default function Hero({
   onSearch,
 }: HeroProps) {
   /* =======================================================
+     FILTER INITIALIZATION
+  ======================================================= */
+
+  const [
+    filtersInitialized,
+    setFiltersInitialized,
+  ] = useState(false);
+
+
+  /* =======================================================
      LOCATION
   ======================================================= */
 
@@ -86,7 +101,7 @@ export default function Hero({
 
 
   /* =======================================================
-     PROPERTY TYPE MASTER DATA
+     PROPERTY TYPE MASTER
   ======================================================= */
 
   const [
@@ -117,7 +132,7 @@ export default function Hero({
 
 
   /* =======================================================
-     SELECTED FILTER VALUES
+     SELECTED FILTERS
   ======================================================= */
 
   const [
@@ -211,7 +226,90 @@ export default function Hero({
 
 
   /* =======================================================
-     LOAD PROPERTY TYPE MASTER
+     RESTORE SAVED FILTERS
+
+     Run only once.
+  ======================================================= */
+
+  useEffect(() => {
+    const saved =
+      getSavedPropertyFilters();
+
+    if (
+      saved
+    ) {
+      setLocation(
+        saved.location ||
+          ""
+      );
+
+      setSelectedUnitTypeId(
+        saved.unitTypeId ??
+          null
+      );
+
+      setBeds(
+        saved.beds ||
+          "All"
+      );
+
+      setAreaRange(
+        saved.areaRange ||
+          "All"
+      );
+
+      setPriceRange(
+        saved.priceRange ||
+          "All"
+      );
+    }
+
+    /*
+     * Important:
+     * do not allow the save effect
+     * to run until restoration is done.
+     */
+    setFiltersInitialized(
+      true
+    );
+  }, []);
+
+
+  /* =======================================================
+     SAVE FILTERS
+  ======================================================= */
+
+  useEffect(() => {
+    if (
+      !filtersInitialized
+    ) {
+      return;
+    }
+
+    savePropertyFilters({
+      location,
+
+      unitTypeId:
+        selectedUnitTypeId,
+
+      beds,
+
+      areaRange,
+
+      priceRange,
+    });
+  }, [
+    filtersInitialized,
+    location,
+    selectedUnitTypeId,
+    beds,
+    areaRange,
+    priceRange,
+  ]);
+
+
+  /* =======================================================
+     LOAD PROPERTY TYPES
   ======================================================= */
 
   useEffect(() => {
@@ -230,11 +328,25 @@ export default function Hero({
         }
 
         setPropertyCategories(
-          data
+          Array.isArray(
+            data
+          )
+            ? data
+            : []
         );
 
+        /*
+         * Only set first tab initially
+         * if no restored type determines
+         * a category later.
+         */
         if (
-          data.length > 0
+          Array.isArray(
+            data
+          ) &&
+          data.length >
+            0 &&
+          !propertyGroup
         ) {
           setPropertyGroup(
             data[0]
@@ -283,7 +395,11 @@ export default function Hero({
         }
 
         setAllProperties(
-          properties
+          Array.isArray(
+            properties
+          )
+            ? properties
+            : []
         );
       } catch (error) {
         console.error(
@@ -364,596 +480,6 @@ export default function Hero({
 
 
   /* =======================================================
-     APARTMENT CHECK
-
-     Beds applicable only to apartment.
-  ======================================================= */
-
-  const isApartment =
-    selectedUnitType
-      ?.name
-      ?.trim()
-      .toUpperCase() ===
-    "APARTMENT";
-
-
-  /* =======================================================
-     PARSE AREA RANGE
-  ======================================================= */
-
-  const selectedArea =
-    useMemo(() => {
-      if (
-        areaRange ===
-        "All"
-      ) {
-        return {
-          minArea:
-            undefined,
-
-          maxArea:
-            undefined,
-        };
-      }
-
-      const [
-        min,
-        max,
-      ] =
-        areaRange.split(
-          "-"
-        );
-
-      return {
-        minArea:
-          min !== ""
-            ? Number(min)
-            : undefined,
-
-        maxArea:
-          max !== ""
-            ? Number(max)
-            : undefined,
-      };
-    }, [
-      areaRange,
-    ]);
-
-
-  /* =======================================================
-     PARSE PRICE RANGE
-  ======================================================= */
-
-  const selectedPrice =
-    useMemo(() => {
-      if (
-        priceRange ===
-        "All"
-      ) {
-        return {
-          minPrice:
-            undefined,
-
-          maxPrice:
-            undefined,
-        };
-      }
-
-      const [
-        min,
-        max,
-      ] =
-        priceRange.split(
-          "-"
-        );
-
-      return {
-        minPrice:
-          min !== ""
-            ? Number(min)
-            : undefined,
-
-        maxPrice:
-          max !== ""
-            ? Number(max)
-            : undefined,
-      };
-    }, [
-      priceRange,
-    ]);
-
-
-  /* =======================================================
-     DYNAMIC / CASCADING FILTERS
-
-     Every selected filter recalculates all other
-     available options from active vacant units.
-  ======================================================= */
-
-  useEffect(() => {
-    let cancelled =
-      false;
-
-    const timer =
-      window.setTimeout(
-        async () => {
-          try {
-            setLoadingDynamicFilters(
-              true
-            );
-
-            const data =
-              await getDynamicPropertyFilters(
-                {
-                  search:
-                    location.trim() ||
-                    undefined,
-
-                  unitTypeId:
-                    selectedUnitTypeId,
-
-                  beds:
-                    isApartment &&
-                    beds !== "All"
-                      ? beds
-                      : undefined,
-
-                  minArea:
-                    selectedArea.minArea,
-
-                  maxArea:
-                    selectedArea.maxArea,
-
-                  minPrice:
-                    selectedPrice.minPrice,
-
-                  maxPrice:
-                    selectedPrice.maxPrice,
-                }
-              );
-
-            if (
-              cancelled
-            ) {
-              return;
-            }
-
-            setDynamicPropertyTypes(
-              data.propertyTypes ||
-                []
-            );
-
-            setDynamicBeds(
-              data.beds ||
-                []
-            );
-
-            setDynamicAreas(
-              data.areaRanges ||
-                []
-            );
-
-            setDynamicPrices(
-              data.priceRanges ||
-                []
-            );
-
-            setDynamicFiltersLoaded(
-              true
-            );
-
-
-            /* =========================================
-               CLEAR INVALID PROPERTY TYPE
-            ========================================= */
-
-            if (
-              selectedUnitTypeId !==
-                null &&
-              !data.propertyTypes.some(
-                (
-                  option
-                ) =>
-                  Number(
-                    option.value
-                  ) ===
-                  selectedUnitTypeId
-              )
-            ) {
-              setSelectedUnitTypeId(
-                null
-              );
-
-              setPropertyCategory(
-                "All Types"
-              );
-
-              setBeds(
-                "All"
-              );
-            }
-
-
-            /* =========================================
-               CLEAR INVALID AREA
-            ========================================= */
-
-            if (
-              areaRange !==
-                "All" &&
-              !data.areaRanges.some(
-                (
-                  option
-                ) =>
-                  String(
-                    option.value
-                  ) ===
-                  areaRange
-              )
-            ) {
-              setAreaRange(
-                "All"
-              );
-            }
-
-
-            /* =========================================
-               CLEAR INVALID PRICE
-            ========================================= */
-
-            if (
-              priceRange !==
-                "All" &&
-              !data.priceRanges.some(
-                (
-                  option
-                ) =>
-                  String(
-                    option.value
-                  ) ===
-                  priceRange
-              )
-            ) {
-              setPriceRange(
-                "All"
-              );
-            }
-
-
-            /* =========================================
-               CLEAR INVALID BEDS
-            ========================================= */
-
-            if (
-              isApartment &&
-              beds !==
-                "All" &&
-              !data.beds.some(
-                (
-                  option
-                ) =>
-                  String(
-                    option.value
-                  ) ===
-                  beds
-              )
-            ) {
-              setBeds(
-                "All"
-              );
-            }
-          } catch (error) {
-            console.error(
-              "Unable to refresh dynamic filters:",
-              error
-            );
-          } finally {
-            if (
-              !cancelled
-            ) {
-              setLoadingDynamicFilters(
-                false
-              );
-            }
-          }
-        },
-        250
-      );
-
-    return () => {
-      cancelled =
-        true;
-
-      window.clearTimeout(
-        timer
-      );
-    };
-  }, [
-    location,
-    selectedUnitTypeId,
-    beds,
-    areaRange,
-    priceRange,
-    isApartment,
-    selectedArea.minArea,
-    selectedArea.maxArea,
-    selectedPrice.minPrice,
-    selectedPrice.maxPrice,
-  ]);
-
-
-  /* =======================================================
-     AVAILABLE PROPERTY TYPES FOR CURRENT TAB
-  ======================================================= */
-
-  const availablePropertyTypes =
-    useMemo(() => {
-      const types =
-        selectedCategory
-          ?.types ||
-        [];
-
-      /*
-       * Before dynamic API returns,
-       * show normal master options.
-       */
-      if (
-        !dynamicFiltersLoaded
-      ) {
-        return types;
-      }
-
-      const availableIds =
-        new Set(
-          dynamicPropertyTypes.map(
-            (
-              option
-            ) =>
-              Number(
-                option.value
-              )
-          )
-        );
-
-      return types.filter(
-        (
-          type
-        ) =>
-          availableIds.has(
-            type.id
-          )
-      );
-    }, [
-      selectedCategory,
-      dynamicPropertyTypes,
-      dynamicFiltersLoaded,
-    ]);
-
-
-  /* =======================================================
-     SELECTED LABELS
-  ======================================================= */
-
-  const selectedAreaLabel =
-    useMemo(() => {
-      if (
-        areaRange ===
-        "All"
-      ) {
-        return "Any Size";
-      }
-
-      return (
-        dynamicAreas.find(
-          (
-            option
-          ) =>
-            String(
-              option.value
-            ) ===
-            areaRange
-        )?.label ||
-        areaRange
-      );
-    }, [
-      areaRange,
-      dynamicAreas,
-    ]);
-
-
-  const selectedPriceLabel =
-    useMemo(() => {
-      if (
-        priceRange ===
-        "All"
-      ) {
-        return "Any Price";
-      }
-
-      return (
-        dynamicPrices.find(
-          (
-            option
-          ) =>
-            String(
-              option.value
-            ) ===
-            priceRange
-        )?.label ||
-        priceRange
-      );
-    }, [
-      priceRange,
-      dynamicPrices,
-    ]);
-
-
-  const selectedBedLabel =
-    useMemo(() => {
-      if (
-        beds ===
-        "All"
-      ) {
-        return "Any";
-      }
-
-      return (
-        dynamicBeds.find(
-          (
-            option
-          ) =>
-            String(
-              option.value
-            ) ===
-            beds
-        )?.label ||
-        beds
-      );
-    }, [
-      beds,
-      dynamicBeds,
-    ]);
-
-
-  /* =======================================================
-     OUTSIDE CLICK
-  ======================================================= */
-
-  useEffect(() => {
-    const handleOutsideClick = (
-      event: MouseEvent
-    ) => {
-      if (
-        filtersRef.current &&
-        !filtersRef.current.contains(
-          event.target as Node
-        )
-      ) {
-        closeAllDropdowns();
-      }
-    };
-
-    document.addEventListener(
-      "mousedown",
-      handleOutsideClick
-    );
-
-    return () => {
-      document.removeEventListener(
-        "mousedown",
-        handleOutsideClick
-      );
-    };
-  }, []);
-
-
-  /* =======================================================
-     CLOSE DROPDOWNS
-  ======================================================= */
-
-  function closeAllDropdowns() {
-    setIsPropertyTypeOpen(
-      false
-    );
-
-    setIsAreaOpen(
-      false
-    );
-
-    setIsBedsOpen(
-      false
-    );
-
-    setIsPriceOpen(
-      false
-    );
-  }
-
-
-  /* =======================================================
-     LOCATION CHANGE
-  ======================================================= */
-
-  function handleLocationChange(
-    value: string
-  ) {
-    setLocation(
-      value
-    );
-
-    if (
-      !value.trim()
-    ) {
-      setSuggestions(
-        []
-      );
-
-      return;
-    }
-
-    const searchValue =
-      value
-        .trim()
-        .toLowerCase();
-
-    const uniqueLocations =
-      new Map<
-        string,
-        Property
-      >();
-
-    allProperties.forEach(
-      (
-        property
-      ) => {
-        const propertyLocation =
-          property.location
-            ?.trim();
-
-        if (
-          !propertyLocation
-        ) {
-          return;
-        }
-
-        if (
-          !propertyLocation
-            .toLowerCase()
-            .includes(
-              searchValue
-            )
-        ) {
-          return;
-        }
-
-        const key =
-          propertyLocation.toLowerCase();
-
-        if (
-          !uniqueLocations.has(
-            key
-          )
-        ) {
-          uniqueLocations.set(
-            key,
-            property
-          );
-        }
-      }
-    );
-
-    setSuggestions(
-      Array.from(
-        uniqueLocations.values()
-      ).slice(
-        0,
-        6
-      )
-    );
-  }
-
-
-  /* =======================================================
      FORMAT CATEGORY
   ======================================================= */
 
@@ -1019,9 +545,844 @@ export default function Hero({
         .toUpperCase();
 
     return (
-      mapping[key] ||
+      mapping[
+        key
+      ] ||
       formatCategoryName(
         value
+      )
+    );
+  }
+
+
+  /* =======================================================
+     RESTORE PROPERTY TYPE LABEL + CATEGORY TAB
+
+     selectedUnitTypeId can come from sessionStorage.
+     Once master data loads we update the visible label.
+  ======================================================= */
+
+  useEffect(() => {
+    if (
+      selectedUnitTypeId ===
+      null
+    ) {
+      setPropertyCategory(
+        "All Types"
+      );
+
+      return;
+    }
+
+
+    if (
+      !selectedUnitType
+    ) {
+      return;
+    }
+
+
+    setPropertyCategory(
+      formatUnitType(
+        selectedUnitType.name
+      )
+    );
+
+
+    const owningCategory =
+      propertyCategories.find(
+        (
+          category
+        ) =>
+          category.types.some(
+            (
+              type
+            ) =>
+              type.id ===
+              selectedUnitTypeId
+          )
+      );
+
+
+    if (
+      owningCategory
+    ) {
+      setPropertyGroup(
+        owningCategory.categoryId
+      );
+    }
+  }, [
+    selectedUnitTypeId,
+    selectedUnitType,
+    propertyCategories,
+  ]);
+
+
+  /* =======================================================
+     APARTMENT CHECK
+  ======================================================= */
+
+  const isApartment =
+    selectedUnitType
+      ?.name
+      ?.trim()
+      .toUpperCase() ===
+    "APARTMENT";
+
+
+  /* =======================================================
+     PARSE AREA RANGE
+  ======================================================= */
+
+  const selectedArea =
+    useMemo(() => {
+      if (
+        areaRange ===
+        "All"
+      ) {
+        return {
+          minArea:
+            undefined,
+
+          maxArea:
+            undefined,
+        };
+      }
+
+
+      const [
+        min,
+        max,
+      ] =
+        areaRange.split(
+          "-"
+        );
+
+
+      return {
+        minArea:
+          min !== ""
+            ? Number(
+                min
+              )
+            : undefined,
+
+        maxArea:
+          max !== ""
+            ? Number(
+                max
+              )
+            : undefined,
+      };
+    }, [
+      areaRange,
+    ]);
+
+
+  /* =======================================================
+     PARSE PRICE RANGE
+  ======================================================= */
+
+  const selectedPrice =
+    useMemo(() => {
+      if (
+        priceRange ===
+        "All"
+      ) {
+        return {
+          minPrice:
+            undefined,
+
+          maxPrice:
+            undefined,
+        };
+      }
+
+
+      const [
+        min,
+        max,
+      ] =
+        priceRange.split(
+          "-"
+        );
+
+
+      return {
+        minPrice:
+          min !== ""
+            ? Number(
+                min
+              )
+            : undefined,
+
+        maxPrice:
+          max !== ""
+            ? Number(
+                max
+              )
+            : undefined,
+      };
+    }, [
+      priceRange,
+    ]);
+
+
+  /* =======================================================
+     DYNAMIC CASCADING FILTERS
+  ======================================================= */
+
+  useEffect(() => {
+    /*
+     * Do not load based on empty
+     * defaults before saved values
+     * have been restored.
+     */
+    if (
+      !filtersInitialized
+    ) {
+      return;
+    }
+
+
+    let cancelled =
+      false;
+
+
+    const timer =
+      window.setTimeout(
+        async () => {
+          try {
+            setLoadingDynamicFilters(
+              true
+            );
+
+
+            const data =
+              await getDynamicPropertyFilters(
+                {
+                  search:
+                    location.trim() ||
+                    undefined,
+
+                  unitTypeId:
+                    selectedUnitTypeId,
+
+                  beds:
+                    isApartment &&
+                    beds !==
+                      "All"
+                      ? beds
+                      : undefined,
+
+                  minArea:
+                    selectedArea.minArea,
+
+                  maxArea:
+                    selectedArea.maxArea,
+
+                  minPrice:
+                    selectedPrice.minPrice,
+
+                  maxPrice:
+                    selectedPrice.maxPrice,
+                }
+              );
+
+
+            if (
+              cancelled
+            ) {
+              return;
+            }
+
+
+            const propertyTypes =
+              Array.isArray(
+                data.propertyTypes
+              )
+                ? data.propertyTypes
+                : [];
+
+            const bedOptions =
+              Array.isArray(
+                data.beds
+              )
+                ? data.beds
+                : [];
+
+            const areaOptions =
+              Array.isArray(
+                data.areaRanges
+              )
+                ? data.areaRanges
+                : [];
+
+            const priceOptions =
+              Array.isArray(
+                data.priceRanges
+              )
+                ? data.priceRanges
+                : [];
+
+
+            setDynamicPropertyTypes(
+              propertyTypes
+            );
+
+            setDynamicBeds(
+              bedOptions
+            );
+
+            setDynamicAreas(
+              areaOptions
+            );
+
+            setDynamicPrices(
+              priceOptions
+            );
+
+            setDynamicFiltersLoaded(
+              true
+            );
+
+
+            /* =========================================
+               PROPERTY TYPE VALIDATION
+            ========================================= */
+
+            if (
+              selectedUnitTypeId !==
+                null &&
+              !propertyTypes.some(
+                (
+                  option
+                ) =>
+                  Number(
+                    option.value
+                  ) ===
+                  selectedUnitTypeId
+              )
+            ) {
+              setSelectedUnitTypeId(
+                null
+              );
+
+              setPropertyCategory(
+                "All Types"
+              );
+
+              setBeds(
+                "All"
+              );
+            }
+
+
+            /* =========================================
+               AREA VALIDATION
+            ========================================= */
+
+            if (
+              areaRange !==
+                "All" &&
+              !areaOptions.some(
+                (
+                  option
+                ) =>
+                  String(
+                    option.value
+                  ) ===
+                  areaRange
+              )
+            ) {
+              setAreaRange(
+                "All"
+              );
+            }
+
+
+            /* =========================================
+               PRICE VALIDATION
+            ========================================= */
+
+            if (
+              priceRange !==
+                "All" &&
+              !priceOptions.some(
+                (
+                  option
+                ) =>
+                  String(
+                    option.value
+                  ) ===
+                  priceRange
+              )
+            ) {
+              setPriceRange(
+                "All"
+              );
+            }
+
+
+            /* =========================================
+               BEDS VALIDATION
+            ========================================= */
+
+            if (
+              isApartment &&
+              beds !==
+                "All" &&
+              !bedOptions.some(
+                (
+                  option
+                ) =>
+                  String(
+                    option.value
+                  ) ===
+                  beds
+              )
+            ) {
+              setBeds(
+                "All"
+              );
+            }
+          } catch (error) {
+            console.error(
+              "Unable to refresh dynamic filters:",
+              error
+            );
+          } finally {
+            if (
+              !cancelled
+            ) {
+              setLoadingDynamicFilters(
+                false
+              );
+            }
+          }
+        },
+        250
+      );
+
+
+    return () => {
+      cancelled =
+        true;
+
+      window.clearTimeout(
+        timer
+      );
+    };
+  }, [
+    filtersInitialized,
+    location,
+    selectedUnitTypeId,
+    beds,
+    areaRange,
+    priceRange,
+    isApartment,
+    selectedArea.minArea,
+    selectedArea.maxArea,
+    selectedPrice.minPrice,
+    selectedPrice.maxPrice,
+  ]);
+
+
+  /* =======================================================
+     AVAILABLE PROPERTY TYPES
+  ======================================================= */
+
+  const availablePropertyTypes =
+    useMemo(() => {
+      const types =
+        selectedCategory
+          ?.types ||
+        [];
+
+
+      if (
+        !dynamicFiltersLoaded
+      ) {
+        return types;
+      }
+
+
+      const availableIds =
+        new Set(
+          dynamicPropertyTypes.map(
+            (
+              option
+            ) =>
+              Number(
+                option.value
+              )
+          )
+        );
+
+
+      return types.filter(
+        (
+          type
+        ) =>
+          availableIds.has(
+            type.id
+          )
+      );
+    }, [
+      selectedCategory,
+      dynamicPropertyTypes,
+      dynamicFiltersLoaded,
+    ]);
+
+
+  /* =======================================================
+     AREA LABEL
+  ======================================================= */
+
+  const selectedAreaLabel =
+    useMemo(() => {
+      if (
+        areaRange ===
+        "All"
+      ) {
+        return "Any Size";
+      }
+
+
+      return (
+        dynamicAreas.find(
+          (
+            option
+          ) =>
+            String(
+              option.value
+            ) ===
+            areaRange
+        )?.label ||
+        formatAreaRange(
+          areaRange
+        )
+      );
+    }, [
+      areaRange,
+      dynamicAreas,
+    ]);
+
+
+  /* =======================================================
+     PRICE LABEL
+  ======================================================= */
+
+  const selectedPriceLabel =
+    useMemo(() => {
+      if (
+        priceRange ===
+        "All"
+      ) {
+        return "Any Price";
+      }
+
+
+      return (
+        dynamicPrices.find(
+          (
+            option
+          ) =>
+            String(
+              option.value
+            ) ===
+            priceRange
+        )?.label ||
+        formatPriceRange(
+          priceRange
+        )
+      );
+    }, [
+      priceRange,
+      dynamicPrices,
+    ]);
+
+
+  /* =======================================================
+     BED LABEL
+  ======================================================= */
+
+  const selectedBedLabel =
+    useMemo(() => {
+      if (
+        beds ===
+        "All"
+      ) {
+        return "Any";
+      }
+
+
+      const fallback:
+        Record<
+          string,
+          string
+        > = {
+        STD:
+          "Studio",
+
+        "1BK":
+          "1 Bed",
+
+        "2BK":
+          "2 Beds",
+
+        "3BK":
+          "3 Beds",
+
+        "4BK":
+          "4 Beds",
+      };
+
+
+      return (
+        dynamicBeds.find(
+          (
+            option
+          ) =>
+            String(
+              option.value
+            ) ===
+            beds
+        )?.label ||
+        fallback[
+          beds
+        ] ||
+        beds
+      );
+    }, [
+      beds,
+      dynamicBeds,
+    ]);
+
+
+  /* =======================================================
+     AREA FALLBACK LABEL
+  ======================================================= */
+
+  function formatAreaRange(
+    value: string
+  ) {
+    const labels:
+      Record<
+        string,
+        string
+      > = {
+      "0-500":
+        "Up to 500 Sq.Ft.",
+
+      "500-1000":
+        "500 - 1,000 Sq.Ft.",
+
+      "1000-2000":
+        "1,000 - 2,000 Sq.Ft.",
+
+      "2000-5000":
+        "2,000 - 5,000 Sq.Ft.",
+
+      "5000-":
+        "5,000+ Sq.Ft.",
+    };
+
+
+    return (
+      labels[
+        value
+      ] ||
+      value
+    );
+  }
+
+
+  /* =======================================================
+     PRICE FALLBACK LABEL
+  ======================================================= */
+
+  function formatPriceRange(
+    value: string
+  ) {
+    const labels:
+      Record<
+        string,
+        string
+      > = {
+      "0-30000":
+        "Up to AED 30K",
+
+      "30000-50000":
+        "AED 30K - 50K",
+
+      "50000-100000":
+        "AED 50K - 100K",
+
+      "100000-200000":
+        "AED 100K - 200K",
+
+      "200000-":
+        "AED 200K+",
+    };
+
+
+    return (
+      labels[
+        value
+      ] ||
+      value
+    );
+  }
+
+
+  /* =======================================================
+     OUTSIDE CLICK
+  ======================================================= */
+
+  useEffect(() => {
+    const handleOutsideClick =
+      (
+        event:
+          MouseEvent
+      ) => {
+        if (
+          filtersRef.current &&
+          !filtersRef.current.contains(
+            event.target as Node
+          )
+        ) {
+          closeAllDropdowns();
+        }
+      };
+
+
+    document.addEventListener(
+      "mousedown",
+      handleOutsideClick
+    );
+
+
+    return () => {
+      document.removeEventListener(
+        "mousedown",
+        handleOutsideClick
+      );
+    };
+  }, []);
+
+
+  /* =======================================================
+     CLOSE DROPDOWNS
+  ======================================================= */
+
+  function closeAllDropdowns() {
+    setIsPropertyTypeOpen(
+      false
+    );
+
+    setIsAreaOpen(
+      false
+    );
+
+    setIsBedsOpen(
+      false
+    );
+
+    setIsPriceOpen(
+      false
+    );
+  }
+
+
+  /* =======================================================
+     LOCATION CHANGE
+  ======================================================= */
+
+  function handleLocationChange(
+    value: string
+  ) {
+    setLocation(
+      value
+    );
+
+
+    if (
+      !value.trim()
+    ) {
+      setSuggestions(
+        []
+      );
+
+      return;
+    }
+
+
+    const searchValue =
+      value
+        .trim()
+        .toLowerCase();
+
+
+    const uniqueLocations =
+      new Map<
+        string,
+        Property
+      >();
+
+
+    allProperties.forEach(
+      (
+        property
+      ) => {
+        const propertyLocation =
+          property.location
+            ?.trim();
+
+
+        if (
+          !propertyLocation
+        ) {
+          return;
+        }
+
+
+        if (
+          !propertyLocation
+            .toLowerCase()
+            .includes(
+              searchValue
+            )
+        ) {
+          return;
+        }
+
+
+        const key =
+          propertyLocation
+            .toLowerCase();
+
+
+        if (
+          !uniqueLocations.has(
+            key
+          )
+        ) {
+          uniqueLocations.set(
+            key,
+            property
+          );
+        }
+      }
+    );
+
+
+    setSuggestions(
+      Array.from(
+        uniqueLocations.values()
+      ).slice(
+        0,
+        6
       )
     );
   }
@@ -1045,13 +1406,15 @@ export default function Hero({
       )
     );
 
+
     /*
-     * Beds belongs to apartment.
-     * Reset when property type changes.
+     * Beds depend on property
+     * type, so clear previous beds.
      */
     setBeds(
       "All"
     );
+
 
     closeAllDropdowns();
   }
@@ -1081,7 +1444,7 @@ export default function Hero({
 
 
   /* =======================================================
-     SELECT ALL TYPES
+     ALL TYPES
   ======================================================= */
 
   function selectAllTypes() {
@@ -1103,11 +1466,13 @@ export default function Hero({
   ) {
     event.preventDefault();
 
+
     let minPrice =
       "";
 
     let maxPrice =
       "";
+
 
     if (
       priceRange !==
@@ -1120,6 +1485,7 @@ export default function Hero({
         priceRange.split(
           "-"
         );
+
 
       minPrice =
         min || "";
@@ -1135,6 +1501,7 @@ export default function Hero({
     let maxArea =
       "";
 
+
     if (
       areaRange !==
       "All"
@@ -1147,12 +1514,35 @@ export default function Hero({
           "-"
         );
 
+
       minArea =
         min || "";
 
       maxArea =
         max || "";
     }
+
+
+    /*
+     * Save immediately before
+     * navigation as well.
+     */
+    savePropertyFilters({
+      location:
+        location.trim(),
+
+      unitTypeId:
+        selectedUnitTypeId,
+
+      beds:
+        isApartment
+          ? beds
+          : "All",
+
+      areaRange,
+
+      priceRange,
+    });
 
 
     onSearch({
@@ -1263,9 +1653,7 @@ export default function Hero({
                 }
               >
                 <MapPinSearch
-                  size={
-                    20
-                  }
+                  size={20}
                 />
               </div>
 
@@ -1278,6 +1666,7 @@ export default function Hero({
                 <label>
                   LOCATION
                 </label>
+
 
                 <input
                   value={
@@ -1306,9 +1695,7 @@ export default function Hero({
                 />
 
 
-                {/* =========================================
-                    LOCATION SUGGESTIONS
-                ========================================= */}
+                {/* LOCATION SUGGESTIONS */}
 
                 {suggestions.length >
                   0 && (
@@ -1332,9 +1719,11 @@ export default function Hero({
                           ) => {
                             event.preventDefault();
 
+
                             setLocation(
                               property.location
                             );
+
 
                             setSuggestions(
                               []
@@ -1342,9 +1731,7 @@ export default function Hero({
                           }}
                         >
                           <MapPin
-                            size={
-                              17
-                            }
+                            size={17}
                           />
 
                           <div>
@@ -1369,9 +1756,7 @@ export default function Hero({
             </div>
 
 
-            {/* =============================================
-                SEARCH BUTTON
-            ============================================= */}
+            {/* SEARCH BUTTON */}
 
             <div
               className={
@@ -1456,9 +1841,7 @@ export default function Hero({
                   }
                 >
                   <Building2
-                    size={
-                      20
-                    }
+                    size={20}
                   />
                 </div>
 
@@ -1493,9 +1876,7 @@ export default function Hero({
                       null && (
                       <span
                         role="button"
-                        tabIndex={
-                          0
-                        }
+                        tabIndex={0}
                         aria-label="Clear property type"
                         className={
                           styles.clearSelectedFilter
@@ -1517,7 +1898,6 @@ export default function Hero({
                               " "
                           ) {
                             event.preventDefault();
-
                             event.stopPropagation();
 
                             clearPropertyType();
@@ -1532,9 +1912,7 @@ export default function Hero({
 
 
                 <ChevronDown
-                  size={
-                    15
-                  }
+                  size={15}
                   className={`${styles.chevron} ${
                     isPropertyTypeOpen
                       ? styles.chevronOpen
@@ -1543,10 +1921,6 @@ export default function Hero({
                 />
               </button>
 
-
-              {/* ===========================================
-                  PROPERTY TYPE PANEL
-              =========================================== */}
 
               {isPropertyTypeOpen && (
                 <div
@@ -1677,10 +2051,9 @@ export default function Hero({
                           styles.dropdownEmpty
                         }
                       >
-                        No property
-                        types available
-                        for the selected
-                        filters.
+                        No property types
+                        available for the
+                        selected filters.
                       </div>
                     )}
                   </div>
@@ -1733,9 +2106,7 @@ export default function Hero({
                   }
                 >
                   <Ruler
-                    size={
-                      20
-                    }
+                    size={20}
                   />
                 </div>
 
@@ -1770,9 +2141,7 @@ export default function Hero({
                       "All" && (
                       <span
                         role="button"
-                        tabIndex={
-                          0
-                        }
+                        tabIndex={0}
                         className={
                           styles.clearSelectedFilter
                         }
@@ -1796,7 +2165,6 @@ export default function Hero({
                               " "
                           ) {
                             event.preventDefault();
-
                             event.stopPropagation();
 
                             setAreaRange(
@@ -1813,9 +2181,7 @@ export default function Hero({
 
 
                 <ChevronDown
-                  size={
-                    15
-                  }
+                  size={15}
                   className={`${styles.chevron} ${
                     isAreaOpen
                       ? styles.chevronOpen
@@ -1824,10 +2190,6 @@ export default function Hero({
                 />
               </button>
 
-
-              {/* ===========================================
-                  AREA OPTIONS
-              =========================================== */}
 
               {isAreaOpen && (
                 <div
@@ -1992,9 +2354,7 @@ export default function Hero({
                   }
                 >
                   <BedDouble
-                    size={
-                      20
-                    }
+                    size={20}
                   />
                 </div>
 
@@ -2030,9 +2390,7 @@ export default function Hero({
                         "All" && (
                         <span
                           role="button"
-                          tabIndex={
-                            0
-                          }
+                          tabIndex={0}
                           className={
                             styles.clearSelectedFilter
                           }
@@ -2056,7 +2414,6 @@ export default function Hero({
                                 " "
                             ) {
                               event.preventDefault();
-
                               event.stopPropagation();
 
                               setBeds(
@@ -2073,9 +2430,7 @@ export default function Hero({
 
 
                 <ChevronDown
-                  size={
-                    15
-                  }
+                  size={15}
                   className={`${styles.chevron} ${
                     isBedsOpen
                       ? styles.chevronOpen
@@ -2084,10 +2439,6 @@ export default function Hero({
                 />
               </button>
 
-
-              {/* ===========================================
-                  BED OPTIONS
-              =========================================== */}
 
               {isApartment &&
                 isBedsOpen && (
@@ -2198,7 +2549,7 @@ export default function Hero({
 
 
             {/* =============================================
-                PRICE
+                PRICE RANGE
             ============================================= */}
 
             <div
@@ -2241,9 +2592,7 @@ export default function Hero({
                   }
                 >
                   <Tag
-                    size={
-                      20
-                    }
+                    size={20}
                   />
                 </div>
 
@@ -2278,9 +2627,7 @@ export default function Hero({
                       "All" && (
                       <span
                         role="button"
-                        tabIndex={
-                          0
-                        }
+                        tabIndex={0}
                         className={
                           styles.clearSelectedFilter
                         }
@@ -2304,7 +2651,6 @@ export default function Hero({
                               " "
                           ) {
                             event.preventDefault();
-
                             event.stopPropagation();
 
                             setPriceRange(
@@ -2321,9 +2667,7 @@ export default function Hero({
 
 
                 <ChevronDown
-                  size={
-                    15
-                  }
+                  size={15}
                   className={`${styles.chevron} ${
                     isPriceOpen
                       ? styles.chevronOpen
@@ -2332,10 +2676,6 @@ export default function Hero({
                 />
               </button>
 
-
-              {/* ===========================================
-                  PRICE OPTIONS
-              =========================================== */}
 
               {isPriceOpen && (
                 <div

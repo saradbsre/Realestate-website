@@ -27,17 +27,25 @@ import {
 import {
   getProperties,
   getPropertyFilterOptions,
-    getPropertyBuildingUnitOptions,
+  getPropertyBuildingUnitOptions,
   type Property,
   type PropertyFilterCategory,
   type PropertyBuildingOption,
   type PropertyUnitOption,
 } from "@/lib/propertyApi";
 
+import {
+  savePropertyFilters,
+  getSavedPropertyFilters,
+  clearSavedPropertyFilters,
+  
+} from "@/lib/propertyFilterStorage";
+
 import styles from "./properties.module.css";
 
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE =
+  10;
 
 
 /* =========================================================
@@ -135,8 +143,9 @@ const AREA_OPTIONS = [
   },
 ];
 
+
 /* =========================================================
-   BUILD RANGE VALUE FROM URL
+   BUILD RANGE VALUE
 ========================================================= */
 
 function buildRangeValue(
@@ -149,14 +158,19 @@ function buildRangeValue(
   const max =
     maxValue?.trim() || "";
 
-  if (!min && !max) {
+  if (
+    !min &&
+    !max
+  ) {
     return "All";
   }
 
   return `${min}-${max}`;
 }
+
+
 /* =========================================================
-   LISTING IMAGE GALLERY
+   IMAGE GALLERY
 ========================================================= */
 
 function ListingImageGallery({
@@ -167,7 +181,9 @@ function ListingImageGallery({
   const [
     activeIndex,
     setActiveIndex,
-  ] = useState(0);
+  ] =
+    useState(0);
+
 
   const images =
     useMemo(() => {
@@ -188,15 +204,6 @@ function ListingImageGallery({
             )
         );
 
-      /*
-       * Backend gallery already contains:
-       *
-       * 1. Building images
-       * 2. Matching unit images
-       *
-       * If gallery is empty, use
-       * primary image as fallback.
-       */
       if (
         validImages.length >
         0
@@ -204,13 +211,13 @@ function ListingImageGallery({
         return validImages;
       }
 
+
       if (
         property.primaryImageUrl
       ) {
         return [
           {
-            imageId:
-              -1,
+            imageId: -1,
 
             imagePath:
               property.primaryImagePath ||
@@ -222,8 +229,7 @@ function ListingImageGallery({
             imageType:
               "BUILDING" as const,
 
-            displayOrder:
-              0,
+            displayOrder: 0,
           },
         ];
       }
@@ -236,10 +242,6 @@ function ListingImageGallery({
     ]);
 
 
-  /*
-   * Reset to first image
-   * whenever listing changes.
-   */
   useEffect(() => {
     setActiveIndex(
       0
@@ -255,7 +257,6 @@ function ListingImageGallery({
         React.MouseEvent<HTMLButtonElement>
     ) => {
       event.preventDefault();
-
       event.stopPropagation();
 
       if (
@@ -269,8 +270,7 @@ function ListingImageGallery({
         (
           current
         ) =>
-          current ===
-          0
+          current === 0
             ? images.length -
               1
             : current -
@@ -285,7 +285,6 @@ function ListingImageGallery({
         React.MouseEvent<HTMLButtonElement>
     ) => {
       event.preventDefault();
-
       event.stopPropagation();
 
       if (
@@ -300,11 +299,9 @@ function ListingImageGallery({
           current
         ) =>
           current ===
-          images.length -
-            1
+          images.length - 1
             ? 0
-            : current +
-              1
+            : current + 1
       );
     };
 
@@ -315,37 +312,27 @@ function ListingImageGallery({
   ) {
     return (
       <div
-  className={
-    styles.galleryPreviewFallback
-  }
->
-  {/* <div
-    className={
-      styles.galleryPreviewFallbackIcon
-    }
-  > */}
-    {/* <Building2
-      size={34}
-    /> */}
-  {/* </div> */}
+        className={
+          styles.galleryPreviewFallback
+        }
+      >
+        <h3
+          className={
+            styles.galleryPreviewFallbackTitle
+          }
+        >
+          No Property Images
+        </h3>
 
-  <h3
-    className={
-      styles.galleryPreviewFallbackTitle
-    }
-  >
-    No Property Images
-  </h3>
-
-  <p
-    className={
-      styles.galleryPreviewFallbackText
-    }
-  >
-    Images for this property are
-    not available yet.
-  </p>
-</div>
+        <p
+          className={
+            styles.galleryPreviewFallbackText
+          }
+        >
+          Images for this property
+          are not available yet.
+        </p>
+      </div>
     );
   }
 
@@ -364,8 +351,7 @@ function ListingImageGallery({
     >
       <img
         src={
-          currentImage
-            .imageUrl!
+          currentImage.imageUrl!
         }
         alt={
           property.title
@@ -376,22 +362,17 @@ function ListingImageGallery({
       />
 
 
-      {/* IMAGE TYPE */}
-
       <span
         className={
           styles.listingImageType
         }
       >
-        {currentImage
-          .imageType ===
+        {currentImage.imageType ===
         "UNIT"
           ? "Unit"
           : "Building"}
       </span>
 
-
-      {/* NAVIGATION */}
 
       {images.length >
         1 && (
@@ -405,9 +386,7 @@ function ListingImageGallery({
             aria-label="Previous image"
           >
             <ChevronLeft
-              size={
-                22
-              }
+              size={22}
             />
           </button>
 
@@ -421,9 +400,7 @@ function ListingImageGallery({
             aria-label="Next image"
           >
             <ChevronRight
-              size={
-                22
-              }
+              size={22}
             />
           </button>
 
@@ -433,12 +410,9 @@ function ListingImageGallery({
               styles.listingGalleryCounter
             }
           >
-            {activeIndex +
-              1}
+            {activeIndex + 1}
             /
-            {
-              images.length
-            }
+            {images.length}
           </span>
         </>
       )}
@@ -446,8 +420,9 @@ function ListingImageGallery({
   );
 }
 
+
 /* =========================================================
-   MAIN CONTENT
+   PROPERTIES CONTENT
 ========================================================= */
 
 function PropertiesContent() {
@@ -456,51 +431,77 @@ function PropertiesContent() {
 
 
   /* =======================================================
+     INITIALIZATION
+  ======================================================= */
+
+  const [
+    filtersInitialized,
+    setFiltersInitialized,
+  ] =
+    useState(false);
+
+
+  /* =======================================================
+     BUILDING
+  ======================================================= */
+
+  const [
+    buildingId,
+    setBuildingId,
+  ] =
+    useState("");
+
+  const [
+    buildingOptions,
+    setBuildingOptions,
+  ] =
+    useState<
+      PropertyBuildingOption[]
+    >([]);
+
+
+  /* =======================================================
+     UNIT
+  ======================================================= */
+
+  const [
+    unitDesc,
+    setUnitDesc,
+  ] =
+    useState("");
+
+  const [
+    unitOptions,
+    setUnitOptions,
+  ] =
+    useState<
+      PropertyUnitOption[]
+    >([]);
+
+
+  /* =======================================================
      RESULTS
   ======================================================= */
-const [
-  buildingId,
-  setBuildingId,
-] =
-  useState("");
 
-const [
-  unitDesc,
-  setUnitDesc,
-] =
-  useState("");
-
-const [
-  buildingOptions,
-  setBuildingOptions,
-] =
-  useState<
-    PropertyBuildingOption[]
-  >([]);
-
-const [
-  unitOptions,
-  setUnitOptions,
-] =
-  useState<
-    PropertyUnitOption[]
-  >([]);
   const [
     properties,
     setProperties,
-  ] = useState<Property[]>(
-    []
-  );
+  ] =
+    useState<
+      Property[]
+    >([]);
 
   const [
     loading,
     setLoading,
-  ] = useState(true);
+  ] =
+    useState(true);
 
   const [
     error,
     setError,
-  ] = useState("");
+  ] =
+    useState("");
 
 
   /* =======================================================
@@ -510,34 +511,44 @@ const [
   const [
     page,
     setPage,
-  ] = useState(1);
+  ] =
+    useState(1);
 
   const [
     pagination,
     setPagination,
-  ] = useState({
-    page: 1,
-    pageSize: PAGE_SIZE,
-    totalRecords: 0,
-    totalPages: 0,
-  });
+  ] =
+    useState({
+      page: 1,
+
+      pageSize:
+        PAGE_SIZE,
+
+      totalRecords:
+        0,
+
+      totalPages:
+        0,
+    });
 
 
   /* =======================================================
-     FILTER OPTIONS FROM DATABASE
+     FILTER OPTIONS
   ======================================================= */
 
   const [
     propertyCategories,
     setPropertyCategories,
-  ] = useState<
-    PropertyFilterCategory[]
-  >([]);
+  ] =
+    useState<
+      PropertyFilterCategory[]
+    >([]);
 
   const [
     loadingFilterOptions,
     setLoadingFilterOptions,
-  ] = useState(true);
+  ] =
+    useState(true);
 
 
   /* =======================================================
@@ -547,12 +558,14 @@ const [
   const [
     locationInput,
     setLocationInput,
-  ] = useState("");
+  ] =
+    useState("");
 
   const [
     location,
     setLocation,
-  ] = useState("");
+  ] =
+    useState("");
 
 
   /* =======================================================
@@ -562,9 +575,10 @@ const [
   const [
     unitTypeId,
     setUnitTypeId,
-  ] = useState<
-    number | null
-  >(null);
+  ] =
+    useState<
+      number | null
+    >(null);
 
 
   /* =======================================================
@@ -574,7 +588,8 @@ const [
   const [
     beds,
     setBeds,
-  ] = useState("All");
+  ] =
+    useState("All");
 
 
   /* =======================================================
@@ -584,7 +599,8 @@ const [
   const [
     priceRange,
     setPriceRange,
-  ] = useState("All");
+  ] =
+    useState("All");
 
 
   /* =======================================================
@@ -594,7 +610,8 @@ const [
   const [
     areaRange,
     setAreaRange,
-  ] = useState("All");
+  ] =
+    useState("All");
 
 
   /* =======================================================
@@ -604,221 +621,327 @@ const [
   const [
     mobileFiltersOpen,
     setMobileFiltersOpen,
-  ] = useState(false);
+  ] =
+    useState(false);
 
 
   /* =======================================================
-     URL SEARCH
+     INITIAL RESTORE
+
+     Priority:
+     1. Existing session filters
+     2. URL filters
+     3. Defaults
   ======================================================= */
 
-/* =======================================================
-   LOAD FILTERS FROM URL
-======================================================= */
-
-useEffect(() => {
-  /* -------------------------------------------------------
-     LOCATION
-  ------------------------------------------------------- */
-
-  const search =
-    searchParams.get(
-      "search"
-    ) || "";
-
-  setLocationInput(
-    search
-  );
-
-  setLocation(
-    search
-  );
-
-/* -------------------------------------------------------
-   BUILDING
-------------------------------------------------------- */
-
-const buildingParam =
-  searchParams.get(
-    "buildingId"
-  ) || "";
-
-setBuildingId(
-  buildingParam
-);
+  useEffect(() => {
+    const saved =
+      getSavedPropertyFilters();
 
 
-/* -------------------------------------------------------
-   UNIT
-------------------------------------------------------- */
+    /* =====================================================
+       RESTORE SESSION
+    ===================================================== */
 
-const unitParam =
-  searchParams.get(
-    "unitDesc"
-  ) || "";
+    if (
+      saved
+    ) {
+      setLocationInput(
+        saved.location ||
+          ""
+      );
 
-setUnitDesc(
-  unitParam
-);
-  /* -------------------------------------------------------
-     PROPERTY TYPE
-  ------------------------------------------------------- */
+      setLocation(
+        saved.location ||
+          ""
+      );
 
-  const unitTypeParam =
-    searchParams.get(
-      "unitTypeId"
-    );
+      setUnitTypeId(
+        saved.unitTypeId ??
+          null
+      );
 
-  if (
-    unitTypeParam &&
-    Number.isFinite(
-      Number(
-        unitTypeParam
-      )
-    )
-  ) {
-    setUnitTypeId(
-      Number(
-        unitTypeParam
-      )
-    );
-  } else {
-    setUnitTypeId(
-      null
-    );
-  }
+      setBeds(
+        saved.beds ||
+          "All"
+      );
 
+      setAreaRange(
+        saved.areaRange ||
+          "All"
+      );
 
-  /* -------------------------------------------------------
-     BEDS
-  ------------------------------------------------------- */
+      setPriceRange(
+        saved.priceRange ||
+          "All"
+      );
 
-  const bedsParam =
-    searchParams.get(
-      "beds"
-    );
+      setBuildingId(
+        saved.buildingId ||
+          ""
+      );
 
-  const validBed =
-    BED_OPTIONS.some(
-      (
-        option
-      ) =>
-        option.value ===
-        bedsParam
-    );
+      setUnitDesc(
+        saved.unitDesc ||
+          ""
+      );
 
-  setBeds(
-    bedsParam &&
-      validBed
-      ? bedsParam
-      : "All"
-  );
+      setPage(
+        saved.page &&
+        saved.page > 0
+          ? saved.page
+          : 1
+      );
+
+      setFiltersInitialized(
+        true
+      );
+
+      return;
+    }
 
 
-  /* -------------------------------------------------------
-     PRICE
-  ------------------------------------------------------- */
+    /* =====================================================
+       LOAD URL FILTERS
+    ===================================================== */
 
-  const minPrice =
-    searchParams.get(
-      "minPrice"
-    );
-
-  const maxPrice =
-    searchParams.get(
-      "maxPrice"
-    );
-
-  const urlPriceRange =
-    buildRangeValue(
-      minPrice,
-      maxPrice
-    );
-
-  const validPriceRange =
-    PRICE_OPTIONS.some(
-      (
-        option
-      ) =>
-        option.value ===
-        urlPriceRange
-    );
-
-  setPriceRange(
-    validPriceRange
-      ? urlPriceRange
-      : "All"
-  );
-
-
-  /* -------------------------------------------------------
-     UNIT AREA
-  ------------------------------------------------------- */
-
-  const minArea =
-    searchParams.get(
-      "minArea"
-    );
-
-  const maxArea =
-    searchParams.get(
-      "maxArea"
-    );
-
-  const urlAreaRange =
-    buildRangeValue(
-      minArea,
-      maxArea
-    );
-
-  const validAreaRange =
-    AREA_OPTIONS.some(
-      (
-        option
-      ) =>
-        option.value ===
-        urlAreaRange
-    );
-
-  setAreaRange(
-    validAreaRange
-      ? urlAreaRange
-      : "All"
-  );
-
-
-  /* -------------------------------------------------------
-     PAGE
-  ------------------------------------------------------- */
-
-  const pageParam =
-    Number(
+    const search =
       searchParams.get(
-        "page"
-      ) ||
-        1
+        "search"
+      ) || "";
+
+    setLocationInput(
+      search
     );
 
-  setPage(
-    Number.isFinite(
-      pageParam
-    ) &&
-      pageParam >
-        0
-      ? pageParam
-      : 1
-  );
-}, [
-  searchParams,
-]);
+    setLocation(
+      search
+    );
+
+
+    setBuildingId(
+      searchParams.get(
+        "buildingId"
+      ) || ""
+    );
+
+
+    setUnitDesc(
+      searchParams.get(
+        "unitDesc"
+      ) || ""
+    );
+
+
+    /* PROPERTY TYPE */
+
+    const unitTypeParam =
+      searchParams.get(
+        "unitTypeId"
+      );
+
+    if (
+      unitTypeParam &&
+      Number.isFinite(
+        Number(
+          unitTypeParam
+        )
+      )
+    ) {
+      setUnitTypeId(
+        Number(
+          unitTypeParam
+        )
+      );
+    } else {
+      setUnitTypeId(
+        null
+      );
+    }
+
+
+    /* BEDS */
+
+    const bedsParam =
+      searchParams.get(
+        "beds"
+      );
+
+    const validBed =
+      BED_OPTIONS.some(
+        (
+          option
+        ) =>
+          option.value ===
+          bedsParam
+      );
+
+    setBeds(
+      bedsParam &&
+        validBed
+        ? bedsParam
+        : "All"
+    );
+
+
+    /* PRICE */
+
+    const urlPriceRange =
+      buildRangeValue(
+        searchParams.get(
+          "minPrice"
+        ),
+        searchParams.get(
+          "maxPrice"
+        )
+      );
+
+    const validPriceRange =
+      PRICE_OPTIONS.some(
+        (
+          option
+        ) =>
+          option.value ===
+          urlPriceRange
+      );
+
+    setPriceRange(
+      validPriceRange
+        ? urlPriceRange
+        : "All"
+    );
+
+
+    /* AREA */
+
+    const urlAreaRange =
+      buildRangeValue(
+        searchParams.get(
+          "minArea"
+        ),
+        searchParams.get(
+          "maxArea"
+        )
+      );
+
+    const validAreaRange =
+      AREA_OPTIONS.some(
+        (
+          option
+        ) =>
+          option.value ===
+          urlAreaRange
+      );
+
+    setAreaRange(
+      validAreaRange
+        ? urlAreaRange
+        : "All"
+    );
+
+
+    /* PAGE */
+
+    const pageParam =
+      Number(
+        searchParams.get(
+          "page"
+        ) || 1
+      );
+
+    setPage(
+      Number.isFinite(
+        pageParam
+      ) &&
+        pageParam > 0
+        ? pageParam
+        : 1
+    );
+
+
+    setFiltersInitialized(
+      true
+    );
+  }, [
+    searchParams,
+  ]);
 
 
   /* =======================================================
-     LOAD FILTER OPTIONS
+     SAVE FILTERS
+  ======================================================= */
+
+  useEffect(() => {
+    if (
+      !filtersInitialized
+    ) {
+      return;
+    }
+
+
+    const isDefault =
+      !location &&
+      !buildingId &&
+      !unitDesc &&
+      unitTypeId ===
+        null &&
+      beds ===
+        "All" &&
+      areaRange ===
+        "All" &&
+      priceRange ===
+        "All" &&
+      page ===
+        1;
+
+
+    if (
+      isDefault
+    ) {
+      clearSavedPropertyFilters();
+
+      return;
+    }
+
+
+    savePropertyFilters({
+      location,
+
+      unitTypeId,
+
+      beds,
+
+      areaRange,
+
+      priceRange,
+
+      buildingId,
+
+      unitDesc,
+
+      page,
+    });
+  }, [
+    filtersInitialized,
+    location,
+    buildingId,
+    unitDesc,
+    unitTypeId,
+    beds,
+    areaRange,
+    priceRange,
+    page,
+  ]);
+
+
+  /* =======================================================
+     LOAD PROPERTY TYPE OPTIONS
   ======================================================= */
 
   useEffect(() => {
     let cancelled =
       false;
+
 
     async function loadFilterOptions() {
       try {
@@ -829,11 +952,13 @@ setUnitDesc(
         const data =
           await getPropertyFilterOptions();
 
+
         if (
           cancelled
         ) {
           return;
         }
+
 
         setPropertyCategories(
           Array.isArray(
@@ -842,11 +967,14 @@ setUnitDesc(
             ? data
             : []
         );
-      } catch (error) {
+      } catch (
+        error
+      ) {
         console.error(
           "Unable to load property filter options:",
           error
         );
+
 
         if (
           !cancelled
@@ -866,7 +994,9 @@ setUnitDesc(
       }
     }
 
+
     loadFilterOptions();
+
 
     return () => {
       cancelled =
@@ -874,119 +1004,232 @@ setUnitDesc(
     };
   }, []);
 
-useEffect(() => {
-  async function loadBuildings() {
-    try {
-      const result =
-        await getPropertyBuildingUnitOptions();
 
-      setBuildingOptions(
-        result.buildings || []
-      );
-    } catch (
-      error
-    ) {
-      console.error(
-        "Unable to load buildings:",
+  /* =======================================================
+     LOAD BUILDINGS
+  ======================================================= */
+
+  useEffect(() => {
+    let cancelled =
+      false;
+
+
+    async function loadBuildings() {
+      try {
+        const result =
+          await getPropertyBuildingUnitOptions();
+
+
+        if (
+          cancelled
+        ) {
+          return;
+        }
+
+
+        setBuildingOptions(
+          result.buildings ||
+            []
+        );
+      } catch (
         error
-      );
-    }
-  }
-
-  loadBuildings();
-}, []);
-
-useEffect(() => {
-  if (
-    !buildingId
-  ) {
-    setUnitOptions(
-      []
-    );
-
-    setUnitDesc(
-      ""
-    );
-
-    return;
-  }
-
-  async function loadUnits() {
-    try {
-      const result =
-        await getPropertyBuildingUnitOptions(
-          buildingId
+      ) {
+        console.error(
+          "Unable to load buildings:",
+          error
         );
 
-      setUnitOptions(
-        result.units || []
-      );
-    } catch (
-      error
-    ) {
-      console.error(
-        "Unable to load units:",
-        error
-      );
 
+        if (
+          !cancelled
+        ) {
+          setBuildingOptions(
+            []
+          );
+        }
+      }
+    }
+
+
+    loadBuildings();
+
+
+    return () => {
+      cancelled =
+        true;
+    };
+  }, []);
+
+
+  /* =======================================================
+     LOAD UNITS FOR BUILDING
+  ======================================================= */
+
+  useEffect(() => {
+    if (
+      !filtersInitialized
+    ) {
+      return;
+    }
+
+
+    if (
+      !buildingId
+    ) {
       setUnitOptions(
         []
       );
+
+      setUnitDesc(
+        ""
+      );
+
+      return;
     }
-  }
 
-  loadUnits();
-}, [
-  buildingId,
-]);
-  /* =======================================================
-     DEBOUNCE LOCATION
-  ======================================================= */
 
-/* =======================================================
-   DEBOUNCE LOCATION
-======================================================= */
+    let cancelled =
+      false;
 
-useEffect(() => {
-  const timer =
-    window.setTimeout(
-      () => {
-        const newLocation =
-          locationInput.trim();
 
-        setLocation(
+    async function loadUnits() {
+      try {
+        const result =
+          await getPropertyBuildingUnitOptions(
+            buildingId
+          );
+
+
+        if (
+          cancelled
+        ) {
+          return;
+        }
+
+
+        const units =
+          result.units ||
+          [];
+
+
+        setUnitOptions(
+          units
+        );
+
+
+        /*
+         * Keep restored unit only
+         * when it still belongs to
+         * selected building.
+         */
+        setUnitDesc(
           (
             current
           ) => {
-            /*
-             * Reset page only when
-             * user actually changes
-             * the location.
-             */
             if (
-              current !==
-              newLocation
+              !current
             ) {
-              setPage(
-                1
-              );
+              return "";
             }
 
-            return newLocation;
+
+            const exists =
+              units.some(
+                (
+                  unit
+                ) =>
+                  unit.unitDesc ===
+                  current
+              );
+
+
+            return exists
+              ? current
+              : "";
           }
         );
-      },
-      400
-    );
+      } catch (
+        error
+      ) {
+        console.error(
+          "Unable to load units:",
+          error
+        );
 
-  return () => {
-    window.clearTimeout(
-      timer
-    );
-  };
-}, [
-  locationInput,
-]);
+
+        if (
+          !cancelled
+        ) {
+          setUnitOptions(
+            []
+          );
+        }
+      }
+    }
+
+
+    loadUnits();
+
+
+    return () => {
+      cancelled =
+        true;
+    };
+  }, [
+    buildingId,
+    filtersInitialized,
+  ]);
+
+
+  /* =======================================================
+     LOCATION DEBOUNCE
+  ======================================================= */
+
+  useEffect(() => {
+    if (
+      !filtersInitialized
+    ) {
+      return;
+    }
+
+
+    const timer =
+      window.setTimeout(
+        () => {
+          const value =
+            locationInput.trim();
+
+
+          setLocation(
+            (
+              current
+            ) => {
+              if (
+                current !==
+                value
+              ) {
+                setPage(
+                  1
+                );
+              }
+
+              return value;
+            }
+          );
+        },
+        400
+      );
+
+
+    return () => {
+      window.clearTimeout(
+        timer
+      );
+    };
+  }, [
+    locationInput,
+    filtersInitialized,
+  ]);
 
 
   /* =======================================================
@@ -1001,15 +1244,21 @@ useEffect(() => {
       ) {
         const found =
           category.types.find(
-            (type) =>
+            (
+              type
+            ) =>
               type.id ===
               unitTypeId
           );
 
-        if (found) {
+
+        if (
+          found
+        ) {
           return found;
         }
       }
+
 
       return null;
     }, [
@@ -1019,7 +1268,7 @@ useEffect(() => {
 
 
   /* =======================================================
-     APARTMENT CHECK
+     APARTMENT
   ======================================================= */
 
   const isApartment =
@@ -1051,7 +1300,7 @@ useEffect(() => {
 
 
   /* =======================================================
-     FORMAT UNIT TYPE
+     FORMAT TYPE
   ======================================================= */
 
   function formatUnitType(
@@ -1080,6 +1329,9 @@ useEffect(() => {
       "SHOW ROOM":
         "Showroom",
 
+      SHOWROOM:
+        "Showroom",
+
       WAREHOUSE:
         "Warehouse",
 
@@ -1087,13 +1339,17 @@ useEffect(() => {
         "Store",
     };
 
+
     const key =
       value
         .trim()
         .toUpperCase();
 
+
     return (
-      mapping[key] ||
+      mapping[
+        key
+      ] ||
       formatCategoryName(
         value
       )
@@ -1102,7 +1358,7 @@ useEffect(() => {
 
 
   /* =======================================================
-     BREADCRUMBS
+     BREADCRUMB VALUES
   ======================================================= */
 
   const selectedCategoryName =
@@ -1113,23 +1369,30 @@ useEffect(() => {
         return null;
       }
 
+
       for (
         const category of
         propertyCategories
       ) {
-        const found =
+        const exists =
           category.types.some(
-            (type) =>
+            (
+              type
+            ) =>
               type.id ===
               unitTypeId
           );
 
-        if (found) {
+
+        if (
+          exists
+        ) {
           return formatCategoryName(
             category.categoryName
           );
         }
       }
+
 
       return null;
     }, [
@@ -1149,10 +1412,13 @@ useEffect(() => {
   const selectedBedName =
     beds !== "All"
       ? BED_OPTIONS.find(
-          (option) =>
+          (
+            option
+          ) =>
             option.value ===
             beds
-        )?.label || null
+        )?.label ||
+        null
       : null;
 
 
@@ -1161,8 +1427,16 @@ useEffect(() => {
   ======================================================= */
 
   useEffect(() => {
+    if (
+      !filtersInitialized
+    ) {
+      return;
+    }
+
+
     let cancelled =
       false;
+
 
     async function loadProperties() {
       try {
@@ -1175,15 +1449,14 @@ useEffect(() => {
         );
 
 
-        /* -----------------------------------------------
-           PRICE RANGE
-        ----------------------------------------------- */
+        /* PRICE */
 
         let minPrice:
           string | undefined;
 
         let maxPrice:
           string | undefined;
+
 
         if (
           priceRange !==
@@ -1197,6 +1470,7 @@ useEffect(() => {
               "-"
             );
 
+
           minPrice =
             min ||
             undefined;
@@ -1207,15 +1481,14 @@ useEffect(() => {
         }
 
 
-        /* -----------------------------------------------
-           AREA RANGE
-        ----------------------------------------------- */
+        /* AREA */
 
         let minArea:
           string | undefined;
 
         let maxArea:
           string | undefined;
+
 
         if (
           areaRange !==
@@ -1229,6 +1502,7 @@ useEffect(() => {
               "-"
             );
 
+
           minArea =
             min ||
             undefined;
@@ -1239,74 +1513,47 @@ useEffect(() => {
         }
 
 
-        /* -----------------------------------------------
-           API CALL
-        ----------------------------------------------- */
+        const result =
+          await getProperties({
+            page,
 
-   const result =
-  await getProperties({
-    page,
+            pageSize:
+              PAGE_SIZE,
 
-    pageSize:
-      PAGE_SIZE,
+            view:
+              "unitType",
 
-    view:
-      "unitType",
+            search:
+              location ||
+              undefined,
 
-    search:
-      location ||
-      undefined,
+            buildingId:
+              buildingId ||
+              undefined,
 
-    /* =========================================
-       BUILDING FILTER
-    ========================================= */
+            unitDesc:
+              unitDesc ||
+              undefined,
 
-    buildingId:
-      buildingId ||
-      undefined,
+            unitTypeId:
+              unitTypeId ??
+              undefined,
 
-    /* =========================================
-       UNIT FILTER
-    ========================================= */
+            beds:
+              isApartment &&
+              beds !==
+                "All"
+                ? beds
+                : undefined,
 
-    unitDesc:
-      unitDesc ||
-      undefined,
+            minPrice,
 
-    /* =========================================
-       PROPERTY TYPE
-    ========================================= */
+            maxPrice,
 
-    unitTypeId:
-      unitTypeId ??
-      undefined,
+            minArea,
 
-    /* =========================================
-       BEDS
-    ========================================= */
-
-    beds:
-      isApartment &&
-      beds !== "All"
-        ? beds
-        : undefined,
-
-    /* =========================================
-       PRICE
-    ========================================= */
-
-    minPrice,
-
-    maxPrice,
-
-    /* =========================================
-       AREA
-    ========================================= */
-
-    minArea,
-
-    maxArea,
-  });
+            maxArea,
+          });
 
 
         if (
@@ -1328,21 +1575,26 @@ useEffect(() => {
         setPagination(
           result.pagination
         );
-      } catch (error) {
+      } catch (
+        error
+      ) {
         if (
           cancelled
         ) {
           return;
         }
 
+
         console.error(
           "Unable to load properties:",
           error
         );
 
+
         setProperties(
           []
         );
+
 
         setError(
           error instanceof
@@ -1361,16 +1613,19 @@ useEffect(() => {
       }
     }
 
+
     loadProperties();
+
 
     return () => {
       cancelled =
         true;
     };
   }, [
+    filtersInitialized,
     page,
-      buildingId,
-  unitDesc,
+    buildingId,
+    unitDesc,
     location,
     unitTypeId,
     beds,
@@ -1393,10 +1648,6 @@ useEffect(() => {
         id
       );
 
-      /*
-       * Beds should clear when
-       * property type changes.
-       */
       setBeds(
         "All"
       );
@@ -1465,51 +1716,54 @@ useEffect(() => {
 
 
   /* =======================================================
-     CLEAR FILTERS
+     CLEAR
   ======================================================= */
 
-const clearFilters =
-  () => {
-    setLocationInput(
-      ""
-    );
+  const clearFilters =
+    () => {
+      clearSavedPropertyFilters();
 
-    setLocation(
-      ""
-    );
 
-    setBuildingId(
-      ""
-    );
+      setLocationInput(
+        ""
+      );
 
-    setUnitDesc(
-      ""
-    );
+      setLocation(
+        ""
+      );
 
-    setUnitOptions(
-      []
-    );
+      setBuildingId(
+        ""
+      );
 
-    setUnitTypeId(
-      null
-    );
+      setUnitDesc(
+        ""
+      );
 
-    setBeds(
-      "All"
-    );
+      setUnitOptions(
+        []
+      );
 
-    setPriceRange(
-      "All"
-    );
+      setUnitTypeId(
+        null
+      );
 
-    setAreaRange(
-      "All"
-    );
+      setBeds(
+        "All"
+      );
 
-    setPage(
-      1
-    );
-  };
+      setPriceRange(
+        "All"
+      );
+
+      setAreaRange(
+        "All"
+      );
+
+      setPage(
+        1
+      );
+    };
 
 
   /* =======================================================
@@ -1540,53 +1794,6 @@ const clearFilters =
 
 
   /* =======================================================
-     PROPERTY TYPES COMPACT
-  ======================================================= */
-
-  function compactAvailableTypes(
-    value:
-      string
-  ) {
-    const list =
-      (
-        value ||
-        ""
-      )
-        .split(",")
-        .map(
-          (
-            item
-          ) =>
-            item.trim()
-        )
-        .filter(
-          Boolean
-        );
-
-    if (
-      list.length <=
-      4
-    ) {
-      return list.join(
-        " • "
-      );
-    }
-
-    return `${list
-      .slice(
-        0,
-        4
-      )
-      .join(
-        " • "
-      )} +${
-      list.length -
-      4
-    } more`;
-  }
-
-
-  /* =======================================================
      JSX
   ======================================================= */
 
@@ -1596,7 +1803,6 @@ const clearFilters =
         styles.page
       }
     >
-
       {/* =================================================
           BREADCRUMB
       ================================================= */}
@@ -1624,9 +1830,7 @@ const clearFilters =
               }
             >
               <Home
-                size={
-                  14
-                }
+                size={14}
               />
 
               <span>
@@ -1636,9 +1840,7 @@ const clearFilters =
 
 
             <ChevronRight
-              size={
-                14
-              }
+              size={14}
               className={
                 styles.breadcrumbArrow
               }
@@ -1658,9 +1860,7 @@ const clearFilters =
             {location && (
               <>
                 <ChevronRight
-                  size={
-                    14
-                  }
+                  size={14}
                   className={
                     styles.breadcrumbArrow
                   }
@@ -1680,9 +1880,7 @@ const clearFilters =
             {selectedCategoryName && (
               <>
                 <ChevronRight
-                  size={
-                    14
-                  }
+                  size={14}
                   className={
                     styles.breadcrumbArrow
                   }
@@ -1704,9 +1902,7 @@ const clearFilters =
             {selectedPropertyTypeName && (
               <>
                 <ChevronRight
-                  size={
-                    14
-                  }
+                  size={14}
                   className={
                     styles.breadcrumbArrow
                   }
@@ -1728,9 +1924,7 @@ const clearFilters =
             {selectedBedName && (
               <>
                 <ChevronRight
-                  size={
-                    14
-                  }
+                  size={14}
                   className={
                     styles.breadcrumbArrow
                   }
@@ -1750,12 +1944,11 @@ const clearFilters =
 
 
             {!location &&
-              !selectedPropertyTypeName && (
+              !selectedPropertyTypeName &&
+              !selectedBedName && (
               <>
                 <ChevronRight
-                  size={
-                    14
-                  }
+                  size={14}
                   className={
                     styles.breadcrumbArrow
                   }
@@ -1776,60 +1969,7 @@ const clearFilters =
 
 
       {/* =================================================
-          RESULT HEADER
-      ================================================= */}
-
-      {/* <section
-        className={
-          styles.resultsHero
-        }
-      >
-        <div
-          className={
-            styles.resultsHeroInner
-          }
-        >
-          <div>
-            <span
-              className={
-                styles.resultsEyebrow
-              }
-            >
-              RENTAL PROPERTIES
-            </span>
-
-            <h1>
-              Properties for Rent
-            </h1>
-
-            <p>
-              Find available residential and commercial
-              properties across the UAE.
-            </p>
-          </div>
-
-
-          <div
-            className={
-              styles.resultsHeroCount
-            }
-          >
-            <strong>
-              {pagination
-                .totalRecords
-                .toLocaleString()}
-            </strong>
-
-            <span>
-              Properties Available
-            </span>
-          </div>
-        </div>
-      </section> */}
-
-
-      {/* =================================================
-          BODY
+          CONTENT
       ================================================= */}
 
       <section
@@ -1837,39 +1977,41 @@ const clearFilters =
           styles.container
         }
       >
+        {/* RESULTS COUNT */}
 
-        {/* =================================================
-    RESULTS COUNT
-================================================= */}
+        <div
+          className={
+            styles.resultsCountRow
+          }
+        >
+          {!loading &&
+            !error && (
+            <div
+              className={
+                styles.resultsCountText
+              }
+            >
+              <strong>
+                {pagination
+                  .totalRecords
+                  .toLocaleString(
+                    "en-AE"
+                  )}
+              </strong>
 
-<div
-  className={
-    styles.resultsCountRow
-  }
->
-  {!loading && !error && (
-    <div
-      className={
-        styles.resultsCountText
-      }
-    >
-      <strong>
-        {pagination.totalRecords.toLocaleString(
-          "en-AE"
-        )}
-      </strong>
+              <span>
+                Rental{" "}
+                {pagination.totalRecords ===
+                1
+                  ? "Property"
+                  : "Properties"}
+              </span>
+            </div>
+          )}
+        </div>
 
-      <span>
-        Rental{" "}
-        {pagination.totalRecords === 1
-          ? "Property"
-          : "Properties"}
-      </span>
-    </div>
-  )}
-</div>
 
-        {/* MOBILE FILTER BUTTON */}
+        {/* MOBILE FILTER */}
 
         <button
           type="button"
@@ -1894,9 +2036,8 @@ const clearFilters =
             styles.resultsLayout
           }
         >
-
           {/* =================================================
-              FILTER SIDEBAR
+              SIDEBAR
           ================================================= */}
 
           <aside
@@ -1906,8 +2047,7 @@ const clearFilters =
                 : ""
             }`}
           >
-
-            {/* FILTER HEADER */}
+            {/* HEADER */}
 
             <div
               className={
@@ -1928,9 +2068,7 @@ const clearFilters =
                 }
               >
                 <RotateCcw
-                  size={
-                    13
-                  }
+                  size={13}
                 />
 
                 Clear
@@ -1938,9 +2076,7 @@ const clearFilters =
             </div>
 
 
-            {/* =================================================
-                LOCATION
-            ================================================= */}
+            {/* LOCATION */}
 
             <div
               className={
@@ -1957,9 +2093,7 @@ const clearFilters =
                 }
               >
                 <Search
-                  size={
-                    15
-                  }
+                  size={15}
                 />
 
                 <input
@@ -1971,9 +2105,7 @@ const clearFilters =
                     event
                   ) =>
                     setLocationInput(
-                      event
-                        .target
-                        .value
+                      event.target.value
                     )
                   }
                   placeholder="Area or community"
@@ -1983,154 +2115,150 @@ const clearFilters =
                 />
               </div>
             </div>
-{/* =================================================
-    BUILDING
-================================================= */}
-
-<div
-  className={
-    styles.filterSection
-  }
->
-  <h3>
-    Building
-  </h3>
-
-  <select
-    value={
-      buildingId
-    }
-   onChange={(
-  event
-) => {
-  const value =
-    event.target.value;
-
-  setBuildingId(
-    value
-  );
-
-  /*
-   * Clear unit from previous building
-   */
-  setUnitDesc(
-    ""
-  );
-
-  setUnitOptions(
-    []
-  );
-
-  setPage(
-    1
-  );
-}}
-    className={
-      styles.filterSelect
-    }
-  >
-    <option value="">
-      All Buildings
-    </option>
-
-    {buildingOptions.map(
-      (
-        building
-      ) => (
-        <option
-          key={
-            building.buildingId
-          }
-          value={
-            building.buildingId
-          }
-        >
-          {
-            building.buildingName
-          }
-        </option>
-      )
-    )}
-  </select>
-</div>
 
 
-{/* =================================================
-    UNIT
-================================================= */}
+            {/* BUILDING */}
 
-<div
-  className={
-    styles.filterSection
-  }
->
-  <h3>
-    Unit
-  </h3>
+            <div
+              className={
+                styles.filterSection
+              }
+            >
+              <h3>
+                Building
+              </h3>
 
-  <select
-    value={
-      unitDesc
-    }
-    disabled={
-      !buildingId
-    }
-    onChange={(
-      event
-    ) => {
-      setUnitDesc(
-        event.target.value
-      );
+              <select
+                value={
+                  buildingId
+                }
+                onChange={(
+                  event
+                ) => {
+                  const value =
+                    event.target.value;
 
-      setPage(
-        1
-      );
-    }}
-    className={
-      styles.filterSelect
-    }
-  >
-    <option value="">
-      {buildingId
-        ? "All Units"
-        : "Select building first"}
-    </option>
+                  setBuildingId(
+                    value
+                  );
 
-    {unitOptions.map(
-      (
-        unit
-      ) => (
-        <option
-          key={
-            unit.unitDesc
-          }
-          value={
-            unit.unitDesc
-          }
-        >
-          Unit{" "}
-          {unit.unitDesc}
+                  setUnitDesc(
+                    ""
+                  );
 
-          {unit.unitType
-            ? ` - ${unit.unitType}`
-            : ""}
+                  setUnitOptions(
+                    []
+                  );
 
-          {unit.annualRent
-            ? ` - AED ${Number(
-                unit.annualRent
-              ).toLocaleString(
-                "en-AE"
-              )}`
-            : ""}
-        </option>
-      )
-    )}
-  </select>
-</div>
+                  setPage(
+                    1
+                  );
+                }}
+                className={
+                  styles.filterSelect
+                }
+              >
+                <option value="">
+                  All Buildings
+                </option>
 
-            {/* =================================================
-                PROPERTY TYPE
-            ================================================= */}
+                {buildingOptions.map(
+                  (
+                    building
+                  ) => (
+                    <option
+                      key={
+                        building.buildingId
+                      }
+                      value={
+                        building.buildingId
+                      }
+                    >
+                      {
+                        building.buildingName
+                      }
+                    </option>
+                  )
+                )}
+              </select>
+            </div>
+
+
+            {/* UNIT */}
+
+            <div
+              className={
+                styles.filterSection
+              }
+            >
+              <h3>
+                Unit
+              </h3>
+
+              <select
+                value={
+                  unitDesc
+                }
+                disabled={
+                  !buildingId
+                }
+                onChange={(
+                  event
+                ) => {
+                  setUnitDesc(
+                    event.target.value
+                  );
+
+                  setPage(
+                    1
+                  );
+                }}
+                className={
+                  styles.filterSelect
+                }
+              >
+                <option value="">
+                  {buildingId
+                    ? "All Units"
+                    : "Select building first"}
+                </option>
+
+                {unitOptions.map(
+                  (
+                    unit
+                  ) => (
+                    <option
+                      key={
+                        unit.unitDesc
+                      }
+                      value={
+                        unit.unitDesc
+                      }
+                    >
+                      Unit{" "}
+                      {
+                        unit.unitDesc
+                      }
+
+                      {unit.unitType
+                        ? ` - ${unit.unitType}`
+                        : ""}
+
+                      {unit.annualRent
+                        ? ` - AED ${Number(
+                            unit.annualRent
+                          ).toLocaleString(
+                            "en-AE"
+                          )}`
+                        : ""}
+                    </option>
+                  )
+                )}
+              </select>
+            </div>
+
+
+            {/* PROPERTY TYPE */}
 
             <div
               className={
@@ -2260,9 +2388,7 @@ const clearFilters =
             </div>
 
 
-            {/* =================================================
-                BEDS
-            ================================================= */}
+            {/* BEDS */}
 
             {isApartment && (
               <div
@@ -2323,9 +2449,7 @@ const clearFilters =
             )}
 
 
-            {/* =================================================
-                AREA / SQ.FT.
-            ================================================= */}
+            {/* AREA */}
 
             <div
               className={
@@ -2384,9 +2508,7 @@ const clearFilters =
             </div>
 
 
-            {/* =================================================
-                ANNUAL RENT
-            ================================================= */}
+            {/* PRICE */}
 
             <div
               className={
@@ -2469,9 +2591,7 @@ const clearFilters =
                   styles.error
                 }
               >
-                {
-                  error
-                }
+                {error}
               </div>
             ) : properties.length ===
               0 ? (
@@ -2481,9 +2601,7 @@ const clearFilters =
                 }
               >
                 <Building2
-                  size={
-                    40
-                  }
+                  size={40}
                 />
 
                 <h2>
@@ -2491,7 +2609,8 @@ const clearFilters =
                 </h2>
 
                 <p>
-                  Try changing your search criteria.
+                  Try changing your
+                  search criteria.
                 </p>
 
                 <button
@@ -2508,309 +2627,258 @@ const clearFilters =
               </div>
             ) : (
               <>
-
-                {/* =============================================
-                    PROPERTY LIST
-                ============================================= */}
+                {/* PROPERTY LIST */}
 
                 <div
-  className={
-    styles.list
-  }
->
-  {properties.map(
-    (
-      property
-    ) => {
-      const unitType =
-        property.availableTypes ||
-        property.type ||
-        "Property";
-
-      const detailHref =
-        `/property?id=${encodeURIComponent(
-          property.id
-        )}&purposeCode=${encodeURIComponent(
-          property.purposeCode ||
-            ""
-        )}`;
-
-      return (
-        <article
-          key={
-            `property-${property.listingId}`
-          }
-          className={
-            styles.propertyCard
-          }
-        >
-
-          {/* =========================================
-              IMAGE GALLERY
-          ========================================= */}
-
-          <Link
-            href={
-              detailHref
-            }
-            className={
-              styles.imageArea
-            }
-          >
-            <ListingImageGallery
-              property={
-                property
-              }
-            />
-          </Link>
-
-
-          {/* =========================================
-              PROPERTY DETAILS
-          ========================================= */}
-
-          <div
-            className={
-              styles.propertyMainInfo
-            }
-          >
-
-            {/* UNIT TYPE */}
-
-            <div
-              className={
-                styles.propertyTopRow
-              }
-            >
-              
-            </div>
-
-
-            <Link
-              href={
-                detailHref
-              }
-              className={
-                styles.unitTitleLink
-              }
-            >
-              <h2
-                className={
-                  styles.unitTypeHeading
-                }
-              >
-                {
-                  unitType
-                }
-              </h2>
-            </Link>
-
-
-            {/* BUILDING NAME */}
-
-            <div
-              className={
-                styles.buildingNameSubtle
-              }
-              title={
-                property.title
-              }
-            >
-              {
-                property.title
-              }
-            </div>
-
-
-            {/* LOCATION */}
-
-            <div
-              className={
-                styles.propertyLocationRow
-              }
-            >
-              <MapPin
-                size={
-                  16
-                }
-                className={
-                  styles.locationIcon
-                }
-              />
-
-              <span>
-                {
-                  property.location
-                }
-              </span>
-            </div>
-
-
-            {/* META */}
-
-            <div
-              className={
-                styles.propertyMetaStack
-              }
-            >
-              <div
-                className={
-                  styles.propertyMetaItem
-                }
-              >
-                <Building2
-                  size={
-                    17
-                  }
                   className={
-                    styles.metaIcon
-                  }
-                />
-
-                <span>
-                  {
-                    unitType
-                  }
-                </span>
-              </div>
-
-
-              <div
-                className={
-                  styles.propertyMetaItem
-                }
-              >
-                <Ruler
-                  size={
-                    17
-                  }
-                  className={
-                    styles.metaIcon
-                  }
-                />
-
-                <span>
-                  {property.maxArea >
-                  property.area
-                    ? `${Number(
-                        property.area
-                      ).toLocaleString(
-                        "en-AE"
-                      )} - ${Number(
-                        property.maxArea
-                      ).toLocaleString(
-                        "en-AE"
-                      )} Sq.Ft.`
-                    : `${Number(
-                        property.area
-                      ).toLocaleString(
-                        "en-AE"
-                      )} Sq.Ft.`}
-                </span>
-              </div>
-            </div>
-
-
-            {/* VACANCY */}
-
-            {/* <div
-              className={
-                styles.typeVacancy
-              }
-            >
-              <strong>
-                {
-                  property.vacantUnits
-                }
-              </strong>
-
-              <span>
-                {property.vacantUnits ===
-                1
-                  ? "Vacant Unit"
-                  : "Vacant Units"}
-              </span>
-            </div> */}
-          </div>
-
-
-          {/* =========================================
-              PRICE
-          ========================================= */}
-
-          <div
-            className={
-              styles.propertyPricePanel
-            }
-          >
-            <div
-              className={
-                styles.startingFromText
-              }
-            >
-              Starting from
-            </div>
-
-
-            {property.price >
-            0 ? (
-              <>
-                <div
-                  className={
-                    styles.propertyPriceValue
+                    styles.list
                   }
                 >
-                  {formatPrice(
-                    property.price
+                  {properties.map(
+                    (
+                      property
+                    ) => {
+                      const unitType =
+                        property.availableTypes ||
+                        property.type ||
+                        "Property";
+
+
+                      const detailHref =
+                        `/property?id=${encodeURIComponent(
+                          property.id
+                        )}&purposeCode=${encodeURIComponent(
+                          property.purposeCode ||
+                            ""
+                        )}`;
+
+
+                      return (
+                        <article
+                          key={`property-${property.listingId}`}
+                          className={
+                            styles.propertyCard
+                          }
+                        >
+                          {/* IMAGE */}
+
+                          <Link
+                            href={
+                              detailHref
+                            }
+                            className={
+                              styles.imageArea
+                            }
+                          >
+                            <ListingImageGallery
+                              property={
+                                property
+                              }
+                            />
+                          </Link>
+
+
+                          {/* INFO */}
+
+                          <div
+                            className={
+                              styles.propertyMainInfo
+                            }
+                          >
+                            <div
+                              className={
+                                styles.propertyTopRow
+                              }
+                            />
+
+
+                            <Link
+                              href={
+                                detailHref
+                              }
+                              className={
+                                styles.unitTitleLink
+                              }
+                            >
+                              <h2
+                                className={
+                                  styles.unitTypeHeading
+                                }
+                              >
+                                {
+                                  unitType
+                                }
+                              </h2>
+                            </Link>
+
+
+                            <div
+                              className={
+                                styles.buildingNameSubtle
+                              }
+                              title={
+                                property.title
+                              }
+                            >
+                              {
+                                property.title
+                              }
+                            </div>
+
+
+                            <div
+                              className={
+                                styles.propertyLocationRow
+                              }
+                            >
+                              <MapPin
+                                size={16}
+                                className={
+                                  styles.locationIcon
+                                }
+                              />
+
+                              <span>
+                                {
+                                  property.location
+                                }
+                              </span>
+                            </div>
+
+
+                            <div
+                              className={
+                                styles.propertyMetaStack
+                              }
+                            >
+                              <div
+                                className={
+                                  styles.propertyMetaItem
+                                }
+                              >
+                                <Building2
+                                  size={17}
+                                  className={
+                                    styles.metaIcon
+                                  }
+                                />
+
+                                <span>
+                                  {
+                                    unitType
+                                  }
+                                </span>
+                              </div>
+
+
+                              <div
+                                className={
+                                  styles.propertyMetaItem
+                                }
+                              >
+                                <Ruler
+                                  size={17}
+                                  className={
+                                    styles.metaIcon
+                                  }
+                                />
+
+                                <span>
+                                  {property.maxArea >
+                                  property.area
+                                    ? `${Number(
+                                        property.area
+                                      ).toLocaleString(
+                                        "en-AE"
+                                      )} - ${Number(
+                                        property.maxArea
+                                      ).toLocaleString(
+                                        "en-AE"
+                                      )} Sq.Ft.`
+                                    : `${Number(
+                                        property.area
+                                      ).toLocaleString(
+                                        "en-AE"
+                                      )} Sq.Ft.`}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+
+                          {/* PRICE */}
+
+                          <div
+                            className={
+                              styles.propertyPricePanel
+                            }
+                          >
+                            <div
+                              className={
+                                styles.startingFromText
+                              }
+                            >
+                              Starting from
+                            </div>
+
+
+                            {property.price >
+                            0 ? (
+                              <>
+                                <div
+                                  className={
+                                    styles.propertyPriceValue
+                                  }
+                                >
+                                  {formatPrice(
+                                    property.price
+                                  )}
+                                </div>
+
+                                <div
+                                  className={
+                                    styles.propertyPricePeriod
+                                  }
+                                >
+                                  per year
+                                </div>
+                              </>
+                            ) : (
+                              <div
+                                className={
+                                  styles.propertyPriceRequest
+                                }
+                              >
+                                Price on Request
+                              </div>
+                            )}
+
+
+                            <Link
+                              href={
+                                detailHref
+                              }
+                              className={
+                                styles.viewPropertyButton
+                              }
+                            >
+                              <span>
+                                View Property
+                              </span>
+
+                              <span>
+                                →
+                              </span>
+                            </Link>
+                          </div>
+                        </article>
+                      );
+                    }
                   )}
                 </div>
 
-                <div
-                  className={
-                    styles.propertyPricePeriod
-                  }
-                >
-                  per year
-                </div>
-              </>
-            ) : (
-              <div
-                className={
-                  styles.propertyPriceRequest
-                }
-              >
-                Price on Request
-              </div>
-            )}
 
-
-            <Link
-              href={
-                detailHref
-              }
-              className={
-                styles.viewPropertyButton
-              }
-            >
-              <span>
-                View Property
-              </span>
-
-              <span>
-                →
-              </span>
-            </Link>
-          </div>
-        </article>
-      );
-    }
-  )}
-</div>
-
-
-                {/* =============================================
-                    PAGINATION
-                ============================================= */}
+                {/* PAGINATION */}
 
                 {pagination.totalPages >
                   1 && (
@@ -2822,8 +2890,7 @@ const clearFilters =
                     <button
                       type="button"
                       disabled={
-                        page ===
-                        1
+                        page === 1
                       }
                       onClick={() =>
                         setPage(
@@ -2832,8 +2899,7 @@ const clearFilters =
                           ) =>
                             Math.max(
                               1,
-                              current -
-                                1
+                              current - 1
                             )
                         )
                       }
@@ -2842,9 +2908,7 @@ const clearFilters =
                       }
                     >
                       <ChevronLeft
-                        size={
-                          18
-                        }
+                        size={18}
                       />
                     </button>
 
@@ -2858,8 +2922,7 @@ const clearFilters =
                         _,
                         index
                       ) =>
-                        index +
-                        1
+                        index + 1
                     )
                       .filter(
                         (
@@ -2883,9 +2946,9 @@ const clearFilters =
                         ) => {
                           const previous =
                             visiblePages[
-                              index -
-                                1
+                              index - 1
                             ];
+
 
                           return (
                             <React.Fragment
@@ -2944,8 +3007,7 @@ const clearFilters =
                           ) =>
                             Math.min(
                               pagination.totalPages,
-                              current +
-                                1
+                              current + 1
                             )
                         )
                       }
@@ -2954,9 +3016,7 @@ const clearFilters =
                       }
                     >
                       <ChevronRight
-                        size={
-                          18
-                        }
+                        size={18}
                       />
                     </button>
                   </div>

@@ -832,7 +832,7 @@ export default function UpcomingProjects() {
           BOTTOM CTA
       ======================================== */}
 
-      {!loading &&
+      {/* {!loading &&
         !error &&
         activePlaceName && (
           <div
@@ -856,7 +856,7 @@ export default function UpcomingProjects() {
               →
             </a>
           </div>
-        )}
+        )} */}
     </section>
   );
 }
