@@ -36,7 +36,7 @@ export default function Header() {
       <nav className={styles.navbar}>
         <Link href="/" className={styles.navBrand} onClick={closeMenu}>
           <img
-            src="/bin-shabib-group.PNG"
+            src="/bin-shabib-group.png"
             alt="ABDULWAHED AHMAD RASHED BIN SHABIB"
             className={styles.logoImage}
           />
