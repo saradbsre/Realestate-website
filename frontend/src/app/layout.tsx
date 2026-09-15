@@ -4,16 +4,19 @@ import type {
 
 import "./globals.css";
 
-import SiteChrome from "./components/SiteChrome";
+import SiteShell
+  from "./components/SiteShell";
+
 
 export const metadata:
   Metadata = {
   title:
-    "Abdulwahed Bin Shabib Real Estate",
+    "Abdulwahed Ahmad Rashed Bin Shabib Real Estate",
 
   description:
-    "Abdulwahed Bin Shabib Real Estate",
+    "Residential and commercial properties for rent in UAE",
 };
+
 
 export default function RootLayout({
   children,
@@ -24,9 +27,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <SiteChrome>
+        <SiteShell>
           {children}
-        </SiteChrome>
+        </SiteShell>
       </body>
     </html>
   );

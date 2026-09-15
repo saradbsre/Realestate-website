@@ -194,29 +194,22 @@ console.log(
   </div>
 
   {/* Actions */}
-  <div
-    className={styles.bookingActions}
-    onClick={(event) => {
-      event.preventDefault();
-      event.stopPropagation();
-    }}
-  >
-    {/* <span className={styles.vacancyBadge}>
-      {prop.vacantUnits} Vacant Units
-    </span> */}
-
-<Link
-  href={`/property?id=${encodeURIComponent(
-    prop.id
-  )}`}
-  className={styles.bookNowButton}
-  onClick={(event) => {
-    event.stopPropagation();
-  }}
+<div
+  className={
+    styles.bookingActions
+  }
 >
-  View Property
-</Link>
-  </div>
+  <span
+    className={
+      styles.bookNowButton
+    }
+  >
+    View Property
+    <span>
+      →
+    </span>
+  </span>
+</div>
 </div>
               </Link>
             );

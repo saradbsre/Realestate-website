@@ -4155,9 +4155,7 @@ const formatImageFileSize =
               }
             >
               <h3>
-                ABDULWAHED BIN
-                SHABIB REAL ESTATE
-                L.L.C
+               ABDULWAHED AHMAD RASHED BIN SHABIB
               </h3>
 
               <p>
