@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getImageManagementBuildings, getProperties, getProperty,  getPropertyFilterOptions,  getPropertyUnits, getPropertyBuildingUnitOptions } from "../controllers/property.controller";
+import { getImageManagementBuildings, getProperties, getProperty,  getPropertyFilterOptions,  getPropertyUnits, getPropertyBuildingUnitOptions, getAvailablePropertyRanges, getDynamicPropertyFilters } from "../controllers/property.controller";
 import {
   getPublicBuildingImages,
   getPublicUnitImages,
@@ -12,6 +12,12 @@ router.get(
   "/filter-options",
   getPropertyFilterOptions
 );
+
+router.get(
+  "/available-ranges",
+  getAvailablePropertyRanges
+);
+
 router.get(
   "/building-unit-options",
   getPropertyBuildingUnitOptions
@@ -21,7 +27,10 @@ router.get(
   getImageManagementBuildings
 );
 
-
+router.get(
+  "/dynamic-filter-options",
+  getDynamicPropertyFilters
+);
 router.get("/:id/units", getPropertyUnits);
 router.get("/:id", getProperty);
 router.get(

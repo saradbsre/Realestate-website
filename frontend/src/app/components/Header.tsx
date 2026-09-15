@@ -36,11 +36,17 @@ export default function Header() {
       <nav className={styles.navbar}>
         <Link href="/" className={styles.navBrand} onClick={closeMenu}>
           <img
-            src="/bin-shabib-group.webp"
-            alt="ABDULWAHED BIN SHABIB REAL ESTATE L.L.C"
+            src="/bin-shabib-group.PNG"
+            alt="ABDULWAHED AHMAD RASHED BIN SHABIB"
             className={styles.logoImage}
           />
+           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginLeft: "10px", color: "#134987", fontWeight: 600 }}>
+          <p className={styles.navDescription}>ABDULWAHED AHMAD RASHED BIN SHABIB</p>
+  </div>
         </Link>
+       
+          
+      
         <button
           type="button"
           className={styles.menuToggle}
@@ -71,8 +77,8 @@ export default function Header() {
           >
             About us
           </Link>
-          <Link href="/#listings" className={styles.navLink} onClick={closeMenu}>Residential</Link>
-          <Link href="/#listings" className={styles.navLink} onClick={closeMenu}>Commercial</Link>
+          {/* <Link href="/#listings" className={styles.navLink} onClick={closeMenu}>Residential</Link>
+          <Link href="/#listings" className={styles.navLink} onClick={closeMenu}>Commercial</Link> */}
           <Link 
             href="/contact" 
             className={`${styles.navLink} ${pathname === "/contact" ? styles.navLinkActive : ""}`}

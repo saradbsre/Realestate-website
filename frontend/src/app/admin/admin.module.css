@@ -1139,7 +1139,7 @@ text-align: start;
 
 .bookingTable th:nth-child(7),
 .bookingTable td:nth-child(7) {
-  width: 130px;
+  width: 200px;
 }
 
 .bookingTable th:nth-child(8),

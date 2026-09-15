@@ -205,18 +205,17 @@ console.log(
       {prop.vacantUnits} Vacant Units
     </span> */}
 
-<button
-  type="button"
+<Link
+  href={`/property?id=${encodeURIComponent(
+    prop.id
+  )}`}
   className={styles.bookNowButton}
   onClick={(event) => {
-    event.preventDefault();
     event.stopPropagation();
-
-    setBookingProperty(prop);
   }}
 >
-  Book Now
-</button>
+  View Property
+</Link>
   </div>
 </div>
               </Link>
@@ -236,20 +235,7 @@ console.log(
     </Link>
   </div>
 )}
-<BookingModal
-  open={bookingProperty !== null}
-  property={
-    bookingProperty
-      ? {
-          id: bookingProperty.id,
-          title: bookingProperty.title,
-        }
-      : null
-  }
-  onClose={() =>
-    setBookingProperty(null)
-  }
-/>
+
       
     </section>
   );

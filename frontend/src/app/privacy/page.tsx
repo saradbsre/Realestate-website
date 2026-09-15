@@ -34,7 +34,7 @@ export default function PrivacyPage() {
               1. Introduction
             </h2>
             <p style={{ color: "#475569", lineHeight: "1.7", fontSize: "15px" }}>
-              At <strong>ABDULWAHED BIN SHABIB REAL ESTATE L.L.C</strong>, we value the privacy and security of our clients and website visitors. This Privacy Policy details how we collect, store, process, and protect your personal data when you interact with our portal (abdulwahedbinshabibproperty.com), submit contact forms, or register interest in our direct rental units.
+              At <strong>ABDULWAHED AHMAD RASHED BIN SHABIB</strong>, we value the privacy and security of our clients and website visitors. This Privacy Policy details how we collect, store, process, and protect your personal data when you interact with our portal (abdulwahedbinshabibproperty.com), submit contact forms, or register interest in our direct rental units.
             </p>
           </section>
 

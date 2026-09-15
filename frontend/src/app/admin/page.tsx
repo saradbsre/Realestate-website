@@ -3633,7 +3633,7 @@ const formatImageFileSize =
           }
         >
           <img
-            src="/bin-shabib-group.webp"
+            src="/bin-shabib-group.PNG"
             alt="Bin Shabib Real Estate"
             className={
               styles.loginLogo

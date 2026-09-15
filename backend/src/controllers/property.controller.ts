@@ -12,6 +12,8 @@ import {
   findImageManagementBuildings,
   findPropertyByBuildingId,
   findVacantUnitsByBuildingId,
+  getAvailablePropertyRangesRepo,
+  getDynamicPropertyFiltersRepo,
   getPropertyBuildingUnitOptionsRepo,
   getPropertyFilterOptionsRepo,
   updatePropertyWebDisplay,
@@ -647,6 +649,136 @@ export async function getPropertyBuildingUnitOptions(
       data,
     });
   } catch (error) {
+    return next(error);
+  }
+}
+
+export async function getAvailablePropertyRanges(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const unitTypeIdRaw =
+      typeof req.query.unitTypeId ===
+      "string"
+        ? req.query.unitTypeId
+        : "";
+
+    const unitTypeId =
+      unitTypeIdRaw &&
+      Number.isFinite(
+        Number(
+          unitTypeIdRaw
+        )
+      )
+        ? Number(
+            unitTypeIdRaw
+          )
+        : undefined;
+
+    const data =
+      await getAvailablePropertyRangesRepo(
+        unitTypeId
+      );
+
+    return res.json({
+      success: true,
+      data,
+    });
+  } catch (error) {
+    console.error(
+      "GET AVAILABLE PROPERTY RANGES ERROR:",
+      error
+    );
+
+    return next(error);
+  }
+}
+
+export async function getDynamicPropertyFilters(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const numberValue = (
+      value: unknown
+    ) => {
+      if (
+        typeof value !==
+        "string"
+      ) {
+        return undefined;
+      }
+
+      const n =
+        Number(value);
+
+      return Number.isFinite(n)
+        ? n
+        : undefined;
+    };
+
+    const data =
+      await getDynamicPropertyFiltersRepo(
+        {
+          search:
+            typeof req.query
+              .search ===
+            "string"
+              ? req.query.search
+              : undefined,
+
+          unitTypeId:
+            numberValue(
+              req.query
+                .unitTypeId
+            ),
+
+          beds:
+            typeof req.query
+              .beds ===
+              "string"
+              ? req.query.beds
+              : undefined,
+
+          minArea:
+            numberValue(
+              req.query
+                .minArea
+            ),
+
+          maxArea:
+            numberValue(
+              req.query
+                .maxArea
+            ),
+
+          minPrice:
+            numberValue(
+              req.query
+                .minPrice
+            ),
+
+          maxPrice:
+            numberValue(
+              req.query
+                .maxPrice
+            ),
+        }
+      );
+
+    return res.json({
+      success: true,
+      data,
+    });
+  } catch (error) {
+    console.error(
+      "DYNAMIC FILTER ERROR:",
+      error
+    );
+
     return next(error);
   }
 }

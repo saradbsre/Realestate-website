@@ -92,7 +92,7 @@ export default function AboutPage() {
             </h2>
             <div>
               <p className={styles.paragraphText}>
-                Founded in 1981, Abdulwahed Bin Shabib Investment L.L.C. is a well-established and diversified UAE-based organization with a strong presence across Real Estate, Retail, Healthcare, Restaurants, and Government Services. With over four decades of experience, the Group has built a reputation for reliability, adaptability, and delivering value-driven solutions to the communities it serves.
+                Founded in 1981, ABDULWAHED AHMAD RASHED BIN SHABIB is a well-established and diversified UAE-based organization with a strong presence across Real Estate, Retail, Healthcare, Restaurants, and Government Services. With over four decades of experience, the Group has built a reputation for reliability, adaptability, and delivering value-driven solutions to the communities it serves.
               </p>
               <p className={styles.paragraphText}>
                 Recognizing the long-term potential of the UAE's property market, the Group expanded into the real estate sector in the late 1990s. Since then, Abdulwahed Bin Shabib has played an active role in developing and managing landmark commercial and residential properties, including well-known developments such as the 2020 Building on Sheikh Zayed Road, Bin Shabib Mall, and commercial buildings in Jebel Ali.

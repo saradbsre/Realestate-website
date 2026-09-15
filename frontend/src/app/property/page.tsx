@@ -10,12 +10,13 @@ import {
 } from "react";
 
 import {
+    useRouter,
   useSearchParams,
 } from "next/navigation";
 
 import Link from "next/link";
 
-import BookingModal from "../components/BookingModal/BookingModal";
+
 
 import {
   Building2,
@@ -141,7 +142,8 @@ const DUMMY_AMENITIES = [
 function PropertyDetailContent() {
   const searchParams =
     useSearchParams();
-
+const router =
+  useRouter();
   const buildingId =
     searchParams
       .get("id")
@@ -181,13 +183,13 @@ function PropertyDetailContent() {
   ] =
     useState("");
 
-  const [
-    bookingUnit,
-    setBookingUnit,
-  ] =
-    useState<PropertyUnit | null>(
-      null
-    );
+  // const [
+  //   bookingUnit,
+  //   setBookingUnit,
+  // ] =
+  //   useState<PropertyUnit | null>(
+  //     null
+  //   );
 
 
   /* =======================================================
@@ -261,50 +263,120 @@ function PropertyDetailContent() {
   ] =
     useState(0);
 
+const [
+  galleryViewerOpen,
+  setGalleryViewerOpen,
+] =
+  useState(false);
+ const openBuildingGallery =
+  (
+    index:
+      number = 0
+  ) => {
+    if (
+      buildingImages.length ===
+      0
+    ) {
+      return;
+    }
 
-  const openBuildingGallery =
-    (
-      index:
-        number = 0
-    ) => {
-      if (
-        buildingImages.length ===
-        0
-      ) {
-        return;
-      }
-
-      const safeIndex =
-        Math.max(
-          0,
-          Math.min(
-            index,
-            buildingImages.length -
-              1
-          )
-        );
-
-      setGalleryIndex(
-        safeIndex
+    const safeIndex =
+      Math.max(
+        0,
+        Math.min(
+          index,
+          buildingImages.length -
+            1
+        )
       );
 
-      setSelectedImage(
-        safeIndex
-      );
+    setGalleryIndex(
+      safeIndex
+    );
 
-      setGalleryOpen(
-        true
-      );
-    };
+    setSelectedImage(
+      safeIndex
+    );
+
+    /*
+     * Open gallery grid first.
+     */
+    setGalleryViewerOpen(
+      false
+    );
+
+    setGalleryOpen(
+      true
+    );
+  };
 
 
-  const closeBuildingGallery =
-    () => {
-      setGalleryOpen(
-        false
-      );
-    };
+const closeBuildingGallery =
+  () => {
+    setGalleryViewerOpen(
+      false
+    );
 
+    setGalleryOpen(
+      false
+    );
+  };
+
+  const openGalleryViewer =
+  (
+    index: number
+  ) => {
+    setGalleryIndex(
+      index
+    );
+
+    setSelectedImage(
+      index
+    );
+
+    setGalleryViewerOpen(
+      true
+    );
+  };
+
+
+const showPreviousGalleryImage =
+  (
+    event:
+      React.MouseEvent<HTMLButtonElement>
+  ) => {
+    event.stopPropagation();
+
+    setGalleryIndex(
+      (
+        current
+      ) =>
+        current === 0
+          ? buildingImages.length -
+            1
+          : current - 1
+    );
+  };
+
+
+const showNextGalleryImage =
+  (
+    event:
+      React.MouseEvent<HTMLButtonElement>
+  ) => {
+    event.stopPropagation();
+
+    setGalleryIndex(
+      (
+        current
+      ) =>
+        current ===
+        buildingImages.length -
+          1
+          ? 0
+          : current + 1
+    );
+  };
 
   /*
    * Lock body scroll while
@@ -1038,7 +1110,109 @@ function PropertyDetailContent() {
     selectedType,
   ]);
 
+const goToBookingPage = (
+  unit: PropertyUnit
+) => {
+  if (!property) {
+    return;
+  }
 
+  const params =
+    new URLSearchParams();
+
+  params.set(
+    "propertyId",
+    property.id
+  );
+
+  params.set(
+    "propertyName",
+    property.title
+  );
+
+  params.set(
+    "location",
+    property.location || ""
+  );
+
+  params.set(
+    "unitReference",
+    String(
+      unit.description || ""
+    )
+  );
+
+  params.set(
+    "unitType",
+    String(
+      unit.propertyType ||
+        unit.unitName ||
+        ""
+    )
+  );
+
+  params.set(
+    "annualRent",
+    String(
+      Number(
+        unit.annualRent || 0
+      )
+    )
+  );
+
+  params.set(
+    "area",
+    String(
+      Number(
+        unit.area || 0
+      )
+    )
+  );
+
+  params.set(
+    "floorNumber",
+    String(
+      unit.floorNumber ??
+        ""
+    )
+  );
+
+  params.set(
+    "payments",
+    String(
+      unit.numberOfPayments ??
+        ""
+    )
+  );
+
+  params.set(
+    "balcony",
+    Number(
+      unit.isWithBalcony
+    ) === 1
+      ? "Yes"
+      : "No"
+  );
+
+  params.set(
+    "ac",
+    String(
+      unit.airConditioning ||
+        ""
+    )
+  );
+
+  params.set(
+  "unitNature",
+  String(
+    unit.unitNature || "R"
+  )
+);
+
+  router.push(
+    `/booking?${params.toString()}`
+  );
+};
   /* =======================================================
      VISIBLE UNITS
   ======================================================= */
@@ -1761,9 +1935,9 @@ function PropertyDetailContent() {
                   {type.name}
                 </span>
 
-                <small>
+                {/* <small>
                   {type.count}
-                </small>
+                </small> */}
 
                 <ChevronRight
                   size={13}
@@ -1926,11 +2100,11 @@ function PropertyDetailContent() {
                     }
                   </span>
 
-                  <small>
+                  {/* <small>
                     {
                       type.count
                     }
-                  </small>
+                  </small> */}
                 </button>
               )
             )}
@@ -1958,7 +2132,7 @@ function PropertyDetailContent() {
                   }
                 </h3>
 
-                <span>
+                {/* <span>
                   {
                     visibleUnits.length
                   }{" "}
@@ -1967,7 +2141,7 @@ function PropertyDetailContent() {
                   1
                     ? "unit"
                     : "units"}
-                </span>
+                </span> */}
               </div>
 
 
@@ -2153,15 +2327,15 @@ function PropertyDetailContent() {
                         </button>
 
 
-                        {unit.referenceNo && (
+                        {unit.description && (
                           <div
                             className={
                               styles.reference
                             }
                           >
-                            Ref:{" "}
+                            Unit No:{" "}
                             {
-                              unit.referenceNo
+                              unit.description
                             }
                           </div>
                         )}
@@ -2207,7 +2381,7 @@ function PropertyDetailContent() {
                         </div>
 
 
-                        <div
+                        {/* <div
                           className={
                             styles.availableBadge
                           }
@@ -2219,7 +2393,7 @@ function PropertyDetailContent() {
                           />
 
                           Available
-                        </div>
+                        </div> */}
                       </div>
 
 
@@ -2236,7 +2410,7 @@ function PropertyDetailContent() {
                           )}
                         </strong>
 
-                        {Number(
+                        {/* {Number(
                           unit.annualRent ||
                             0
                         ) >
@@ -2244,7 +2418,7 @@ function PropertyDetailContent() {
                           <span>
                             per year
                           </span>
-                        )}
+                        )} */}
                       </div>
 
 
@@ -2331,12 +2505,12 @@ function PropertyDetailContent() {
                             styles.bookButton
                           }
                           onClick={() =>
-                            setBookingUnit(
+                            goToBookingPage(
                               unit
                             )
                           }
                         >
-                          Book Now
+                          Request Booking
                         </button>
                       </div>
                     </article>
@@ -2391,22 +2565,22 @@ function PropertyDetailContent() {
                         </button>
 
 
-                        {unit.referenceNo && (
+                        {unit.description && (
                           <span
                             className={
                               styles.unitCardReference
                             }
                           >
-                            Ref:{" "}
+                            Unit No:{" "}
                             {
-                              unit.referenceNo
+                              unit.description
                             }
                           </span>
                         )}
                       </div>
 
 
-                      <div
+                      {/* <div
                         className={
                           styles.cardAvailable
                         }
@@ -2418,7 +2592,7 @@ function PropertyDetailContent() {
                         />
 
                         Available
-                      </div>
+                      </div> */}
                     </div>
 
 
@@ -2442,7 +2616,7 @@ function PropertyDetailContent() {
                           )}
                         </strong>
 
-                        {Number(
+                        {/* {Number(
                           unit.annualRent ||
                             0
                         ) >
@@ -2450,7 +2624,7 @@ function PropertyDetailContent() {
                           <small>
                             per year
                           </small>
-                        )}
+                        )} */}
                       </div>
 
 
@@ -2524,7 +2698,7 @@ function PropertyDetailContent() {
                         styles.unitCardInfo
                       }
                     >
-                      <div>
+                      {/* <div>
                         <Check
                           size={
                             15
@@ -2532,7 +2706,7 @@ function PropertyDetailContent() {
                         />
 
                         Vacant & available
-                      </div>
+                      </div> */}
 
 
                       {Number(
@@ -2571,12 +2745,12 @@ function PropertyDetailContent() {
                         styles.cardBookButton
                       }
                       onClick={() =>
-                        setBookingUnit(
+                        goToBookingPage(
                           unit
                         )
                       }
                     >
-                      Book Now
+                     Request Booking
                     </button>
                   </article>
                 )
@@ -2662,10 +2836,11 @@ function PropertyDetailContent() {
                   ? styles.propertyGalleryItemActive
                   : ""
               }`}
-              onClick={() => {
-                setGalleryIndex(index);
-                setSelectedImage(index);
-              }}
+            onClick={() =>
+  openGalleryViewer(
+    index
+  )
+}
             >
               <img
                 src={image.imageUrl}
@@ -2683,6 +2858,158 @@ function PropertyDetailContent() {
     </div>
   </div>
 )}
+
+
+{galleryOpen &&
+  galleryViewerOpen &&
+  buildingImages.length >
+    0 &&
+  buildingImages[
+    galleryIndex
+  ]?.imageUrl && (
+    <div
+      className={
+        styles.propertyImageViewerBackdrop
+      }
+      onClick={() =>
+        setGalleryViewerOpen(
+          false
+        )
+      }
+    >
+      {/* =========================================
+          BACK TO GALLERY
+      ========================================= */}
+
+      <button
+        type="button"
+        className={
+          styles.propertyImageViewerBack
+        }
+        onClick={(
+          event
+        ) => {
+          event.stopPropagation();
+
+          setGalleryViewerOpen(
+            false
+          );
+        }}
+      >
+        <span>
+          ←
+        </span>
+
+        <span>
+          Back to gallery
+        </span>
+      </button>
+
+
+      {/* =========================================
+          CLOSE EVERYTHING
+      ========================================= */}
+
+      <button
+        type="button"
+        className={
+          styles.propertyImageViewerClose
+        }
+        onClick={(
+          event
+        ) => {
+          event.stopPropagation();
+
+          closeBuildingGallery();
+        }}
+        aria-label="Close gallery"
+      >
+        ×
+      </button>
+
+
+      {/* =========================================
+          PREVIOUS
+      ========================================= */}
+
+      {buildingImages.length >
+        1 && (
+        <button
+          type="button"
+          className={`${styles.propertyImageViewerArrow} ${styles.propertyImageViewerArrowLeft}`}
+          onClick={
+            showPreviousGalleryImage
+          }
+          aria-label="Previous image"
+        >
+          ‹
+        </button>
+      )}
+
+
+      {/* =========================================
+          LARGE IMAGE
+      ========================================= */}
+
+      <div
+        className={
+          styles.propertyImageViewerContent
+        }
+        onClick={(
+          event
+        ) =>
+          event.stopPropagation()
+        }
+      >
+        <img
+          src={
+            buildingImages[
+              galleryIndex
+            ].imageUrl!
+          }
+          alt={`${property.title} ${
+            galleryIndex +
+            1
+          }`}
+          draggable={
+            false
+          }
+        />
+
+        <div
+          className={
+            styles.propertyImageViewerCounter
+          }
+        >
+          {galleryIndex +
+            1}
+          {" / "}
+          {
+            buildingImages.length
+          }
+        </div>
+      </div>
+
+
+      {/* =========================================
+          NEXT
+      ========================================= */}
+
+      {buildingImages.length >
+        1 && (
+        <button
+          type="button"
+          className={`${styles.propertyImageViewerArrow} ${styles.propertyImageViewerArrowRight}`}
+          onClick={
+            showNextGalleryImage
+          }
+          aria-label="Next image"
+        >
+          ›
+        </button>
+      )}
+    </div>
+  )}
 
 
         {/* =================================================
@@ -2911,7 +3238,7 @@ function PropertyDetailContent() {
             BOOKING MODAL
         ================================================= */}
 
-        <BookingModal
+        {/* <BookingModal
           open={
             bookingUnit !==
             null
@@ -2938,7 +3265,7 @@ function PropertyDetailContent() {
               null
             )
           }
-        />
+        /> */}
       </div>
     </main>
   );

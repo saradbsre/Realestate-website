@@ -1,6 +1,6 @@
 "use client";
 
-import React, {
+import {
   useEffect,
   useMemo,
   useRef,
@@ -22,8 +22,10 @@ import styles from "./hero.module.css";
 import {
   getProperties,
   getPropertyFilterOptions,
+  getDynamicPropertyFilters,
   type Property,
   type PropertyFilterCategory,
+  type DynamicOption,
 } from "@/lib/propertyApi";
 
 
@@ -50,120 +52,6 @@ interface HeroProps {
     maxArea: string;
   }) => void;
 }
-
-
-/* =========================================================
-   PRICE OPTIONS
-========================================================= */
-
-const PRICE_OPTIONS = [
-  {
-    value: "All",
-    label: "Any Price",
-  },
-
-  {
-    value: "0-30000",
-    label: "Up to AED 30K",
-  },
-
-  {
-    value: "30000-50000",
-    label: "AED 30K - 50K",
-  },
-
-  {
-    value: "50000-100000",
-    label: "AED 50K - 100K",
-  },
-
-  {
-    value: "100000-200000",
-    label: "AED 100K - 200K",
-  },
-
-  {
-    value: "200000-",
-    label: "AED 200K+",
-  },
-];
-
-
-/* =========================================================
-   UNIT AREA OPTIONS
-========================================================= */
-
-const AREA_OPTIONS = [
-  {
-    value: "All",
-    label: "Any Size",
-  },
-
-  {
-    value: "0-500",
-    label: "Up to 500 Sq.Ft.",
-  },
-
-  {
-    value: "500-1000",
-    label: "500 - 1,000 Sq.Ft.",
-  },
-
-  {
-    value: "1000-2000",
-    label: "1,000 - 2,000 Sq.Ft.",
-  },
-
-  {
-    value: "2000-5000",
-    label: "2,000 - 5,000 Sq.Ft.",
-  },
-
-  {
-    value: "5000-",
-    label: "5,000+ Sq.Ft.",
-  },
-];
-
-
-/* =========================================================
-   BED OPTIONS
-
-   IMPORTANT:
-   value = ERP unit.Purpose_type
-========================================================= */
-
-const BED_OPTIONS = [
-  {
-    value: "All",
-    label: "Any",
-  },
-
-  {
-    value: "STD",
-    label: "Studio",
-  },
-
-  {
-    value: "1BK",
-    label: "1 BHK",
-  },
-
-  {
-    value: "2BK",
-    label: "2 BHK",
-  },
-
-  {
-    value: "3BK",
-    label: "3 BHK",
-  },
-
-  {
-    value: "4BK",
-    label: "4 BHK",
-  },
-];
 
 
 /* =========================================================
@@ -198,7 +86,7 @@ export default function Hero({
 
 
   /* =======================================================
-     PROPERTY TYPE
+     PROPERTY TYPE MASTER DATA
   ======================================================= */
 
   const [
@@ -208,26 +96,11 @@ export default function Hero({
     PropertyFilterCategory[]
   >([]);
 
-  /*
-   * Category tab:
-   *
-   * UC01
-   * UC02
-   */
   const [
     propertyGroup,
     setPropertyGroup,
   ] = useState("");
 
-  /*
-   * Display label:
-   *
-   * All Types
-   * Apartment
-   * Villa
-   * Office
-   * etc.
-   */
   const [
     propertyCategory,
     setPropertyCategory,
@@ -235,11 +108,6 @@ export default function Hero({
     "All Types"
   );
 
-  /*
-   * Actual database UnitTypeId
-   *
-   * null = All Types
-   */
   const [
     selectedUnitTypeId,
     setSelectedUnitTypeId,
@@ -249,8 +117,18 @@ export default function Hero({
 
 
   /* =======================================================
-     PRICE
+     SELECTED FILTER VALUES
   ======================================================= */
+
+  const [
+    areaRange,
+    setAreaRange,
+  ] = useState("All");
+
+  const [
+    beds,
+    setBeds,
+  ] = useState("All");
 
   const [
     priceRange,
@@ -259,23 +137,46 @@ export default function Hero({
 
 
   /* =======================================================
-     UNIT AREA
+     DYNAMIC DB OPTIONS
   ======================================================= */
 
   const [
-    areaRange,
-    setAreaRange,
-  ] = useState("All");
-
-
-  /* =======================================================
-     BEDS
-  ======================================================= */
+    dynamicPropertyTypes,
+    setDynamicPropertyTypes,
+  ] = useState<
+    DynamicOption[]
+  >([]);
 
   const [
-    beds,
-    setBeds,
-  ] = useState("All");
+    dynamicBeds,
+    setDynamicBeds,
+  ] = useState<
+    DynamicOption[]
+  >([]);
+
+  const [
+    dynamicAreas,
+    setDynamicAreas,
+  ] = useState<
+    DynamicOption[]
+  >([]);
+
+  const [
+    dynamicPrices,
+    setDynamicPrices,
+  ] = useState<
+    DynamicOption[]
+  >([]);
+
+  const [
+    loadingDynamicFilters,
+    setLoadingDynamicFilters,
+  ] = useState(false);
+
+  const [
+    dynamicFiltersLoaded,
+    setDynamicFiltersLoaded,
+  ] = useState(false);
 
 
   /* =======================================================
@@ -288,11 +189,6 @@ export default function Hero({
   ] = useState(false);
 
   const [
-    isPriceOpen,
-    setIsPriceOpen,
-  ] = useState(false);
-
-  const [
     isAreaOpen,
     setIsAreaOpen,
   ] = useState(false);
@@ -302,6 +198,12 @@ export default function Hero({
     setIsBedsOpen,
   ] = useState(false);
 
+  const [
+    isPriceOpen,
+    setIsPriceOpen,
+  ] = useState(false);
+
+
   const filtersRef =
     useRef<HTMLDivElement | null>(
       null
@@ -309,20 +211,28 @@ export default function Hero({
 
 
   /* =======================================================
-     LOAD PROPERTY TYPE FILTER OPTIONS
+     LOAD PROPERTY TYPE MASTER
   ======================================================= */
 
   useEffect(() => {
-    getPropertyFilterOptions()
-      .then((data) => {
+    let cancelled =
+      false;
+
+    async function loadPropertyTypes() {
+      try {
+        const data =
+          await getPropertyFilterOptions();
+
+        if (
+          cancelled
+        ) {
+          return;
+        }
+
         setPropertyCategories(
           data
         );
 
-        /*
-         * Select first category
-         * tab by default.
-         */
         if (
           data.length > 0
         ) {
@@ -331,92 +241,69 @@ export default function Hero({
               .categoryId
           );
         }
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error(
           "Error loading property filter options:",
           error
         );
-      });
+      }
+    }
+
+    loadPropertyTypes();
+
+    return () => {
+      cancelled =
+        true;
+    };
   }, []);
 
 
   /* =======================================================
-     LOAD LOCATION SUGGESTION DATA
+     LOAD LOCATION SUGGESTIONS
   ======================================================= */
 
   useEffect(() => {
-    getProperties({
-      page: 1,
+    let cancelled =
+      false;
 
-      pageSize: 6,
-    })
-      .then(
-        ({
+    async function loadLocations() {
+      try {
+        const {
           properties,
-        }) => {
-          setAllProperties(
-            properties
-          );
+        } =
+          await getProperties({
+            page: 1,
+            pageSize: 100,
+          });
+
+        if (
+          cancelled
+        ) {
+          return;
         }
-      )
-      .catch((error) => {
+
+        setAllProperties(
+          properties
+        );
+      } catch (error) {
         console.error(
           "Error loading suggestion list:",
           error
         );
-      });
-  }, []);
-
-
-  /* =======================================================
-     OUTSIDE CLICK
-  ======================================================= */
-
-  useEffect(() => {
-    const handleOutsideClick = (
-      event: MouseEvent
-    ) => {
-      if (
-        filtersRef.current &&
-        !filtersRef.current.contains(
-          event.target as Node
-        )
-      ) {
-        setIsPropertyTypeOpen(
-          false
-        );
-
-        setIsPriceOpen(
-          false
-        );
-
-        setIsAreaOpen(
-          false
-        );
-
-        setIsBedsOpen(
-          false
-        );
       }
-    };
+    }
 
-    document.addEventListener(
-      "mousedown",
-      handleOutsideClick
-    );
+    loadLocations();
 
     return () => {
-      document.removeEventListener(
-        "mousedown",
-        handleOutsideClick
-      );
+      cancelled =
+        true;
     };
   }, []);
 
 
   /* =======================================================
-     CURRENT CATEGORY
+     CURRENT PROPERTY CATEGORY
   ======================================================= */
 
   const selectedCategory =
@@ -455,12 +342,16 @@ export default function Hero({
       ) {
         const found =
           category.types.find(
-            (type) =>
+            (
+              type
+            ) =>
               type.id ===
               selectedUnitTypeId
           );
 
-        if (found) {
+        if (
+          found
+        ) {
           return found;
         }
       }
@@ -474,6 +365,8 @@ export default function Hero({
 
   /* =======================================================
      APARTMENT CHECK
+
+     Beds applicable only to apartment.
   ======================================================= */
 
   const isApartment =
@@ -485,15 +378,512 @@ export default function Hero({
 
 
   /* =======================================================
+     PARSE AREA RANGE
+  ======================================================= */
+
+  const selectedArea =
+    useMemo(() => {
+      if (
+        areaRange ===
+        "All"
+      ) {
+        return {
+          minArea:
+            undefined,
+
+          maxArea:
+            undefined,
+        };
+      }
+
+      const [
+        min,
+        max,
+      ] =
+        areaRange.split(
+          "-"
+        );
+
+      return {
+        minArea:
+          min !== ""
+            ? Number(min)
+            : undefined,
+
+        maxArea:
+          max !== ""
+            ? Number(max)
+            : undefined,
+      };
+    }, [
+      areaRange,
+    ]);
+
+
+  /* =======================================================
+     PARSE PRICE RANGE
+  ======================================================= */
+
+  const selectedPrice =
+    useMemo(() => {
+      if (
+        priceRange ===
+        "All"
+      ) {
+        return {
+          minPrice:
+            undefined,
+
+          maxPrice:
+            undefined,
+        };
+      }
+
+      const [
+        min,
+        max,
+      ] =
+        priceRange.split(
+          "-"
+        );
+
+      return {
+        minPrice:
+          min !== ""
+            ? Number(min)
+            : undefined,
+
+        maxPrice:
+          max !== ""
+            ? Number(max)
+            : undefined,
+      };
+    }, [
+      priceRange,
+    ]);
+
+
+  /* =======================================================
+     DYNAMIC / CASCADING FILTERS
+
+     Every selected filter recalculates all other
+     available options from active vacant units.
+  ======================================================= */
+
+  useEffect(() => {
+    let cancelled =
+      false;
+
+    const timer =
+      window.setTimeout(
+        async () => {
+          try {
+            setLoadingDynamicFilters(
+              true
+            );
+
+            const data =
+              await getDynamicPropertyFilters(
+                {
+                  search:
+                    location.trim() ||
+                    undefined,
+
+                  unitTypeId:
+                    selectedUnitTypeId,
+
+                  beds:
+                    isApartment &&
+                    beds !== "All"
+                      ? beds
+                      : undefined,
+
+                  minArea:
+                    selectedArea.minArea,
+
+                  maxArea:
+                    selectedArea.maxArea,
+
+                  minPrice:
+                    selectedPrice.minPrice,
+
+                  maxPrice:
+                    selectedPrice.maxPrice,
+                }
+              );
+
+            if (
+              cancelled
+            ) {
+              return;
+            }
+
+            setDynamicPropertyTypes(
+              data.propertyTypes ||
+                []
+            );
+
+            setDynamicBeds(
+              data.beds ||
+                []
+            );
+
+            setDynamicAreas(
+              data.areaRanges ||
+                []
+            );
+
+            setDynamicPrices(
+              data.priceRanges ||
+                []
+            );
+
+            setDynamicFiltersLoaded(
+              true
+            );
+
+
+            /* =========================================
+               CLEAR INVALID PROPERTY TYPE
+            ========================================= */
+
+            if (
+              selectedUnitTypeId !==
+                null &&
+              !data.propertyTypes.some(
+                (
+                  option
+                ) =>
+                  Number(
+                    option.value
+                  ) ===
+                  selectedUnitTypeId
+              )
+            ) {
+              setSelectedUnitTypeId(
+                null
+              );
+
+              setPropertyCategory(
+                "All Types"
+              );
+
+              setBeds(
+                "All"
+              );
+            }
+
+
+            /* =========================================
+               CLEAR INVALID AREA
+            ========================================= */
+
+            if (
+              areaRange !==
+                "All" &&
+              !data.areaRanges.some(
+                (
+                  option
+                ) =>
+                  String(
+                    option.value
+                  ) ===
+                  areaRange
+              )
+            ) {
+              setAreaRange(
+                "All"
+              );
+            }
+
+
+            /* =========================================
+               CLEAR INVALID PRICE
+            ========================================= */
+
+            if (
+              priceRange !==
+                "All" &&
+              !data.priceRanges.some(
+                (
+                  option
+                ) =>
+                  String(
+                    option.value
+                  ) ===
+                  priceRange
+              )
+            ) {
+              setPriceRange(
+                "All"
+              );
+            }
+
+
+            /* =========================================
+               CLEAR INVALID BEDS
+            ========================================= */
+
+            if (
+              isApartment &&
+              beds !==
+                "All" &&
+              !data.beds.some(
+                (
+                  option
+                ) =>
+                  String(
+                    option.value
+                  ) ===
+                  beds
+              )
+            ) {
+              setBeds(
+                "All"
+              );
+            }
+          } catch (error) {
+            console.error(
+              "Unable to refresh dynamic filters:",
+              error
+            );
+          } finally {
+            if (
+              !cancelled
+            ) {
+              setLoadingDynamicFilters(
+                false
+              );
+            }
+          }
+        },
+        250
+      );
+
+    return () => {
+      cancelled =
+        true;
+
+      window.clearTimeout(
+        timer
+      );
+    };
+  }, [
+    location,
+    selectedUnitTypeId,
+    beds,
+    areaRange,
+    priceRange,
+    isApartment,
+    selectedArea.minArea,
+    selectedArea.maxArea,
+    selectedPrice.minPrice,
+    selectedPrice.maxPrice,
+  ]);
+
+
+  /* =======================================================
+     AVAILABLE PROPERTY TYPES FOR CURRENT TAB
+  ======================================================= */
+
+  const availablePropertyTypes =
+    useMemo(() => {
+      const types =
+        selectedCategory
+          ?.types ||
+        [];
+
+      /*
+       * Before dynamic API returns,
+       * show normal master options.
+       */
+      if (
+        !dynamicFiltersLoaded
+      ) {
+        return types;
+      }
+
+      const availableIds =
+        new Set(
+          dynamicPropertyTypes.map(
+            (
+              option
+            ) =>
+              Number(
+                option.value
+              )
+          )
+        );
+
+      return types.filter(
+        (
+          type
+        ) =>
+          availableIds.has(
+            type.id
+          )
+      );
+    }, [
+      selectedCategory,
+      dynamicPropertyTypes,
+      dynamicFiltersLoaded,
+    ]);
+
+
+  /* =======================================================
+     SELECTED LABELS
+  ======================================================= */
+
+  const selectedAreaLabel =
+    useMemo(() => {
+      if (
+        areaRange ===
+        "All"
+      ) {
+        return "Any Size";
+      }
+
+      return (
+        dynamicAreas.find(
+          (
+            option
+          ) =>
+            String(
+              option.value
+            ) ===
+            areaRange
+        )?.label ||
+        areaRange
+      );
+    }, [
+      areaRange,
+      dynamicAreas,
+    ]);
+
+
+  const selectedPriceLabel =
+    useMemo(() => {
+      if (
+        priceRange ===
+        "All"
+      ) {
+        return "Any Price";
+      }
+
+      return (
+        dynamicPrices.find(
+          (
+            option
+          ) =>
+            String(
+              option.value
+            ) ===
+            priceRange
+        )?.label ||
+        priceRange
+      );
+    }, [
+      priceRange,
+      dynamicPrices,
+    ]);
+
+
+  const selectedBedLabel =
+    useMemo(() => {
+      if (
+        beds ===
+        "All"
+      ) {
+        return "Any";
+      }
+
+      return (
+        dynamicBeds.find(
+          (
+            option
+          ) =>
+            String(
+              option.value
+            ) ===
+            beds
+        )?.label ||
+        beds
+      );
+    }, [
+      beds,
+      dynamicBeds,
+    ]);
+
+
+  /* =======================================================
+     OUTSIDE CLICK
+  ======================================================= */
+
+  useEffect(() => {
+    const handleOutsideClick = (
+      event: MouseEvent
+    ) => {
+      if (
+        filtersRef.current &&
+        !filtersRef.current.contains(
+          event.target as Node
+        )
+      ) {
+        closeAllDropdowns();
+      }
+    };
+
+    document.addEventListener(
+      "mousedown",
+      handleOutsideClick
+    );
+
+    return () => {
+      document.removeEventListener(
+        "mousedown",
+        handleOutsideClick
+      );
+    };
+  }, []);
+
+
+  /* =======================================================
+     CLOSE DROPDOWNS
+  ======================================================= */
+
+  function closeAllDropdowns() {
+    setIsPropertyTypeOpen(
+      false
+    );
+
+    setIsAreaOpen(
+      false
+    );
+
+    setIsBedsOpen(
+      false
+    );
+
+    setIsPriceOpen(
+      false
+    );
+  }
+
+
+  /* =======================================================
      LOCATION CHANGE
   ======================================================= */
 
-  const handleLocationChange = (
+  function handleLocationChange(
     value: string
-  ) => {
-    setLocation(value);
+  ) {
+    setLocation(
+      value
+    );
 
-    if (!value.trim()) {
+    if (
+      !value.trim()
+    ) {
       setSuggestions(
         []
       );
@@ -513,7 +903,9 @@ export default function Hero({
       >();
 
     allProperties.forEach(
-      (property) => {
+      (
+        property
+      ) => {
         const propertyLocation =
           property.location
             ?.trim();
@@ -555,10 +947,10 @@ export default function Hero({
         uniqueLocations.values()
       ).slice(
         0,
-        5
+        6
       )
     );
-  };
+  }
 
 
   /* =======================================================
@@ -611,6 +1003,9 @@ export default function Hero({
       "SHOW ROOM":
         "Showroom",
 
+      SHOWROOM:
+        "Showroom",
+
       WAREHOUSE:
         "Warehouse",
 
@@ -633,13 +1028,13 @@ export default function Hero({
 
 
   /* =======================================================
-     PROPERTY TYPE SELECTION
+     SELECT PROPERTY TYPE
   ======================================================= */
 
-  const selectPropertyType = (
+  function selectPropertyType(
     id: number,
     name: string
-  ) => {
+  ) {
     setSelectedUnitTypeId(
       id
     );
@@ -651,9 +1046,30 @@ export default function Hero({
     );
 
     /*
-     * Clear Beds whenever
-     * property type changes.
+     * Beds belongs to apartment.
+     * Reset when property type changes.
      */
+    setBeds(
+      "All"
+    );
+
+    closeAllDropdowns();
+  }
+
+
+  /* =======================================================
+     CLEAR PROPERTY TYPE
+  ======================================================= */
+
+  function clearPropertyType() {
+    setSelectedUnitTypeId(
+      null
+    );
+
+    setPropertyCategory(
+      "All Types"
+    );
+
     setBeds(
       "All"
     );
@@ -661,92 +1077,31 @@ export default function Hero({
     setIsBedsOpen(
       false
     );
+  }
+
+
+  /* =======================================================
+     SELECT ALL TYPES
+  ======================================================= */
+
+  function selectAllTypes() {
+    clearPropertyType();
 
     setIsPropertyTypeOpen(
       false
     );
-  };
-
-
-  /* =======================================================
-     ALL TYPES
-  ======================================================= */
-
-  const selectAllTypes =
-    () => {
-      setSelectedUnitTypeId(
-        null
-      );
-
-      setPropertyCategory(
-        "All Types"
-      );
-
-      setBeds(
-        "All"
-      );
-
-      setIsBedsOpen(
-        false
-      );
-
-      setIsPropertyTypeOpen(
-        false
-      );
-    };
-
-
-  /* =======================================================
-     SELECTED LABELS
-  ======================================================= */
-
-  const selectedPriceLabel =
-    PRICE_OPTIONS.find(
-      (
-        option
-      ) =>
-        option.value ===
-        priceRange
-    )?.label ||
-    "Any Price";
-
-
-  const selectedAreaLabel =
-    AREA_OPTIONS.find(
-      (
-        option
-      ) =>
-        option.value ===
-        areaRange
-    )?.label ||
-    "Any Size";
-
-
-  const selectedBedLabel =
-    BED_OPTIONS.find(
-      (
-        option
-      ) =>
-        option.value ===
-        beds
-    )?.label ||
-    "Any";
+  }
 
 
   /* =======================================================
      SEARCH
   ======================================================= */
 
-  const handleSearchSubmit = (
+  function handleSearchSubmit(
     event:
       React.FormEvent<HTMLFormElement>
-  ) => {
+  ) {
     event.preventDefault();
-
-
-    /* -----------------------------------------------
-       PRICE
-    ----------------------------------------------- */
 
     let minPrice =
       "";
@@ -774,10 +1129,6 @@ export default function Hero({
     }
 
 
-    /* -----------------------------------------------
-       AREA
-    ----------------------------------------------- */
-
     let minArea =
       "";
 
@@ -803,10 +1154,6 @@ export default function Hero({
         max || "";
     }
 
-
-    /* -----------------------------------------------
-       SEARCH
-    ----------------------------------------------- */
 
     onSearch({
       location:
@@ -834,22 +1181,8 @@ export default function Hero({
       []
     );
 
-    setIsPropertyTypeOpen(
-      false
-    );
-
-    setIsPriceOpen(
-      false
-    );
-
-    setIsAreaOpen(
-      false
-    );
-
-    setIsBedsOpen(
-      false
-    );
-  };
+    closeAllDropdowns();
+  }
 
 
   /* =======================================================
@@ -873,7 +1206,6 @@ export default function Hero({
           styles.heroInner
         }
       >
-
         {/* =================================================
             HEADING
         ================================================= */}
@@ -884,19 +1216,17 @@ export default function Hero({
           }
         >
           <h1>
-            Find the Right
-            Space for You
+            Find the Right Space
+            for You
           </h1>
 
           <p>
-            From homes to
-            offices, shops,
-            showrooms and
-            warehouses,
-            explore rental
-            properties across
-            prime locations in
-            the UAE.
+            From homes to offices,
+            shops, showrooms and
+            warehouses, explore
+            rental properties
+            across prime locations
+            in the UAE.
           </p>
         </div>
 
@@ -913,7 +1243,6 @@ export default function Hero({
             handleSearchSubmit
           }
         >
-
           {/* ===============================================
               LOCATION
           =============================================== */}
@@ -950,7 +1279,6 @@ export default function Hero({
                   LOCATION
                 </label>
 
-
                 <input
                   value={
                     location
@@ -965,11 +1293,12 @@ export default function Hero({
                     )
                   }
                   onBlur={() => {
-                    setTimeout(
-                      () =>
+                    window.setTimeout(
+                      () => {
                         setSuggestions(
                           []
-                        ),
+                        );
+                      },
                       200
                     );
                   }}
@@ -977,7 +1306,9 @@ export default function Hero({
                 />
 
 
-                {/* AUTOCOMPLETE */}
+                {/* =========================================
+                    LOCATION SUGGESTIONS
+                ========================================= */}
 
                 {suggestions.length >
                   0 && (
@@ -992,7 +1323,7 @@ export default function Hero({
                       ) => (
                         <button
                           type="button"
-                          key={`suggestion-${property.id}`}
+                          key={`suggestion-${property.id}-${property.location}`}
                           className={
                             styles.suggestionItem
                           }
@@ -1038,7 +1369,9 @@ export default function Hero({
             </div>
 
 
-            {/* SEARCH BUTTON */}
+            {/* =============================================
+                SEARCH BUTTON
+            ============================================= */}
 
             <div
               className={
@@ -1067,9 +1400,9 @@ export default function Hero({
           </div>
 
 
-          {/* ===============================================
+          {/* =================================================
               FILTER CARDS
-          =============================================== */}
+          ================================================= */}
 
           <div
             ref={
@@ -1079,7 +1412,6 @@ export default function Hero({
               styles.filterCards
             }
           >
-
             {/* =============================================
                 PROPERTY TYPE
             ============================================= */}
@@ -1097,13 +1429,9 @@ export default function Hero({
                 onClick={() => {
                   setIsPropertyTypeOpen(
                     (
-                      open
+                      current
                     ) =>
-                      !open
-                  );
-
-                  setIsPriceOpen(
-                    false
+                      !current
                   );
 
                   setIsAreaOpen(
@@ -1111,6 +1439,10 @@ export default function Hero({
                   );
 
                   setIsBedsOpen(
+                    false
+                  );
+
+                  setIsPriceOpen(
                     false
                   );
                 }}
@@ -1144,11 +1476,58 @@ export default function Hero({
                     Property Type
                   </span>
 
-                  <strong>
-                    {
-                      propertyCategory
+
+                  <div
+                    className={
+                      styles.filterValueRow
                     }
-                  </strong>
+                  >
+                    <strong>
+                      {
+                        propertyCategory
+                      }
+                    </strong>
+
+
+                    {selectedUnitTypeId !==
+                      null && (
+                      <span
+                        role="button"
+                        tabIndex={
+                          0
+                        }
+                        aria-label="Clear property type"
+                        className={
+                          styles.clearSelectedFilter
+                        }
+                        onClick={(
+                          event
+                        ) => {
+                          event.stopPropagation();
+
+                          clearPropertyType();
+                        }}
+                        onKeyDown={(
+                          event
+                        ) => {
+                          if (
+                            event.key ===
+                              "Enter" ||
+                            event.key ===
+                              " "
+                          ) {
+                            event.preventDefault();
+
+                            event.stopPropagation();
+
+                            clearPropertyType();
+                          }
+                        }}
+                      >
+                        ×
+                      </span>
+                    )}
+                  </div>
                 </div>
 
 
@@ -1165,7 +1544,9 @@ export default function Hero({
               </button>
 
 
-              {/* PROPERTY TYPE PANEL */}
+              {/* ===========================================
+                  PROPERTY TYPE PANEL
+              =========================================== */}
 
               {isPropertyTypeOpen && (
                 <div
@@ -1173,6 +1554,8 @@ export default function Hero({
                     styles.propertyTypePanel
                   }
                 >
+                  {/* CATEGORY TABS */}
+
                   <div
                     className={
                       styles.propertyTypeTabs
@@ -1187,17 +1570,17 @@ export default function Hero({
                             category.categoryId
                           }
                           type="button"
-                          onClick={() =>
-                            setPropertyGroup(
-                              category.categoryId
-                            )
-                          }
                           className={`${styles.propertyTypeTab} ${
                             propertyGroup ===
                             category.categoryId
                               ? styles.propertyTypeTabActive
                               : ""
                           }`}
+                          onClick={() =>
+                            setPropertyGroup(
+                              category.categoryId
+                            )
+                          }
                         >
                           {formatCategoryName(
                             category.categoryName
@@ -1234,16 +1617,25 @@ export default function Hero({
                   </button>
 
 
-                  {/* TYPES */}
+                  {/* AVAILABLE TYPES */}
 
                   <div
                     className={
                       styles.propertyCategoryList
                     }
                   >
-                    {selectedCategory
-                      ?.types
-                      .map(
+                    {loadingDynamicFilters &&
+                    !dynamicFiltersLoaded ? (
+                      <div
+                        className={
+                          styles.dropdownLoading
+                        }
+                      >
+                        Loading...
+                      </div>
+                    ) : availablePropertyTypes.length >
+                      0 ? (
+                      availablePropertyTypes.map(
                         (
                           type
                         ) => (
@@ -1278,11 +1670,24 @@ export default function Hero({
                             </span>
                           </button>
                         )
-                      )}
+                      )
+                    ) : (
+                      <div
+                        className={
+                          styles.dropdownEmpty
+                        }
+                      >
+                        No property
+                        types available
+                        for the selected
+                        filters.
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
             </div>
+
 
             {/* =============================================
                 UNIT AREA
@@ -1301,20 +1706,20 @@ export default function Hero({
                 onClick={() => {
                   setIsAreaOpen(
                     (
-                      open
+                      current
                     ) =>
-                      !open
+                      !current
                   );
 
                   setIsPropertyTypeOpen(
                     false
                   );
 
-                  setIsPriceOpen(
+                  setIsBedsOpen(
                     false
                   );
 
-                  setIsBedsOpen(
+                  setIsPriceOpen(
                     false
                   );
                 }}
@@ -1348,11 +1753,62 @@ export default function Hero({
                     Unit Area
                   </span>
 
-                  <strong>
-                    {
-                      selectedAreaLabel
+
+                  <div
+                    className={
+                      styles.filterValueRow
                     }
-                  </strong>
+                  >
+                    <strong>
+                      {
+                        selectedAreaLabel
+                      }
+                    </strong>
+
+
+                    {areaRange !==
+                      "All" && (
+                      <span
+                        role="button"
+                        tabIndex={
+                          0
+                        }
+                        className={
+                          styles.clearSelectedFilter
+                        }
+                        aria-label="Clear unit area"
+                        onClick={(
+                          event
+                        ) => {
+                          event.stopPropagation();
+
+                          setAreaRange(
+                            "All"
+                          );
+                        }}
+                        onKeyDown={(
+                          event
+                        ) => {
+                          if (
+                            event.key ===
+                              "Enter" ||
+                            event.key ===
+                              " "
+                          ) {
+                            event.preventDefault();
+
+                            event.stopPropagation();
+
+                            setAreaRange(
+                              "All"
+                            );
+                          }
+                        }}
+                      >
+                        ×
+                      </span>
+                    )}
+                  </div>
                 </div>
 
 
@@ -1369,56 +1825,117 @@ export default function Hero({
               </button>
 
 
+              {/* ===========================================
+                  AREA OPTIONS
+              =========================================== */}
+
               {isAreaOpen && (
                 <div
                   className={
                     styles.simpleDropdownPanel
                   }
                 >
-                  {AREA_OPTIONS.map(
-                    (
-                      option
-                    ) => (
-                      <button
-                        key={
-                          option.value
-                        }
-                        type="button"
-                        className={`${styles.dropdownOption} ${
-                          areaRange ===
-                          option.value
-                            ? styles.dropdownOptionActive
-                            : ""
-                        }`}
-                        onClick={() => {
-                          setAreaRange(
-                            option.value
-                          );
+                  <button
+                    type="button"
+                    className={`${styles.dropdownOption} ${
+                      areaRange ===
+                      "All"
+                        ? styles.dropdownOptionActive
+                        : ""
+                    }`}
+                    onClick={() => {
+                      setAreaRange(
+                        "All"
+                      );
 
-                          setIsAreaOpen(
-                            false
-                          );
-                        }}
-                      >
-                        <span
-                          className={
-                            styles.radioMark
-                          }
-                        />
+                      setIsAreaOpen(
+                        false
+                      );
+                    }}
+                  >
+                    <span
+                      className={
+                        styles.radioMark
+                      }
+                    />
 
-                        <span>
-                          {
-                            option.label
+                    <span>
+                      Any Size
+                    </span>
+                  </button>
+
+
+                  {loadingDynamicFilters &&
+                  !dynamicFiltersLoaded ? (
+                    <div
+                      className={
+                        styles.dropdownLoading
+                      }
+                    >
+                      Loading...
+                    </div>
+                  ) : dynamicAreas.length >
+                    0 ? (
+                    dynamicAreas.map(
+                      (
+                        option
+                      ) => (
+                        <button
+                          key={
+                            String(
+                              option.value
+                            )
                           }
-                        </span>
-                      </button>
+                          type="button"
+                          className={`${styles.dropdownOption} ${
+                            areaRange ===
+                            String(
+                              option.value
+                            )
+                              ? styles.dropdownOptionActive
+                              : ""
+                          }`}
+                          onClick={() => {
+                            setAreaRange(
+                              String(
+                                option.value
+                              )
+                            );
+
+                            setIsAreaOpen(
+                              false
+                            );
+                          }}
+                        >
+                          <span
+                            className={
+                              styles.radioMark
+                            }
+                          />
+
+                          <span>
+                            {
+                              option.label
+                            }
+                          </span>
+                        </button>
+                      )
                     )
+                  ) : (
+                    <div
+                      className={
+                        styles.dropdownEmpty
+                      }
+                    >
+                      No area ranges
+                      available.
+                    </div>
                   )}
                 </div>
               )}
             </div>
 
-         
+
             {/* =============================================
                 BEDS
             ============================================= */}
@@ -1445,20 +1962,20 @@ export default function Hero({
 
                   setIsBedsOpen(
                     (
-                      open
+                      current
                     ) =>
-                      !open
+                      !current
                   );
 
                   setIsPropertyTypeOpen(
                     false
                   );
 
-                  setIsPriceOpen(
+                  setIsAreaOpen(
                     false
                   );
 
-                  setIsAreaOpen(
+                  setIsPriceOpen(
                     false
                   );
                 }}
@@ -1495,11 +2012,63 @@ export default function Hero({
                     Beds
                   </span>
 
-                  <strong>
-                    {isApartment
-                      ? selectedBedLabel
-                      : "Select Property Type"}
-                  </strong>
+
+                  <div
+                    className={
+                      styles.filterValueRow
+                    }
+                  >
+                    <strong>
+                      {isApartment
+                        ? selectedBedLabel
+                        : "Select Property Type"}
+                    </strong>
+
+
+                    {isApartment &&
+                      beds !==
+                        "All" && (
+                        <span
+                          role="button"
+                          tabIndex={
+                            0
+                          }
+                          className={
+                            styles.clearSelectedFilter
+                          }
+                          aria-label="Clear beds"
+                          onClick={(
+                            event
+                          ) => {
+                            event.stopPropagation();
+
+                            setBeds(
+                              "All"
+                            );
+                          }}
+                          onKeyDown={(
+                            event
+                          ) => {
+                            if (
+                              event.key ===
+                                "Enter" ||
+                              event.key ===
+                                " "
+                            ) {
+                              event.preventDefault();
+
+                              event.stopPropagation();
+
+                              setBeds(
+                                "All"
+                              );
+                            }
+                          }}
+                        >
+                          ×
+                        </span>
+                      )}
+                  </div>
                 </div>
 
 
@@ -1516,6 +2085,10 @@ export default function Hero({
               </button>
 
 
+              {/* ===========================================
+                  BED OPTIONS
+              =========================================== */}
+
               {isApartment &&
                 isBedsOpen && (
                   <div
@@ -1523,50 +2096,108 @@ export default function Hero({
                       styles.simpleDropdownPanel
                     }
                   >
-                    {BED_OPTIONS.map(
-                      (
-                        option
-                      ) => (
-                        <button
-                          key={
-                            option.value
-                          }
-                          type="button"
-                          className={`${styles.dropdownOption} ${
-                            beds ===
-                            option.value
-                              ? styles.dropdownOptionActive
-                              : ""
-                          }`}
-                          onClick={() => {
-                            setBeds(
-                              option.value
-                            );
+                    <button
+                      type="button"
+                      className={`${styles.dropdownOption} ${
+                        beds ===
+                        "All"
+                          ? styles.dropdownOptionActive
+                          : ""
+                      }`}
+                      onClick={() => {
+                        setBeds(
+                          "All"
+                        );
 
-                            setIsBedsOpen(
-                              false
-                            );
-                          }}
-                        >
-                          <span
-                            className={
-                              styles.radioMark
-                            }
-                          />
+                        setIsBedsOpen(
+                          false
+                        );
+                      }}
+                    >
+                      <span
+                        className={
+                          styles.radioMark
+                        }
+                      />
 
-                          <span>
-                            {
-                              option.label
+                      <span>
+                        Any
+                      </span>
+                    </button>
+
+
+                    {loadingDynamicFilters &&
+                    !dynamicFiltersLoaded ? (
+                      <div
+                        className={
+                          styles.dropdownLoading
+                        }
+                      >
+                        Loading...
+                      </div>
+                    ) : dynamicBeds.length >
+                      0 ? (
+                      dynamicBeds.map(
+                        (
+                          option
+                        ) => (
+                          <button
+                            key={
+                              String(
+                                option.value
+                              )
                             }
-                          </span>
-                        </button>
+                            type="button"
+                            className={`${styles.dropdownOption} ${
+                              beds ===
+                              String(
+                                option.value
+                              )
+                                ? styles.dropdownOptionActive
+                                : ""
+                            }`}
+                            onClick={() => {
+                              setBeds(
+                                String(
+                                  option.value
+                                )
+                              );
+
+                              setIsBedsOpen(
+                                false
+                              );
+                            }}
+                          >
+                            <span
+                              className={
+                                styles.radioMark
+                              }
+                            />
+
+                            <span>
+                              {
+                                option.label
+                              }
+                            </span>
+                          </button>
+                        )
                       )
+                    ) : (
+                      <div
+                        className={
+                          styles.dropdownEmpty
+                        }
+                      >
+                        No bed options
+                        available.
+                      </div>
                     )}
                   </div>
                 )}
             </div>
 
-               {/* =============================================
+
+            {/* =============================================
                 PRICE
             ============================================= */}
 
@@ -1583,9 +2214,9 @@ export default function Hero({
                 onClick={() => {
                   setIsPriceOpen(
                     (
-                      open
+                      current
                     ) =>
-                      !open
+                      !current
                   );
 
                   setIsPropertyTypeOpen(
@@ -1630,11 +2261,62 @@ export default function Hero({
                     Price Range
                   </span>
 
-                  <strong>
-                    {
-                      selectedPriceLabel
+
+                  <div
+                    className={
+                      styles.filterValueRow
                     }
-                  </strong>
+                  >
+                    <strong>
+                      {
+                        selectedPriceLabel
+                      }
+                    </strong>
+
+
+                    {priceRange !==
+                      "All" && (
+                      <span
+                        role="button"
+                        tabIndex={
+                          0
+                        }
+                        className={
+                          styles.clearSelectedFilter
+                        }
+                        aria-label="Clear price range"
+                        onClick={(
+                          event
+                        ) => {
+                          event.stopPropagation();
+
+                          setPriceRange(
+                            "All"
+                          );
+                        }}
+                        onKeyDown={(
+                          event
+                        ) => {
+                          if (
+                            event.key ===
+                              "Enter" ||
+                            event.key ===
+                              " "
+                          ) {
+                            event.preventDefault();
+
+                            event.stopPropagation();
+
+                            setPriceRange(
+                              "All"
+                            );
+                          }
+                        }}
+                      >
+                        ×
+                      </span>
+                    )}
+                  </div>
                 </div>
 
 
@@ -1651,50 +2333,111 @@ export default function Hero({
               </button>
 
 
+              {/* ===========================================
+                  PRICE OPTIONS
+              =========================================== */}
+
               {isPriceOpen && (
                 <div
                   className={
                     styles.simpleDropdownPanel
                   }
                 >
-                  {PRICE_OPTIONS.map(
-                    (
-                      option
-                    ) => (
-                      <button
-                        key={
-                          option.value
-                        }
-                        type="button"
-                        className={`${styles.dropdownOption} ${
-                          priceRange ===
-                          option.value
-                            ? styles.dropdownOptionActive
-                            : ""
-                        }`}
-                        onClick={() => {
-                          setPriceRange(
-                            option.value
-                          );
+                  <button
+                    type="button"
+                    className={`${styles.dropdownOption} ${
+                      priceRange ===
+                      "All"
+                        ? styles.dropdownOptionActive
+                        : ""
+                    }`}
+                    onClick={() => {
+                      setPriceRange(
+                        "All"
+                      );
 
-                          setIsPriceOpen(
-                            false
-                          );
-                        }}
-                      >
-                        <span
-                          className={
-                            styles.radioMark
-                          }
-                        />
+                      setIsPriceOpen(
+                        false
+                      );
+                    }}
+                  >
+                    <span
+                      className={
+                        styles.radioMark
+                      }
+                    />
 
-                        <span>
-                          {
-                            option.label
+                    <span>
+                      Any Price
+                    </span>
+                  </button>
+
+
+                  {loadingDynamicFilters &&
+                  !dynamicFiltersLoaded ? (
+                    <div
+                      className={
+                        styles.dropdownLoading
+                      }
+                    >
+                      Loading...
+                    </div>
+                  ) : dynamicPrices.length >
+                    0 ? (
+                    dynamicPrices.map(
+                      (
+                        option
+                      ) => (
+                        <button
+                          key={
+                            String(
+                              option.value
+                            )
                           }
-                        </span>
-                      </button>
+                          type="button"
+                          className={`${styles.dropdownOption} ${
+                            priceRange ===
+                            String(
+                              option.value
+                            )
+                              ? styles.dropdownOptionActive
+                              : ""
+                          }`}
+                          onClick={() => {
+                            setPriceRange(
+                              String(
+                                option.value
+                              )
+                            );
+
+                            setIsPriceOpen(
+                              false
+                            );
+                          }}
+                        >
+                          <span
+                            className={
+                              styles.radioMark
+                            }
+                          />
+
+                          <span>
+                            {
+                              option.label
+                            }
+                          </span>
+                        </button>
+                      )
                     )
+                  ) : (
+                    <div
+                      className={
+                        styles.dropdownEmpty
+                      }
+                    >
+                      No price ranges
+                      available.
+                    </div>
                   )}
                 </div>
               )}

@@ -12,15 +12,15 @@ export default function Footer() {
         {/* Column 1: Logo (top) & Description (below) */}
         <div className={styles.footerCol}>
           <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginBottom: "20px" }}>
-            <div style={{ background: "#ffffff", padding: "8px", borderRadius: "8px", display: "inline-block", width: "110px" }}>
-              <img
-                src="/bin-shabib-group.webp"
-                alt="AWS Real Estate Logo"
+            {/* <div style={{ background: "#ffffff", padding: "8px", borderRadius: "8px", display: "inline-block", width: "110px" }}> */}
+              {/* <img
+                src="/bin-shabib-group.PNG"
+                alt="ABDULWAHED AHMAD RASHED BIN SHABIB"
                 style={{ width: "100%", height: "auto", display: "block" }}
-              />
-            </div>
+              /> */}
+            {/* </div> */}
             <p style={{ color: "#a3a3a3", fontSize: "13px", lineHeight: "1.6", margin: 0, maxWidth: "280px" }}>
-              ABDULWAHED BIN SHABIB REAL ESTATE L.L.C is a pioneering name in the UAE property market, delivering excellence and innovation for over 30 years as direct owners.
+              ABDULWAHED AHMAD RASHED BIN SHABIB is a pioneering name in the UAE property market, delivering excellence and innovation for over 30 years as direct owners.
             </p>
           </div>
         </div>

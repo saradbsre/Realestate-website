@@ -284,9 +284,7 @@ export default function HomeClient({
             }
           >
             <h2>
-              About ABDULWAHED
-              BIN SHABIB REAL
-              ESTATE L.L.C
+              About ABDULWAHED AHMAD RASHED BIN SHABIB
             </h2>
 
             <div
@@ -314,9 +312,8 @@ export default function HomeClient({
 
 
               <p>
-                ABDULWAHED BIN
-                SHABIB REAL ESTATE
-                L.L.C represents a
+                ABDULWAHED AHMAD RASHED BIN SHABIB REAL ESTATE
+                 represents a
                 prestigious legacy
                 of direct property
                 ownership and

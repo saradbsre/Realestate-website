@@ -147,6 +147,97 @@ export interface Property {
     string | null;
 }
 
+export interface AvailableRangeOption {
+  value: string;
+
+  label: string;
+
+  sortOrder?: number;
+}
+
+export interface AvailablePropertyRanges {
+  areaRanges:
+    AvailableRangeOption[];
+
+  priceRanges:
+    AvailableRangeOption[];
+
+  beds:
+    AvailableRangeOption[];
+}
+export async function getAvailablePropertyRanges(
+  unitTypeId?: number | null
+): Promise<AvailablePropertyRanges> {
+  const params =
+    new URLSearchParams();
+
+  if (
+    unitTypeId !== null &&
+    unitTypeId !== undefined
+  ) {
+    params.set(
+      "unitTypeId",
+      String(unitTypeId)
+    );
+  }
+
+  const query =
+    params.toString();
+
+  const response =
+    await fetch(
+      `${apiUrl(
+        "/properties/available-ranges"
+      )}${
+        query
+          ? `?${query}`
+          : ""
+      }`,
+      {
+        cache: "no-store",
+      }
+    );
+
+  const result =
+    await response.json();
+
+  if (
+    !response.ok ||
+    !result.success
+  ) {
+    throw new Error(
+      result.error ||
+        "Unable to load available ranges."
+    );
+  }
+
+  const data:
+    AvailablePropertyRanges = {
+      areaRanges:
+        Array.isArray(
+          result.data?.areaRanges
+        )
+          ? result.data.areaRanges
+          : [],
+
+      priceRanges:
+        Array.isArray(
+          result.data?.priceRanges
+        )
+          ? result.data.priceRanges
+          : [],
+
+      beds:
+        Array.isArray(
+          result.data?.beds
+        )
+          ? result.data.beds
+          : [],
+    };
+
+  return data;
+}
+
 
 /* =========================================================
    PROPERTY FILTERS
@@ -250,6 +341,8 @@ export interface PropertyUnit {
   currency:
     string;
 
+unitNature:
+  "C" | "R" | null;
 
   numberOfPayments:
     number | null;
@@ -530,6 +623,178 @@ interface PropertyBuildingUnitOptionsResponse {
 
     units:
       PropertyUnitOption[];
+  };
+}
+
+export interface DynamicOption {
+  value:
+    string | number;
+
+  label: string;
+
+  sortOrder?: number;
+}
+
+export interface DynamicFilterResponse {
+  propertyTypes:
+    DynamicOption[];
+
+  beds:
+    DynamicOption[];
+
+  areaRanges:
+    DynamicOption[];
+
+  priceRanges:
+    DynamicOption[];
+}
+
+
+export async function getDynamicPropertyFilters(
+  filters: {
+    search?: string;
+
+    unitTypeId?:
+      number | null;
+
+    beds?: string;
+
+    minArea?: number;
+
+    maxArea?: number;
+
+    minPrice?: number;
+
+    maxPrice?: number;
+  }
+): Promise<DynamicFilterResponse> {
+  const params =
+    new URLSearchParams();
+
+  if (filters.search) {
+    params.set(
+      "search",
+      filters.search
+    );
+  }
+
+  if (
+    filters.unitTypeId !==
+      null &&
+    filters.unitTypeId !==
+      undefined
+  ) {
+    params.set(
+      "unitTypeId",
+      String(
+        filters.unitTypeId
+      )
+    );
+  }
+
+  if (
+    filters.beds &&
+    filters.beds !==
+      "All"
+  ) {
+    params.set(
+      "beds",
+      filters.beds
+    );
+  }
+
+  if (
+    filters.minArea !==
+    undefined
+  ) {
+    params.set(
+      "minArea",
+      String(
+        filters.minArea
+      )
+    );
+  }
+
+  if (
+    filters.maxArea !==
+    undefined
+  ) {
+    params.set(
+      "maxArea",
+      String(
+        filters.maxArea
+      )
+    );
+  }
+
+  if (
+    filters.minPrice !==
+    undefined
+  ) {
+    params.set(
+      "minPrice",
+      String(
+        filters.minPrice
+      )
+    );
+  }
+
+  if (
+    filters.maxPrice !==
+    undefined
+  ) {
+    params.set(
+      "maxPrice",
+      String(
+        filters.maxPrice
+      )
+    );
+  }
+
+  const response =
+    await fetch(
+      `${apiUrl(
+        "/properties/dynamic-filter-options"
+      )}?${params.toString()}`,
+      {
+        cache:
+          "no-store",
+      }
+    );
+
+  const result =
+    await response.json();
+
+  if (
+    !response.ok ||
+    !result.success
+  ) {
+    throw new Error(
+      result.error ||
+        "Unable to load filters."
+    );
+  }
+
+  return {
+    propertyTypes:
+      result.data
+        ?.propertyTypes ||
+      [],
+
+    beds:
+      result.data
+        ?.beds ||
+      [],
+
+    areaRanges:
+      result.data
+        ?.areaRanges ||
+      [],
+
+    priceRanges:
+      result.data
+        ?.priceRanges ||
+      [],
   };
 }
 
@@ -879,6 +1144,8 @@ function normalizeGalleryImages(
       })
     );
 }
+
+
 
 
 /* =========================================================

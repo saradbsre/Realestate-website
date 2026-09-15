@@ -1574,3 +1574,88 @@ button.filterCard:disabled:hover {
     padding: 22px;
   }
 }
+
+
+/* =========================================================
+   SELECTED FILTER VALUE + CLEAR BUTTON
+========================================================= */
+
+.filterValueRow {
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+}
+
+.filterValueRow strong {
+  min-width: 0;
+
+  overflow: hidden;
+
+  white-space: nowrap;
+
+  text-overflow: ellipsis;
+}
+
+
+/* =========================================================
+   X CLEAR BUTTON
+========================================================= */
+
+.clearSelectedFilter {
+  width: 20px;
+  height: 20px;
+
+  flex: 0 0 20px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border-radius: 50%;
+
+  background: #eaf2f9;
+
+  color: #526b83;
+
+  font-size: 15px;
+  font-weight: 800;
+
+  line-height: 1;
+
+  cursor: pointer;
+
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.clearSelectedFilter:hover {
+  background: #d9eaf8;
+
+  color: #0872d5;
+}
+
+
+/* =========================================================
+   DYNAMIC DROPDOWN STATES
+========================================================= */
+
+.dropdownLoading,
+.dropdownEmpty {
+  padding: 12px 14px;
+
+  color: #7b8ca0;
+
+  font-size: 11px;
+
+  line-height: 1.4;
+}
+
+.dropdownEmpty {
+  text-align: center;
+}

@@ -34,7 +34,7 @@ export default function TermsPage() {
               1. Acceptance of Terms
             </h2>
             <p style={{ color: "#475569", lineHeight: "1.7", fontSize: "15px" }}>
-              Welcome to the portal of <strong>ABDULWAHED BIN SHABIB REAL ESTATE L.L.C</strong> (referred to as "the Company," "we," "us," or "our"). By accessing or using this website (abdulwahedbinshabibproperty.com), you acknowledge that you have read, understood, and agree to be bound by these Terms & Conditions, along with our Privacy Policy. If you do not agree, please discontinue use immediately.
+              Welcome to the portal of <strong>ABDULWAHED AHMAD RASHED BIN SHABIB</strong> (referred to as "the Company," "we," "us," or "our"). By accessing or using this website (abdulwahedbinshabibproperty.com), you acknowledge that you have read, understood, and agree to be bound by these Terms & Conditions, along with our Privacy Policy. If you do not agree, please discontinue use immediately.
             </p>
           </section>
 
@@ -43,7 +43,7 @@ export default function TermsPage() {
               2. Scope of Services & Direct Ownership Model
             </h2>
             <p style={{ color: "#475569", lineHeight: "1.7", fontSize: "15px", marginBottom: "12px" }}>
-              ABDULWAHED BIN SHABIB REAL ESTATE L.L.C is the direct owner and landlord of all properties advertised on this website. 
+              ABDULWAHED AHMAD RASHED BIN SHABIB is the direct owner and landlord of all properties advertised on this website. 
             </p>
             <ul style={{ color: "#475569", lineHeight: "1.7", fontSize: "15px", paddingLeft: "20px" }}>
               <li style={{ marginBottom: "8px" }}>We do not operate as an intermediary real estate brokerage for third-party properties.</li>
@@ -74,7 +74,7 @@ export default function TermsPage() {
             </p>
             <ul style={{ color: "#475569", lineHeight: "1.7", fontSize: "15px", paddingLeft: "20px" }}>
               <li style={{ marginBottom: "8px" }}><strong>Security Deposit:</strong> A security deposit (traditionally 5% of annual rent for unfurnished units, and 10% for furnished units) must be paid to secure the property. This deposit is refundable upon termination of the lease, subject to the property being handed over in original condition, normal wear and tear excepted.</li>
-              <li style={{ marginBottom: "8px" }}><strong>Cheques:</strong> All rental payments are made via post-dated cheques made payable to <strong>ABDULWAHED BIN SHABIB REAL ESTATE L.L.C</strong>. Returned cheques will incur administrative penalties and legal remedies as per UAE laws.</li>
+              <li style={{ marginBottom: "8px" }}><strong>Cheques:</strong> All rental payments are made via post-dated cheques made payable to <strong>ABDULWAHED AHMAD RASHED BIN SHABIB</strong>. Returned cheques will incur administrative penalties and legal remedies as per UAE laws.</li>
             </ul>
           </section>
 
@@ -92,7 +92,7 @@ export default function TermsPage() {
               6. Intellectual Property
             </h2>
             <p style={{ color: "#475569", lineHeight: "1.7", fontSize: "15px" }}>
-              All materials, text, graphics, logos, images, code, and trademarks displayed on this site are the exclusive property of ABDULWAHED BIN SHABIB REAL ESTATE L.L.C and are protected by copyright and intellectual property laws of the UAE and international treaties. Unauthorized duplication, hotlinking, or reproduction is strictly prohibited.
+              All materials, text, graphics, logos, images, code, and trademarks displayed on this site are the exclusive property of ABDULWAHED AHMAD RASHED BIN SHABIB and are protected by copyright and intellectual property laws of the UAE and international treaties. Unauthorized duplication, hotlinking, or reproduction is strictly prohibited.
             </p>
           </section>
 

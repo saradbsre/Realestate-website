@@ -1191,7 +1191,7 @@ export default function ContactPage() {
 
                 <a
                   href={`https://wa.me/97143298000?text=${encodeURIComponent(
-                    `Hello ABDULWAHED BIN SHABIB REAL ESTATE L.L.C team! I have submitted a website enquiry regarding ${submittedDetails.inquiryDepartment}. My name is ${submittedDetails.customerName}. My phone number is ${submittedDetails.phone}.`
+                    `Hello ABDULWAHED AHMAD RASHED BIN SHABIB team! I have submitted a website enquiry regarding ${submittedDetails.inquiryDepartment}. My name is ${submittedDetails.customerName}. My phone number is ${submittedDetails.phone}.`
                   )}`}
                   target="_blank"
                   rel="noopener noreferrer"

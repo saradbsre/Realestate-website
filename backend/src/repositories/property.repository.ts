@@ -3072,6 +3072,9 @@ export async function findVacantUnitsByBuildingId(
             U.Purpose_type
                 AS purposeCode,
 
+            U.unitnature
+                AS unitNature,
+
             UPT.Descr
                 AS propertyType,
 
@@ -4070,4 +4073,1602 @@ return {
   units:
     recordsets[1] || [],
 };
+}
+
+
+
+
+export async function getAvailablePropertyRangesRepo(
+  unitTypeId?: number
+) {
+  const db =
+    await getBinShabibEstateNet();
+
+  const result =
+    await db
+      .request()
+
+      .input(
+        "UnitTypeId",
+        sql.Int,
+        unitTypeId ?? null
+      )
+
+      .query(`
+        /* =================================================
+           BUILD ELIGIBLE UNIT TEMP TABLE
+        ================================================= */
+
+        IF OBJECT_ID(
+            'tempdb..#EligibleUnits'
+        ) IS NOT NULL
+        BEGIN
+            DROP TABLE #EligibleUnits;
+        END;
+
+
+        SELECT
+            LTRIM(
+                RTRIM(
+                    U.Purpose_type
+                )
+            ) AS Purpose_type,
+
+            U.unit_areasqft,
+
+            U.unit_annual_rent
+
+        INTO #EligibleUnits
+
+        FROM dbo.unit U
+
+        INNER JOIN dbo.building B
+
+            ON LTRIM(
+                RTRIM(
+                    B.build_id
+                )
+            )
+            =
+            LTRIM(
+                RTRIM(
+                    U.build_id
+                )
+            )
+
+        WHERE
+            ISNULL(
+                U.IsActive,
+                1
+            ) = 1
+
+            AND ISNULL(
+                U.unit_vacant,
+                'N'
+            ) = 'Y'
+
+            AND ISNULL(
+                B.IsActive,
+                1
+            ) = 1
+
+            AND
+            (
+                B.WebDisplayOrder
+                    IS NULL
+
+                OR B.WebDisplayOrder
+                    BETWEEN 1 AND 6
+            )
+
+            /* =============================================
+               PROPERTY TYPE
+            ============================================= */
+
+            AND
+            (
+                @UnitTypeId IS NULL
+
+                OR EXISTS
+                (
+                    SELECT
+                        1
+
+                    FROM dbo.vw_UnitType VUT
+
+                    WHERE
+                        VUT.UnitTypeId =
+                            @UnitTypeId
+
+                        AND LTRIM(
+                            RTRIM(
+                                VUT.PurposeCode
+                            )
+                        )
+                        =
+                        LTRIM(
+                            RTRIM(
+                                U.Purpose_type
+                            )
+                        )
+                )
+            );
+
+
+        /* =================================================
+           AREA RANGES
+        ================================================= */
+
+        SELECT
+            value,
+
+            label,
+
+            sortOrder
+
+        FROM
+        (
+            SELECT
+                '0-500'
+                    AS value,
+
+                'Up to 500 Sq.Ft.'
+                    AS label,
+
+                1
+                    AS sortOrder
+
+            WHERE EXISTS
+            (
+                SELECT
+                    1
+
+                FROM #EligibleUnits
+
+                WHERE
+                    unit_areasqft >
+                        0
+
+                    AND unit_areasqft <=
+                        500
+            )
+
+
+            UNION ALL
+
+
+            SELECT
+                '500-1000',
+
+                '500 - 1,000 Sq.Ft.',
+
+                2
+
+            WHERE EXISTS
+            (
+                SELECT
+                    1
+
+                FROM #EligibleUnits
+
+                WHERE
+                    unit_areasqft >
+                        500
+
+                    AND unit_areasqft <=
+                        1000
+            )
+
+
+            UNION ALL
+
+
+            SELECT
+                '1000-2000',
+
+                '1,000 - 2,000 Sq.Ft.',
+
+                3
+
+            WHERE EXISTS
+            (
+                SELECT
+                    1
+
+                FROM #EligibleUnits
+
+                WHERE
+                    unit_areasqft >
+                        1000
+
+                    AND unit_areasqft <=
+                        2000
+            )
+
+
+            UNION ALL
+
+
+            SELECT
+                '2000-5000',
+
+                '2,000 - 5,000 Sq.Ft.',
+
+                4
+
+            WHERE EXISTS
+            (
+                SELECT
+                    1
+
+                FROM #EligibleUnits
+
+                WHERE
+                    unit_areasqft >
+                        2000
+
+                    AND unit_areasqft <=
+                        5000
+            )
+
+
+            UNION ALL
+
+
+            SELECT
+                '5000-',
+
+                '5,000+ Sq.Ft.',
+
+                5
+
+            WHERE EXISTS
+            (
+                SELECT
+                    1
+
+                FROM #EligibleUnits
+
+                WHERE
+                    unit_areasqft >
+                        5000
+            )
+        ) AreaRanges
+
+        ORDER BY
+            sortOrder;
+
+
+        /* =================================================
+           PRICE RANGES
+        ================================================= */
+
+        SELECT
+            value,
+
+            label,
+
+            sortOrder
+
+        FROM
+        (
+            SELECT
+                '0-30000'
+                    AS value,
+
+                'Up to AED 30K'
+                    AS label,
+
+                1
+                    AS sortOrder
+
+            WHERE EXISTS
+            (
+                SELECT
+                    1
+
+                FROM #EligibleUnits
+
+                WHERE
+                    unit_annual_rent >
+                        0
+
+                    AND unit_annual_rent <=
+                        30000
+            )
+
+
+            UNION ALL
+
+
+            SELECT
+                '30000-50000',
+
+                'AED 30K - 50K',
+
+                2
+
+            WHERE EXISTS
+            (
+                SELECT
+                    1
+
+                FROM #EligibleUnits
+
+                WHERE
+                    unit_annual_rent >
+                        30000
+
+                    AND unit_annual_rent <=
+                        50000
+            )
+
+
+            UNION ALL
+
+
+            SELECT
+                '50000-100000',
+
+                'AED 50K - 100K',
+
+                3
+
+            WHERE EXISTS
+            (
+                SELECT
+                    1
+
+                FROM #EligibleUnits
+
+                WHERE
+                    unit_annual_rent >
+                        50000
+
+                    AND unit_annual_rent <=
+                        100000
+            )
+
+
+            UNION ALL
+
+
+            SELECT
+                '100000-200000',
+
+                'AED 100K - 200K',
+
+                4
+
+            WHERE EXISTS
+            (
+                SELECT
+                    1
+
+                FROM #EligibleUnits
+
+                WHERE
+                    unit_annual_rent >
+                        100000
+
+                    AND unit_annual_rent <=
+                        200000
+            )
+
+
+            UNION ALL
+
+
+            SELECT
+                '200000-',
+
+                'AED 200K+',
+
+                5
+
+            WHERE EXISTS
+            (
+                SELECT
+                    1
+
+                FROM #EligibleUnits
+
+                WHERE
+                    unit_annual_rent >
+                        200000
+            )
+        ) PriceRanges
+
+        ORDER BY
+            sortOrder;
+
+
+        /* =================================================
+           AVAILABLE BED TYPES
+        ================================================= */
+
+        SELECT
+            value,
+
+            label,
+
+            sortOrder
+
+        FROM
+        (
+            SELECT DISTINCT
+
+                Purpose_type
+                    AS value,
+
+                CASE
+
+                    WHEN Purpose_type =
+                        'STD'
+                    THEN
+                        'Studio'
+
+                    WHEN Purpose_type =
+                        '1BK'
+                    THEN
+                        '1 BHK'
+
+                    WHEN Purpose_type =
+                        '2BK'
+                    THEN
+                        '2 BHK'
+
+                    WHEN Purpose_type =
+                        '3BK'
+                    THEN
+                        '3 BHK'
+
+                    WHEN Purpose_type =
+                        '4BK'
+                    THEN
+                        '4 BHK'
+
+                    ELSE
+                        Purpose_type
+
+                END
+                    AS label,
+
+                CASE
+
+                    WHEN Purpose_type =
+                        'STD'
+                    THEN 1
+
+                    WHEN Purpose_type =
+                        '1BK'
+                    THEN 2
+
+                    WHEN Purpose_type =
+                        '2BK'
+                    THEN 3
+
+                    WHEN Purpose_type =
+                        '3BK'
+                    THEN 4
+
+                    WHEN Purpose_type =
+                        '4BK'
+                    THEN 5
+
+                    ELSE 99
+
+                END
+                    AS sortOrder
+
+            FROM #EligibleUnits
+
+            WHERE
+                Purpose_type
+                IN
+                (
+                    'STD',
+                    '1BK',
+                    '2BK',
+                    '3BK',
+                    '4BK'
+                )
+
+        ) BedRanges
+
+        ORDER BY
+            sortOrder;
+
+
+        /* =================================================
+           CLEAN TEMP TABLE
+        ================================================= */
+
+        DROP TABLE #EligibleUnits;
+      `);
+
+
+  const recordsets =
+    result.recordsets as
+      sql.IRecordSet<any>[];
+
+
+  return {
+    areaRanges:
+      recordsets[0] ||
+      [],
+
+    priceRanges:
+      recordsets[1] ||
+      [],
+
+    beds:
+      recordsets[2] ||
+      [],
+  };
+
+
+
+  
+}
+
+
+export interface DynamicFilterParams {
+  search?: string;
+
+  unitTypeId?: number;
+
+  beds?: string;
+
+  minArea?: number;
+
+  maxArea?: number;
+
+  minPrice?: number;
+
+  maxPrice?: number;
+}
+
+
+export async function getDynamicPropertyFiltersRepo(
+  filters: DynamicFilterParams
+) {
+  const db =
+    await getBinShabibEstateNet();
+
+  const result =
+    await db
+      .request()
+
+      .input(
+        "Search",
+        sql.NVarChar(300),
+        filters.search?.trim() ||
+          null
+      )
+
+      .input(
+        "UnitTypeId",
+        sql.Int,
+        filters.unitTypeId ??
+          null
+      )
+
+      .input(
+        "Beds",
+        sql.NVarChar(20),
+        filters.beds?.trim() ||
+          null
+      )
+
+      .input(
+        "MinArea",
+        sql.Decimal(18, 2),
+        filters.minArea ??
+          null
+      )
+
+      .input(
+        "MaxArea",
+        sql.Decimal(18, 2),
+        filters.maxArea ??
+          null
+      )
+
+      .input(
+        "MinPrice",
+        sql.Decimal(18, 2),
+        filters.minPrice ??
+          null
+      )
+
+      .input(
+        "MaxPrice",
+        sql.Decimal(18, 2),
+        filters.maxPrice ??
+          null
+      )
+
+      .query(`
+        /* =================================================
+           ALL PUBLICLY AVAILABLE UNITS
+        ================================================= */
+
+        SELECT
+            LTRIM(RTRIM(U.build_id))
+                AS buildId,
+
+            LTRIM(RTRIM(U.Purpose_type))
+                AS purposeCode,
+
+            U.unit_areasqft
+                AS area,
+
+            U.unit_annual_rent
+                AS annualRent,
+
+            LTRIM(RTRIM(B.build_Add))
+                AS address,
+
+            LTRIM(RTRIM(B.build_neigh))
+                AS neighborhood,
+
+            LTRIM(RTRIM(A.area_desc))
+                AS areaName,
+
+            LTRIM(RTRIM(P.place_desc))
+                AS placeName
+
+        INTO #BaseUnits
+
+        FROM dbo.unit U
+
+        INNER JOIN dbo.building B
+            ON LTRIM(RTRIM(B.build_id))
+             = LTRIM(RTRIM(U.build_id))
+
+        LEFT JOIN dbo.area A
+            ON A.area_id =
+               B.area_id
+
+        LEFT JOIN dbo.place P
+            ON P.place_id =
+               B.place_id
+
+        WHERE
+            ISNULL(U.IsActive, 1) = 1
+
+            AND ISNULL(
+                U.unit_vacant,
+                'N'
+            ) = 'Y'
+
+            AND ISNULL(
+                B.IsActive,
+                1
+            ) = 1
+
+            AND
+            (
+                B.WebDisplayOrder
+                    IS NULL
+
+                OR B.WebDisplayOrder
+                    BETWEEN 1 AND 6
+            );
+
+
+        /* =================================================
+           PROPERTY TYPE OPTIONS
+
+           Apply every filter EXCEPT property type.
+        ================================================= */
+
+        SELECT DISTINCT
+            VUT.UnitTypeId
+                AS value,
+
+            VUT.UnitTypeDesc
+                AS label
+
+        FROM dbo.vw_UnitType VUT
+
+        WHERE
+            VUT.UnitTypeId <> 99
+
+            AND EXISTS
+            (
+                SELECT 1
+
+                FROM #BaseUnits BU
+
+                WHERE
+                    LTRIM(RTRIM(
+                        BU.purposeCode
+                    ))
+                    =
+                    LTRIM(RTRIM(
+                        VUT.PurposeCode
+                    ))
+
+                    AND
+                    (
+                        @Beds IS NULL
+
+                        OR BU.purposeCode =
+                           @Beds
+                    )
+
+                    AND
+                    (
+                        @MinArea IS NULL
+
+                        OR BU.area >=
+                           @MinArea
+                    )
+
+                    AND
+                    (
+                        @MaxArea IS NULL
+
+                        OR BU.area <=
+                           @MaxArea
+                    )
+
+                    AND
+                    (
+                        @MinPrice IS NULL
+
+                        OR BU.annualRent >=
+                           @MinPrice
+                    )
+
+                    AND
+                    (
+                        @MaxPrice IS NULL
+
+                        OR BU.annualRent <=
+                           @MaxPrice
+                    )
+
+                    AND
+                    (
+                        @Search IS NULL
+
+                        OR BU.address
+                           LIKE '%' +
+                           @Search + '%'
+
+                        OR BU.neighborhood
+                           LIKE '%' +
+                           @Search + '%'
+
+                        OR BU.areaName
+                           LIKE '%' +
+                           @Search + '%'
+
+                        OR BU.placeName
+                           LIKE '%' +
+                           @Search + '%'
+                    )
+            )
+
+        ORDER BY
+            label;
+
+
+        /* =================================================
+           BED OPTIONS
+
+           Apply every filter EXCEPT Beds.
+        ================================================= */
+
+        SELECT
+            purposeCode
+                AS value,
+
+            CASE
+                WHEN purposeCode = 'STD'
+                    THEN 'Studio'
+
+                WHEN purposeCode = '1BK'
+                    THEN '1 BHK'
+
+                WHEN purposeCode = '2BK'
+                    THEN '2 BHK'
+
+                WHEN purposeCode = '3BK'
+                    THEN '3 BHK'
+
+                WHEN purposeCode = '4BK'
+                    THEN '4 BHK'
+
+                ELSE purposeCode
+            END AS label,
+
+            CASE
+                WHEN purposeCode = 'STD'
+                    THEN 1
+
+                WHEN purposeCode = '1BK'
+                    THEN 2
+
+                WHEN purposeCode = '2BK'
+                    THEN 3
+
+                WHEN purposeCode = '3BK'
+                    THEN 4
+
+                WHEN purposeCode = '4BK'
+                    THEN 5
+
+                ELSE 99
+            END AS sortOrder
+
+        FROM
+        (
+            SELECT DISTINCT
+                BU.purposeCode
+
+            FROM #BaseUnits BU
+
+            WHERE
+                BU.purposeCode IN
+                (
+                    'STD',
+                    '1BK',
+                    '2BK',
+                    '3BK',
+                    '4BK'
+                )
+
+                AND
+                (
+                    @UnitTypeId IS NULL
+
+                    OR EXISTS
+                    (
+                        SELECT 1
+
+                        FROM dbo.vw_UnitType VUT
+
+                        WHERE
+                            VUT.UnitTypeId =
+                                @UnitTypeId
+
+                            AND LTRIM(RTRIM(
+                                VUT.PurposeCode
+                            ))
+                            =
+                            LTRIM(RTRIM(
+                                BU.purposeCode
+                            ))
+                    )
+                )
+
+                AND
+                (
+                    @MinArea IS NULL
+
+                    OR BU.area >=
+                       @MinArea
+                )
+
+                AND
+                (
+                    @MaxArea IS NULL
+
+                    OR BU.area <=
+                       @MaxArea
+                )
+
+                AND
+                (
+                    @MinPrice IS NULL
+
+                    OR BU.annualRent >=
+                       @MinPrice
+                )
+
+                AND
+                (
+                    @MaxPrice IS NULL
+
+                    OR BU.annualRent <=
+                       @MaxPrice
+                )
+
+                AND
+                (
+                    @Search IS NULL
+
+                    OR BU.address
+                       LIKE '%' +
+                       @Search + '%'
+
+                    OR BU.neighborhood
+                       LIKE '%' +
+                       @Search + '%'
+
+                    OR BU.areaName
+                       LIKE '%' +
+                       @Search + '%'
+
+                    OR BU.placeName
+                       LIKE '%' +
+                       @Search + '%'
+                )
+
+        ) X
+
+        ORDER BY
+            sortOrder;
+
+
+        /* =================================================
+           AREA RANGES
+
+           Apply everything EXCEPT area.
+        ================================================= */
+
+        SELECT
+            value,
+            label,
+            sortOrder
+
+        FROM
+        (
+            SELECT
+                '0-500'
+                    AS value,
+
+                'Up to 500 Sq.Ft.'
+                    AS label,
+
+                1 AS sortOrder
+
+            WHERE EXISTS
+            (
+                SELECT 1
+                FROM #BaseUnits BU
+
+                WHERE
+                    BU.area > 0
+                    AND BU.area <= 500
+
+                    AND
+                    (
+                        @Beds IS NULL
+                        OR BU.purposeCode =
+                           @Beds
+                    )
+
+                    AND
+                    (
+                        @UnitTypeId IS NULL
+
+                        OR EXISTS
+                        (
+                            SELECT 1
+
+                            FROM dbo.vw_UnitType VUT
+
+                            WHERE
+                                VUT.UnitTypeId =
+                                    @UnitTypeId
+
+                                AND LTRIM(RTRIM(
+                                    VUT.PurposeCode
+                                ))
+                                =
+                                LTRIM(RTRIM(
+                                    BU.purposeCode
+                                ))
+                        )
+                    )
+
+                    AND
+                    (
+                        @MinPrice IS NULL
+                        OR BU.annualRent >=
+                           @MinPrice
+                    )
+
+                    AND
+                    (
+                        @MaxPrice IS NULL
+                        OR BU.annualRent <=
+                           @MaxPrice
+                    )
+            )
+
+
+            UNION ALL
+
+
+            SELECT
+                '500-1000',
+                '500 - 1,000 Sq.Ft.',
+                2
+
+            WHERE EXISTS
+            (
+                SELECT 1
+                FROM #BaseUnits BU
+
+                WHERE
+                    BU.area > 500
+                    AND BU.area <= 1000
+
+                    AND
+                    (
+                        @Beds IS NULL
+                        OR BU.purposeCode =
+                           @Beds
+                    )
+
+                    AND
+                    (
+                        @UnitTypeId IS NULL
+
+                        OR EXISTS
+                        (
+                            SELECT 1
+
+                            FROM dbo.vw_UnitType VUT
+
+                            WHERE
+                                VUT.UnitTypeId =
+                                    @UnitTypeId
+
+                                AND LTRIM(RTRIM(
+                                    VUT.PurposeCode
+                                ))
+                                =
+                                LTRIM(RTRIM(
+                                    BU.purposeCode
+                                ))
+                        )
+                    )
+
+                    AND
+                    (
+                        @MinPrice IS NULL
+                        OR BU.annualRent >=
+                           @MinPrice
+                    )
+
+                    AND
+                    (
+                        @MaxPrice IS NULL
+                        OR BU.annualRent <=
+                           @MaxPrice
+                    )
+            )
+
+
+            UNION ALL
+
+
+            SELECT
+                '1000-2000',
+                '1,000 - 2,000 Sq.Ft.',
+                3
+
+            WHERE EXISTS
+            (
+                SELECT 1
+                FROM #BaseUnits BU
+
+                WHERE
+                    BU.area > 1000
+                    AND BU.area <= 2000
+
+                    AND
+                    (
+                        @Beds IS NULL
+                        OR BU.purposeCode =
+                           @Beds
+                    )
+
+                    AND
+                    (
+                        @UnitTypeId IS NULL
+
+                        OR EXISTS
+                        (
+                            SELECT 1
+
+                            FROM dbo.vw_UnitType VUT
+
+                            WHERE
+                                VUT.UnitTypeId =
+                                    @UnitTypeId
+
+                                AND LTRIM(RTRIM(
+                                    VUT.PurposeCode
+                                ))
+                                =
+                                LTRIM(RTRIM(
+                                    BU.purposeCode
+                                ))
+                        )
+                    )
+            )
+
+
+            UNION ALL
+
+
+            SELECT
+                '2000-5000',
+                '2,000 - 5,000 Sq.Ft.',
+                4
+
+            WHERE EXISTS
+            (
+                SELECT 1
+
+                FROM #BaseUnits BU
+
+                WHERE
+                    BU.area > 2000
+                    AND BU.area <= 5000
+
+                    AND
+                    (
+                        @Beds IS NULL
+                        OR BU.purposeCode =
+                           @Beds
+                    )
+
+                    AND
+                    (
+                        @UnitTypeId IS NULL
+
+                        OR EXISTS
+                        (
+                            SELECT 1
+
+                            FROM dbo.vw_UnitType VUT
+
+                            WHERE
+                                VUT.UnitTypeId =
+                                    @UnitTypeId
+
+                                AND LTRIM(RTRIM(
+                                    VUT.PurposeCode
+                                ))
+                                =
+                                LTRIM(RTRIM(
+                                    BU.purposeCode
+                                ))
+                        )
+                    )
+            )
+
+
+            UNION ALL
+
+
+            SELECT
+                '5000-',
+                '5,000+ Sq.Ft.',
+                5
+
+            WHERE EXISTS
+            (
+                SELECT 1
+
+                FROM #BaseUnits BU
+
+                WHERE
+                    BU.area > 5000
+
+                    AND
+                    (
+                        @Beds IS NULL
+                        OR BU.purposeCode =
+                           @Beds
+                    )
+
+                    AND
+                    (
+                        @UnitTypeId IS NULL
+
+                        OR EXISTS
+                        (
+                            SELECT 1
+
+                            FROM dbo.vw_UnitType VUT
+
+                            WHERE
+                                VUT.UnitTypeId =
+                                    @UnitTypeId
+
+                                AND LTRIM(RTRIM(
+                                    VUT.PurposeCode
+                                ))
+                                =
+                                LTRIM(RTRIM(
+                                    BU.purposeCode
+                                ))
+                        )
+                    )
+            )
+
+        ) AreaOptions
+
+        ORDER BY
+            sortOrder;
+
+
+        /* =================================================
+           PRICE RANGES
+
+           Apply everything EXCEPT Price.
+        ================================================= */
+
+        SELECT
+            value,
+            label,
+            sortOrder
+
+        FROM
+        (
+            SELECT
+                '0-30000'
+                    AS value,
+
+                'Up to AED 30K'
+                    AS label,
+
+                1 AS sortOrder
+
+            WHERE EXISTS
+            (
+                SELECT 1
+
+                FROM #BaseUnits BU
+
+                WHERE
+                    BU.annualRent > 0
+                    AND BU.annualRent <=
+                        30000
+
+                    AND
+                    (
+                        @Beds IS NULL
+                        OR BU.purposeCode =
+                           @Beds
+                    )
+
+                    AND
+                    (
+                        @MinArea IS NULL
+                        OR BU.area >=
+                           @MinArea
+                    )
+
+                    AND
+                    (
+                        @MaxArea IS NULL
+                        OR BU.area <=
+                           @MaxArea
+                    )
+
+                    AND
+                    (
+                        @UnitTypeId IS NULL
+
+                        OR EXISTS
+                        (
+                            SELECT 1
+
+                            FROM dbo.vw_UnitType VUT
+
+                            WHERE
+                                VUT.UnitTypeId =
+                                    @UnitTypeId
+
+                                AND LTRIM(RTRIM(
+                                    VUT.PurposeCode
+                                ))
+                                =
+                                LTRIM(RTRIM(
+                                    BU.purposeCode
+                                ))
+                        )
+                    )
+            )
+
+
+            UNION ALL
+
+
+            SELECT
+                '30000-50000',
+                'AED 30K - 50K',
+                2
+
+            WHERE EXISTS
+            (
+                SELECT 1
+
+                FROM #BaseUnits BU
+
+                WHERE
+                    BU.annualRent > 30000
+                    AND BU.annualRent <=
+                        50000
+
+                    AND
+                    (
+                        @Beds IS NULL
+                        OR BU.purposeCode =
+                           @Beds
+                    )
+
+                    AND
+                    (
+                        @MinArea IS NULL
+                        OR BU.area >=
+                           @MinArea
+                    )
+
+                    AND
+                    (
+                        @MaxArea IS NULL
+                        OR BU.area <=
+                           @MaxArea
+                    )
+
+                    AND
+                    (
+                        @UnitTypeId IS NULL
+
+                        OR EXISTS
+                        (
+                            SELECT 1
+
+                            FROM dbo.vw_UnitType VUT
+
+                            WHERE
+                                VUT.UnitTypeId =
+                                    @UnitTypeId
+
+                                AND LTRIM(RTRIM(
+                                    VUT.PurposeCode
+                                ))
+                                =
+                                LTRIM(RTRIM(
+                                    BU.purposeCode
+                                ))
+                        )
+                    )
+            )
+
+
+            UNION ALL
+
+
+            SELECT
+                '50000-100000',
+                'AED 50K - 100K',
+                3
+
+            WHERE EXISTS
+            (
+                SELECT 1
+
+                FROM #BaseUnits BU
+
+                WHERE
+                    BU.annualRent > 50000
+                    AND BU.annualRent <=
+                        100000
+
+                    AND
+                    (
+                        @Beds IS NULL
+                        OR BU.purposeCode =
+                           @Beds
+                    )
+
+                    AND
+                    (
+                        @MinArea IS NULL
+                        OR BU.area >=
+                           @MinArea
+                    )
+
+                    AND
+                    (
+                        @MaxArea IS NULL
+                        OR BU.area <=
+                           @MaxArea
+                    )
+
+                    AND
+                    (
+                        @UnitTypeId IS NULL
+
+                        OR EXISTS
+                        (
+                            SELECT 1
+
+                            FROM dbo.vw_UnitType VUT
+
+                            WHERE
+                                VUT.UnitTypeId =
+                                    @UnitTypeId
+
+                                AND LTRIM(RTRIM(
+                                    VUT.PurposeCode
+                                ))
+                                =
+                                LTRIM(RTRIM(
+                                    BU.purposeCode
+                                ))
+                        )
+                    )
+            )
+
+
+            UNION ALL
+
+
+            SELECT
+                '100000-200000',
+                'AED 100K - 200K',
+                4
+
+            WHERE EXISTS
+            (
+                SELECT 1
+
+                FROM #BaseUnits BU
+
+                WHERE
+                    BU.annualRent > 100000
+                    AND BU.annualRent <=
+                        200000
+
+                    AND
+                    (
+                        @Beds IS NULL
+                        OR BU.purposeCode =
+                           @Beds
+                    )
+
+                    AND
+                    (
+                        @MinArea IS NULL
+                        OR BU.area >=
+                           @MinArea
+                    )
+
+                    AND
+                    (
+                        @MaxArea IS NULL
+                        OR BU.area <=
+                           @MaxArea
+                    )
+
+                    AND
+                    (
+                        @UnitTypeId IS NULL
+
+                        OR EXISTS
+                        (
+                            SELECT 1
+
+                            FROM dbo.vw_UnitType VUT
+
+                            WHERE
+                                VUT.UnitTypeId =
+                                    @UnitTypeId
+
+                                AND LTRIM(RTRIM(
+                                    VUT.PurposeCode
+                                ))
+                                =
+                                LTRIM(RTRIM(
+                                    BU.purposeCode
+                                ))
+                        )
+                    )
+            )
+
+
+            UNION ALL
+
+
+            SELECT
+                '200000-',
+                'AED 200K+',
+                5
+
+            WHERE EXISTS
+            (
+                SELECT 1
+
+                FROM #BaseUnits BU
+
+                WHERE
+                    BU.annualRent >
+                        200000
+
+                    AND
+                    (
+                        @Beds IS NULL
+                        OR BU.purposeCode =
+                           @Beds
+                    )
+
+                    AND
+                    (
+                        @MinArea IS NULL
+                        OR BU.area >=
+                           @MinArea
+                    )
+
+                    AND
+                    (
+                        @MaxArea IS NULL
+                        OR BU.area <=
+                           @MaxArea
+                    )
+
+                    AND
+                    (
+                        @UnitTypeId IS NULL
+
+                        OR EXISTS
+                        (
+                            SELECT 1
+
+                            FROM dbo.vw_UnitType VUT
+
+                            WHERE
+                                VUT.UnitTypeId =
+                                    @UnitTypeId
+
+                                AND LTRIM(RTRIM(
+                                    VUT.PurposeCode
+                                ))
+                                =
+                                LTRIM(RTRIM(
+                                    BU.purposeCode
+                                ))
+                        )
+                    )
+            )
+
+        ) PriceOptions
+
+        ORDER BY
+            sortOrder;
+
+
+        DROP TABLE #BaseUnits;
+      `);
+
+  const sets =
+    result.recordsets as
+      sql.IRecordSet<any>[];
+
+  return {
+    propertyTypes:
+      sets[0] || [],
+
+    beds:
+      sets[1] || [],
+
+    areaRanges:
+      sets[2] || [],
+
+    priceRanges:
+      sets[3] || [],
+  };
 }
