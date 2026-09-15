@@ -72,16 +72,10 @@ export default function LoginPage() {
         }
       >
         <h1>
-          Internal Access
+          Login
         </h1>
 
-        <p>
-          This website is currently
-          under internal testing.
-          Enter the access password
-          to continue.
-        </p>
-
+       
         <form
           onSubmit={
             handleLogin
