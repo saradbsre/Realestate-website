@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+
 import {
   usePathname,
 } from "next/navigation";
@@ -27,14 +28,27 @@ export default function SiteShell({
   const pathname =
     usePathname();
 
+
+  /* =====================================================
+     PAGE CHECKS
+  ===================================================== */
+
   const isLoginPage =
     pathname ===
     "/login";
 
+  const isAdminPage =
+    pathname ===
+      "/admin" ||
+    pathname.startsWith(
+      "/admin/"
+    );
+
 
   /* =====================================================
      LOGIN PAGE
-     No header / footer
+     No Navbar
+     No Footer
   ===================================================== */
 
   if (
@@ -49,7 +63,46 @@ export default function SiteShell({
 
 
   /* =====================================================
+     ADMIN PORTAL
+     Keep website Navbar
+     Remove website Footer
+  ===================================================== */
+
+  if (
+    isAdminPage
+  ) {
+    return (
+      <InternalAccessGuard>
+        <div
+          style={{
+            minHeight:
+              "100vh",
+
+            display:
+              "flex",
+
+            flexDirection:
+              "column",
+          }}
+        >
+          <Navbar />
+
+          <main
+            style={{
+              flex: 1,
+            }}
+          >
+            {children}
+          </main>
+        </div>
+      </InternalAccessGuard>
+    );
+  }
+
+
+  /* =====================================================
      NORMAL WEBSITE
+     Navbar + Content + Footer
   ===================================================== */
 
   return (
