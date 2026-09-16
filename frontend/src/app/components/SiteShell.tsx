@@ -85,8 +85,7 @@ export default function SiteShell({
               "column",
           }}
         >
-          <Navbar />
-
+   
           <main
             style={{
               flex: 1,
