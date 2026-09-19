@@ -30,11 +30,11 @@ export const mailTransporter =
     host:
       process.env.SMTP_HOST,
 
-    port: 587,
+    port:
+      smtpPort,
 
-    secure: false, // true for 465, false for other ports
-
-    // requireTLS: true,
+    secure:
+      smtpPort === 465,
 
     auth: {
       user:
@@ -43,11 +43,53 @@ export const mailTransporter =
       pass:
         process.env.SMTP_PASS,
     },
+
+    requireTLS:
+      smtpPort === 587,
+
+    connectionTimeout:
+      20000,
+
+    greetingTimeout:
+      20000,
+
+    socketTimeout:
+      30000,
+
     tls: {
-      rejectUnauthorized: false,
+      rejectUnauthorized:
+        false,
     },
   });
+mailTransporter
+  .verify()
+  .then(() => {
+    console.log(
+      "SMTP connection verified successfully"
+    );
+  })
+  .catch(
+    (
+      error
+    ) => {
+      console.error(
+        "SMTP verification failed:",
+        {
+          message:
+            error?.message,
 
+          code:
+            error?.code,
+
+          command:
+            error?.command,
+
+          response:
+            error?.response,
+        }
+      );
+    }
+  );
 function escapeHtml(
   value: string
 ) {
