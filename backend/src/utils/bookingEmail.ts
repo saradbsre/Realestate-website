@@ -21,31 +21,78 @@ interface BookingEmailData {
   passportMimeType: string;
 }
 
+const smtpHost =
+  process.env.SMTP_HOST?.trim() ||
+  "smtp.hostinger.com";
+
 const smtpPort =
   Number(
-    process.env.SMTP_PORT || 465
+    process.env.SMTP_PORT ||
+      465
   );
-export const mailTransporter =
-  nodemailer.createTransport({
+
+const smtpUser =
+  process.env.SMTP_USER?.trim();
+
+const smtpPass =
+  process.env.SMTP_PASS;
+
+
+/* =========================================================
+   SAFE SMTP DEBUG
+========================================================= */
+
+console.log(
+  "SMTP configuration:",
+  {
     host:
-      process.env.SMTP_HOST,
+      smtpHost,
 
     port:
       smtpPort,
 
+    user:
+      smtpUser,
+
+    userLength:
+      smtpUser?.length,
+
+    passwordExists:
+      Boolean(
+        smtpPass
+      ),
+
+    passwordLength:
+      smtpPass?.length,
+  }
+);
+
+
+/* =========================================================
+   SMTP TRANSPORTER
+========================================================= */
+
+export const mailTransporter =
+  nodemailer.createTransport({
+    host:
+      smtpHost,
+
+    port:
+      smtpPort,
+
+    /*
+     * Port 465 = SSL/TLS
+     */
     secure:
       smtpPort === 465,
 
     auth: {
       user:
-        process.env.SMTP_USER,
+        smtpUser,
 
       pass:
-        process.env.SMTP_PASS,
+        smtpPass,
     },
-
-    requireTLS:
-      smtpPort === 465,
 
     connectionTimeout:
       20000,
@@ -55,17 +102,20 @@ export const mailTransporter =
 
     socketTimeout:
       30000,
-
-    tls: {
-      rejectUnauthorized:
-        false,
-    },
   });
+
+
+/* =========================================================
+   SMTP VERIFY
+
+   Runs when backend starts.
+========================================================= */
+
 mailTransporter
   .verify()
   .then(() => {
     console.log(
-      "SMTP connection verified successfully"
+      "✅ Hostinger SMTP connection verified successfully"
     );
   })
   .catch(
@@ -73,7 +123,7 @@ mailTransporter
       error
     ) => {
       console.error(
-        "SMTP verification failed:",
+        "❌ SMTP verification failed:",
         {
           message:
             error?.message,
@@ -90,6 +140,7 @@ mailTransporter
       );
     }
   );
+
 function escapeHtml(
   value: string
 ) {
