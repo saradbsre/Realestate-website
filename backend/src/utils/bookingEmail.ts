@@ -23,7 +23,7 @@ interface BookingEmailData {
 
 const smtpPort =
   Number(
-    process.env.SMTP_PORT || 587
+    process.env.SMTP_PORT || 465
   );
 export const mailTransporter =
   nodemailer.createTransport({
@@ -45,7 +45,7 @@ export const mailTransporter =
     },
 
     requireTLS:
-      smtpPort === 587,
+      smtpPort === 465,
 
     connectionTimeout:
       20000,
@@ -234,7 +234,7 @@ export async function sendBookingEmails(
                         font-size:17px;
                       "
                     >
-                      ABDULWAHED BIN SHABIB REAL ESTATE
+                      ABDULWAHED AHMAD RASHED BIN SHABIB
                     </strong>
                   </td>
                 </tr>
@@ -277,7 +277,7 @@ export async function sendBookingEmails(
                     "
                   >
                     <strong>
-                      ABDULWAHED BIN SHABIB REAL ESTATE L.L.C
+                      ABDULWAHED AHMAD RASHED BIN SHABIB REAL ESTATE L.L.C
                     </strong>
 
                     <br />
