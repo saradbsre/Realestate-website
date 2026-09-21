@@ -82,7 +82,7 @@ export default function Footer() {
           <span style={{ color: "rgba(255, 255, 255, 0.4)", fontSize: "12px" }}>|</span>
           <Link href="/terms" className={styles.copyrightLink}>Terms & Conditions</Link>
         </div>
-        <p>AWS REAL ESTATE @ {new Date().getFullYear()} ALL RIGHTS RESERVED</p>
+        <p>ABDULWAHED AHMAD RASHED BIN SHABIB @ {new Date().getFullYear()} ALL RIGHTS RESERVED</p>
       </div>
     </footer>
   );

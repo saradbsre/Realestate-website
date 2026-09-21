@@ -412,6 +412,20 @@ export async function sendBookingEmails(
     : ""
 }
 
+${
+  data.unitReference
+    ? `
+      <p>
+        <strong>
+          Unit Number:
+        </strong>
+
+        ${safe.unitReference}
+      </p>
+    `
+    : ""
+}
+
           <p>
             <strong>
               Applicant:
